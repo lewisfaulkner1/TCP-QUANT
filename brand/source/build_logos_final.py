@@ -36,6 +36,8 @@ ON_DARK = Paint(GOLD, IVORY, GOLD)
 ON_DARK_FOIL = Paint(GOLD, IVORY, GOLD, foil=True)
 ALL_GOLD_FOIL = Paint(GOLD, "url(#foil)", GOLD, foil=True)
 ON_LIGHT = Paint(GOLD_DEEP, INK, GOLD_DEEP)
+ALL_GOLD_FLAT = Paint(GOLD, GOLD, GOLD)
+ALL_DEEP_GOLD = Paint(GOLD_DEEP, GOLD_DEEP, GOLD_DEEP)
 
 
 # ------------------------------------------------------------------ crown
@@ -175,3 +177,16 @@ if __name__ == "__main__":
         write(f"{voice}/inner-circle-horizontal-on-dark.svg", horizontal(voice, ON_DARK, text="INNER CIRCLE"))
         write(f"{voice}/badge-on-dark.svg", badge(voice, ON_DARK))
         write(f"{voice}/badge-on-dark-foil.svg", badge(voice, ON_DARK_FOIL))
+
+    # The official logo: Bold, gold throughout (chosen 26 Sep 2026)
+    O = "official"
+    for tag, paint in (("", ALL_GOLD_FOIL), ("-flat", ALL_GOLD_FLAT), ("-on-light", ALL_DEEP_GOLD)):
+        write(f"{O}/tcp-logo-stacked{tag}.svg", stacked("bold", paint))
+        write(f"{O}/tcp-logo-horizontal{tag}.svg", horizontal("bold", paint))
+        write(f"{O}/tcp-badge{tag}.svg", badge("bold", paint))
+    write(f"{O}/tcp-crown.svg", icon(ON_DARK_FOIL))
+    write(f"{O}/tcp-crown-flat.svg", icon(ON_DARK))
+    write(f"{O}/tcp-crown-on-light.svg", icon(ON_LIGHT))
+    write(f"{O}/tcp-inner-circle-stacked.svg", stacked("bold", ALL_GOLD_FOIL, text="INNER CIRCLE"))
+    write(f"{O}/tcp-inner-circle-horizontal.svg", horizontal("bold", ALL_GOLD_FOIL, text="INNER CIRCLE"))
+

@@ -5,16 +5,16 @@ with the partner disclosure and the risk line — keep both.
 
 ## Bio
 
-> TCP — The Crypto Playbooks
+> TCP — The Crypto Playbook
 > Trade the playbook. Gold now, futures & crypto next.
 > Signals · A+ setups · Mentorship · Members' lounge
 > Partner link below (I may earn commission). High risk, not financial advice. 18+
 
 ## Post 1 — Intro
 
-> The desk is open.
+> The Inner Circle is open.
 >
-> TCP — The Crypto Playbooks is where I share how I trade: the rules, the
+> TCP — The Crypto Playbook is where I share how I trade: the rules, the
 > setups, and the reasoning behind every trade. Gold (XAUUSD) today.
 > Futures and crypto next.
 >
@@ -26,7 +26,7 @@ with the partner disclosure and the risk line — keep both.
 
 ## Post 2 — What members get
 
-> Inside the desk:
+> Inside the Inner Circle:
 >
 > → The TCP Quant Terminal, my indicator, on your charts
 > → Algorithmic signals every trading day
@@ -42,7 +42,7 @@ with the partner disclosure and the risk line — keep both.
 
 ## Post 3 — How to join
 
-> Three steps to the desk:
+> Three steps to the Inner Circle:
 >
 > 1. Open a PU Prime account through the link in my bio
 > 2. Verify your account
@@ -55,7 +55,7 @@ with the partner disclosure and the risk line — keep both.
 ## Story
 
 Use the story graphic with a link sticker pointing to your PU Prime link.
-Sticker text: **Join the desk**.
+Sticker text: **Join the Inner Circle**.
 
 ## A+ setup breakdown (template)
 

@@ -1,61 +1,24 @@
-# TCP — The Crypto Playbooks · brand kit
+# TCP — The Crypto Playbook · brand kit
 
 Tagline: **Trade the playbook.**
 
-## The final two
+## Official logo
 
-The Crown Candles crown (a crown with three candlesticks cut through it)
-over TCP, in two voices. Files are in `logo/final/`; `logo/final/overview.png`
-shows both side by side.
+The gold crown with three candlesticks cut through it, above TCP and THE
+CRYPTO PLAYBOOK, in metallic gold throughout. Chosen 26 Sep 2026.
+Everything is in `logo/official/`:
 
-| | Voice | TCP set in | Profile picture |
-|---|---|---|---|
-| 1 | Regal | Cinzel (Roman capitals) | `final/regal/profile-picture-1080.png` (+ `-royal`) |
-| 2 | Bold | The heavy geometric TCP wordmark | `final/bold/profile-picture-1080.png` (+ `-royal`) |
-
-Each voice folder has `stacked-*` (crown above TCP), `horizontal-*` (crown
-beside TCP, for banners), `inner-circle-*` (for the Telegram group) and
-`badge-*` (crown + TCP without the tagline). `-foil` files use the metallic
-gold; the flat files are for small sizes and print. `final/icon/` holds the
-crown on its own, including `profile-picture-crown-1080.png`.
-
-## Logo concepts
-
-| | Concept | Idea | Profile picture |
-|---|---|---|---|
-| A | Playbook | An open book whose spine is a candlestick | `logo/a-playbook/profile-picture-1080.png` |
-| B | Mint | A minted gold coin: gold today, crypto next | `logo/b-mint/profile-picture-1080.png` |
-| C | Monogram | The C of TCP holds a candlestick | `logo/c-monogram/profile-picture-1080.png` |
-
-### Round 2
-
-Built on what the TCP Inner Circle already knows: the crown, the coin and the
-wings. These use the name as it appears on the current logo, THE CRYPTO
-PLAYBOOK. Files are in `logo/round-2/`.
-
-| | Concept | Idea | Profile picture |
-|---|---|---|---|
-| D | Crown Candles | A crown with three candlesticks cut through it | `d-crown-candles/profile-picture-1080.png` (+ `-royal`) |
-| E | Crowned Coin | The current logo grown up: crown on a coin, a candle in place of the ₿ | `e-crowned-coin/profile-picture-1080.png` (+ `-royal`) |
-| F | Candle Wings | A candlestick with swept wings | `f-candle-wings/profile-picture-1080.png` |
-| G | Crown Serif | A small crown over TCP in an elegant serif | `g-crown-serif/profile-picture-1080.png` |
-
-D also has `inner-circle-on-dark`, the lockup for the Telegram group.
-
-The campaign graphics use concept A until one is chosen.
-
-## Files
-
-Each concept folder holds:
-
-- `icon-gold` — the mark alone, for dark backgrounds
-- `icon-deepgold` — the mark alone, for light backgrounds
-- `lockup-on-dark` / `lockup-on-light` — mark + TCP wordmark + THE CRYPTO PLAYBOOKS
-- `lockup-stacked-on-dark` — mark above the wordmark (A and B)
-- `profile-picture-1080.png` — ready to upload as a profile picture
-- B only: `coin` (full seal with ring text) and `coin-simple` (for small sizes)
-
-`logo/wordmark/` is the TCP wordmark with no mark.
+| File | Use |
+|---|---|
+| `tcp-logo-stacked` | The main logo: posts, videos, website |
+| `tcp-logo-horizontal` | Banners and headers (X, YouTube, email) |
+| `tcp-badge` | Crown + TCP without the tagline, for tight spaces |
+| `tcp-crown` | The crown alone: watermarks, favicons, stickers |
+| `tcp-inner-circle-stacked` / `-horizontal` | The Telegram group and members' material |
+| `profile-picture-1080.png` (+ `-royal`) | Profile picture: crown + TCP |
+| `profile-picture-crown-1080.png` (+ `-royal`) | Profile picture: the crown only |
+| `…-flat` | Flat gold, for small sizes, print and embroidery |
+| `…-on-light` | Deep gold, for white or light backgrounds |
 
 `.svg` files stay sharp at any size (web, print, merch). `.png` files have a
 transparent background and are the ones to upload to social apps.
@@ -66,11 +29,12 @@ transparent background and are the ones to upload to social apps.
 |---|---|---|
 | Ink | `#0E0D0B` | Backgrounds |
 | Coal | `#1A1814` | Cards and panels |
-| Gold | `#D8AD4E` | Logo, accents, buttons |
+| Gold | `#D8AD4E` | Accents, buttons, flat logo |
+| Gold foil | `#F6E3A3` → `#D8AD4E` → `#B0812F` → `#E3C06D` | The logo only (top-to-bottom gradient) |
 | Deep gold | `#7C5A1C` | Gold on light backgrounds |
 | Ivory | `#F2ECDF` | Text on dark; light backgrounds |
 | Stone | `#A69D8C` | Secondary text |
-| Royal | `#241640` | Optional ground; carries on the current logo's purple |
+| Royal | `#241640` | Inner Circle ground; carries on the old logo's purple |
 
 ## Type (free on Google Fonts)
 
@@ -85,13 +49,20 @@ transparent background and are the ones to upload to social apps.
 - Disclose the PU Prime partner link wherever you ask people to open an account.
 - Show results in full, losses included, or don't show them.
 
+## Explorations (for reference)
+
+- `logo/final/` — the final two, Regal and Bold, before the choice (`overview.png`)
+- `logo/round-2/` — round 2: Crown Candles, Crowned Coin, Candle Wings, Crown Serif (`overview.png`)
+- `logo/a-playbook/`, `logo/b-mint/`, `logo/c-monogram/`, `logo/wordmark/` — round 1
+
 ## Rebuilding the logo files
 
-`source/build_logos_final.py` (the final two), `source/build_logos_r2.py`
-(round 2) and `source/build_logos.py` (round 1) draw every logo from code; `source/render.js` turns the SVGs into PNGs. To
-change a colour or shape, edit the script and rebuild. This needs Python with
-`fonttools`, plus these Google Fonts saved in `source/fonts/`:
-`archivo-semiexp-600.ttf`, `archivo-700.ttf`, `instrument-serif.ttf` and `cinzel-700.ttf`.
+`source/build_logos_final.py` draws the official logo (and the final two)
+from code; `source/build_logos_r2.py` and `source/build_logos.py` draw the
+earlier rounds; `source/render.js` turns SVGs into PNGs. To change a colour
+or shape, edit the script and rebuild. This needs Python with `fonttools`,
+plus these Google Fonts saved in `source/fonts/`: `archivo-semiexp-600.ttf`,
+`archivo-700.ttf`, `instrument-serif.ttf` and `cinzel-700.ttf`.
 
 ```
 cd brand/source && python3 build_logos_final.py out_final
