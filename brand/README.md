@@ -10,6 +10,21 @@ Tagline: **Trade the playbook.**
 | B | Mint | A minted gold coin: gold today, crypto next | `logo/b-mint/profile-picture-1080.png` |
 | C | Monogram | The C of TCP holds a candlestick | `logo/c-monogram/profile-picture-1080.png` |
 
+### Round 2
+
+Built on what the TCP Inner Circle already knows: the crown, the coin and the
+wings. These use the name as it appears on the current logo, THE CRYPTO
+PLAYBOOK. Files are in `logo/round-2/`.
+
+| | Concept | Idea | Profile picture |
+|---|---|---|---|
+| D | Crown Candles | A crown with three candlesticks cut through it | `d-crown-candles/profile-picture-1080.png` (+ `-royal`) |
+| E | Crowned Coin | The current logo grown up: crown on a coin, a candle in place of the ₿ | `e-crowned-coin/profile-picture-1080.png` (+ `-royal`) |
+| F | Candle Wings | A candlestick with swept wings | `f-candle-wings/profile-picture-1080.png` |
+| G | Crown Serif | A small crown over TCP in an elegant serif | `g-crown-serif/profile-picture-1080.png` |
+
+D also has `inner-circle-on-dark`, the lockup for the Telegram group.
+
 The campaign graphics use concept A until one is chosen.
 
 ## Files
@@ -38,6 +53,7 @@ transparent background and are the ones to upload to social apps.
 | Deep gold | `#7C5A1C` | Gold on light backgrounds |
 | Ivory | `#F2ECDF` | Text on dark; light backgrounds |
 | Stone | `#A69D8C` | Secondary text |
+| Royal | `#241640` | Optional ground; carries on the current logo's purple |
 
 ## Type (free on Google Fonts)
 
@@ -54,11 +70,12 @@ transparent background and are the ones to upload to social apps.
 
 ## Rebuilding the logo files
 
-`source/build_logos.py` draws every logo from code; `source/render.js`
-turns the SVGs into PNGs. To change a colour or shape, edit the script and
-rebuild (needs Python with `fonttools`, plus Archivo from Google Fonts saved
-as `source/fonts/archivo-semiexp-600.ttf` and `source/fonts/archivo-700.ttf`):
+`source/build_logos.py` (round 1) and `source/build_logos_r2.py` (round 2)
+draw every logo from code; `source/render.js` turns the SVGs into PNGs. To
+change a colour or shape, edit the script and rebuild. This needs Python with
+`fonttools`, plus these Google Fonts saved in `source/fonts/`:
+`archivo-semiexp-600.ttf`, `archivo-700.ttf` and `instrument-serif.ttf`.
 
 ```
-cd brand/source && python3 build_logos.py out
+cd brand/source && python3 build_logos.py out && python3 build_logos_r2.py out2
 ```
