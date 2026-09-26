@@ -23,6 +23,21 @@ Everything is in `logo/official/`:
 `.svg` files stay sharp at any size (web, print, merch). `.png` files have a
 transparent background and are the ones to upload to social apps.
 
+## Videos
+
+In `video/`, H.264 MP4 at 30 fps with no sound, so you can add music in the app:
+
+| File | Use |
+|---|---|
+| `tcp-intro-9x16.mp4` | 3.6 s logo intro for Reels, TikTok and Shorts |
+| `tcp-intro-16x9.mp4` | The same intro for YouTube |
+| `tcp-outro-9x16.mp4` | 4.5 s end card: logo, "Trade the playbook.", "Request access — link in bio", risk line |
+| `tcp-outro-16x9.mp4` | The same end card for YouTube |
+
+In the intro, three gold candles rise, the crown forms around them and turns
+them into its cut-outs, TCP rises in, the tagline appears and a gold shine
+passes over the logo.
+
 ## Palette
 
 | Name | Hex | Use |
@@ -66,4 +81,14 @@ plus these Google Fonts saved in `source/fonts/`: `archivo-semiexp-600.ttf`,
 
 ```
 cd brand/source && python3 build_logos_final.py out_final
+```
+
+The videos are drawn frame by frame from the same logo geometry:
+`video_parts.py` splits the logo into parts, then `make_video.js` animates
+them in headless Chromium and encodes with ffmpeg (needs Playwright and an
+ffmpeg with libx264; `archivo-exp-800.ttf`, `instrument-serif-italic.ttf`
+and `archivo-400.ttf` also go in `source/fonts/`):
+
+```
+cd brand/source && python3 video_parts.py && node make_video.js intro 9x16 tcp-intro-9x16.mp4
 ```
