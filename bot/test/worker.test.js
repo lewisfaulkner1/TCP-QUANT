@@ -229,6 +229,21 @@ test('/setup needs the key, then connects the webhook with the secret', async ()
   assert.ok(!JSON.stringify(body).includes(ENV.BOT_TOKEN), 'setup report never shows the token');
 });
 
+test('/setup explains what is wrong: secret missing, secret malformed, or key mismatch', async () => {
+  telegram();
+  const at = (key) => new Request(`https://tcp-bot.example.workers.dev/setup?key=${key}`);
+  const missing = await worker.fetch(at('x'), { ...ENV, WEBHOOK_SECRET: '' });
+  assert.equal(missing.status, 500);
+  assert.match(await missing.text(), /WEBHOOK_SECRET is not set/);
+  const malformed = await worker.fetch(at('x'), { ...ENV, WEBHOOK_SECRET: 'has space ' });
+  assert.equal(malformed.status, 500);
+  assert.match(await malformed.text(), /only use letters, numbers/);
+  const mismatch = await worker.fetch(at('nope'), ENV);
+  assert.equal(mismatch.status, 403);
+  assert.match(await mismatch.text(), /doesn't match WEBHOOK_SECRET/);
+  assert.equal(calls.length, 0, 'nothing reaches Telegram until the key matches');
+});
+
 test('bot profile texts fit Telegram limits', async () => {
   telegram();
   await worker.fetch(new Request(`https://tcp-bot.example.workers.dev/setup?key=${ENV.WEBHOOK_SECRET}`), ENV);

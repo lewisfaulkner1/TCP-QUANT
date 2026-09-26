@@ -287,8 +287,15 @@ export default {
 
     // One-time connection: https://<your-worker>/setup?key=<WEBHOOK_SECRET>
     if (url.pathname === '/setup') {
-      if (!env.WEBHOOK_SECRET || url.searchParams.get('key') !== env.WEBHOOK_SECRET) {
-        return new Response('forbidden', { status: 403 });
+      // Say which part is wrong, without revealing any secret.
+      if (!env.WEBHOOK_SECRET) {
+        return new Response('WEBHOOK_SECRET is not set: add it in Settings → Variables and Secrets, then Deploy.', { status: 500 });
+      }
+      if (!/^[A-Za-z0-9_-]{1,256}$/.test(env.WEBHOOK_SECRET)) {
+        return new Response('WEBHOOK_SECRET may only use letters, numbers, - and _ (no spaces): change it, then Deploy.', { status: 500 });
+      }
+      if (url.searchParams.get('key') !== env.WEBHOOK_SECRET) {
+        return new Response("forbidden: the key in the link doesn't match WEBHOOK_SECRET.", { status: 403 });
       }
       if (!env.BOT_TOKEN) return json({ ok: false, error: 'BOT_TOKEN is not set in the Worker settings' }, 500);
       const steps = {
