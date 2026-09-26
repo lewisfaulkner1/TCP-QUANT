@@ -1,11 +1,10 @@
-# Onboarding bot: the flow (to build after the ads)
+# Onboarding bot: the flow
 
-The link in bio opens a Telegram bot. The bot greets people, checks they are
-18+, and walks them through getting set up with a broker under Lewis's
-partner link. Quoted messages are Lewis's wording. The only change is
-"Are 18 years old" corrected to "Are you 18 years old".
+Built: `bot/worker.js` (a Cloudflare Worker). Setup: `bot/SETUP.md`. Quoted
+messages are Lewis's wording; everything is editable in the `TEXT` block at the
+top of `worker.js`.
 
-## 1. Greeting (sent automatically)
+## 1. Greeting (sent automatically on /start)
 
 > 👋 Thanks for reaching out
 > Lewis or his team will be with you shortly to assist you further
@@ -20,30 +19,34 @@ partner link. Quoted messages are Lewis's wording. The only change is
 >
 > Once answered I will get the rest of the details sent across and I will answer any questions you may have. Thanks!
 
-Buttons: **Yes, I'm 18+** · **No**
+Buttons: **✅ Yes, I'm 18+** · **No, I'm under 18**
 
 - **Yes** →
   > 👍🏼 Great, you qualified. Let's get you set up!
-- **No** → a polite close (wording to write).
+
+  then a short "how the Inner Circle works" message (with the partner disclosure and risk line),
+  and a 🟡 **New lead** card goes to the team group.
+- **No** → a polite close.
 
 ## 3. Broker account
 
-Some information about the community (to write), then:
-
 > Do you already have a PU Prime or Vantage account?
 
-Buttons: **PU Prime** · **Vantage** · **Not yet**
+Buttons: **Yes, PU Prime** · **Yes, Vantage** · **Not yet**
 
-- **Not yet** → the sign-up steps through Lewis's partner link, with a choice of broker.
-- **PU Prime / Vantage** → how to move the existing account under Lewis (each broker has its own transfer process).
+- **Not yet** → choose a broker → sign-up steps with a button to Lewis's partner link.
+- **Yes** → steps to move the account under Lewis's partner code (people who already signed up
+  through the link skip straight to Done).
 
-## 4. Hand-off
+## 4. Account number
 
-Lewis or the team picks up the chat for questions and unlocks the Inner Circle.
+After **✅ Done** the bot asks for the account number. The reply goes to the team group as a
+🟢 **Ready to verify** card.
 
-## Needed before building
+## 5. Hand-off
 
-- Lewis's partner links for PU Prime and Vantage
-- Each broker's steps for moving an existing account under a partner
-- The community info message and the under-18 message
-- What unlocks access at the end (Inner Circle invite, Quant Terminal access)
+In the team group:
+
+- Reply to any card to message that person through the bot.
+- Reply `/approve` to send a single-use Inner Circle invite (expires in 7 days).
+- Anything else people send the bot arrives as a 💬 **Message** card.
