@@ -6,17 +6,17 @@ with the partner disclosure and the risk line — keep both.
 ## Bio
 
 > TCP — The Crypto Playbook
-> Trade the playbook. Gold now, futures & crypto next.
-> Signals · A+ setups · Mentorship · Members' lounge
+> Trade the playbook.
+> Quant trading system · Algorithmic signals · A+ setups · Mentorship
 > Partner link below (I may earn commission). High risk, not financial advice. 18+
 
 ## Post 1 — Intro
 
 > The Inner Circle is open.
 >
-> TCP — The Crypto Playbook is where I share how I trade: the rules, the
-> setups, and the reasoning behind every trade. Gold (XAUUSD) today.
-> Futures and crypto next.
+> TCP — The Crypto Playbook is a quant trading system and a private
+> community: algorithmic signals, rules-based A+ setups, and the
+> reasoning behind every trade.
 >
 > Join through the link in bio.
 >
@@ -28,7 +28,7 @@ with the partner disclosure and the risk line — keep both.
 
 > Inside the Inner Circle:
 >
-> → The TCP Quant Terminal, my indicator, on your charts
+> → Quant trading system: the TCP Quant Terminal on your charts
 > → Algorithmic signals every trading day
 > → My A+ setups, and exactly why I took them
 > → Mentorship on the process, not just the entries
@@ -55,7 +55,7 @@ with the partner disclosure and the risk line — keep both.
 ## Story
 
 Use the story graphic with a link sticker pointing to your PU Prime link.
-Sticker text: **Join the Inner Circle**.
+Sticker text: **Request access**.
 
 ## A+ setup breakdown (template)
 
