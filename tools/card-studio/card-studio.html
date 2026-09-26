@@ -1,0 +1,955 @@
+<title>TCP Card Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="gfonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+@font-face{font-family:"TCP Display";src:url(data:font/woff2;base64,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) format("woff2");font-weight:800;font-style:normal;font-display:block}
+:root{
+  color-scheme:dark;
+  --ink:#0E0D0B;--panel:#16140F;--panel-2:#1C1A15;--line:#2E2A22;--line-2:#3A3429;
+  --gold:#D8AD4E;--gold-soft:#E3C06D;--ivory:#F2ECDF;--stone:#A69D8C;--muted:#8A8274;
+  --royal:#241640;--up:#35A68C;--down:#E0613F;
+  --display:"TCP Display","Archivo",system-ui,sans-serif;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --radius:14px;
+}
+html,body{background:var(--ink)}
+body{color:var(--ivory);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 56px;display:grid;gap:20px}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 24px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand svg{width:44px;height:auto;flex:none}
+.brand h1{margin:0;font:800 22px/1.1 var(--display);letter-spacing:.01em}
+.brand p{margin:2px 0 0;color:var(--stone);font-size:13.5px}
+
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid var(--line-2);border-radius:999px;background:var(--ink)}
+.seg button{border:0;background:transparent;color:var(--stone);padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;line-height:1.2;white-space:nowrap}
+.seg button:hover{color:var(--ivory)}
+.seg button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+fieldset > .seg{justify-self:start}
+.seg.dir button[data-value="buy"][aria-pressed="true"]{background:var(--up);color:var(--ink)}
+.seg.dir button[data-value="sell"][aria-pressed="true"]{background:var(--down);color:var(--ink)}
+.tabs button{padding:9px 18px;font-size:15px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.workspace{display:grid;gap:20px;grid-template-areas:"preview" "form";grid-template-columns:minmax(0,1fr);align-items:start}
+.preview-pane{grid-area:preview;display:grid;gap:14px;min-width:0}
+.form-pane{grid-area:form;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:grid;gap:18px}
+@media (min-width:940px){
+  .workspace{grid-template-areas:"form preview";grid-template-columns:minmax(360px,420px) minmax(0,1fr)}
+  .preview-pane{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+}
+
+.size-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.dims{font:500 12.5px/1 var(--mono);color:var(--stone);letter-spacing:.06em}
+.stage{display:grid;place-items:center;padding:14px;border:1px solid var(--line);border-radius:18px;background:
+  radial-gradient(120% 80% at 50% 0%,#1A1813 0%,#0B0A09 70%)}
+.stage img{display:block;max-width:100%;height:auto;max-height:min(74vh,900px);width:auto;border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(242,236,223,.06)}
+@media (max-width:939px){.stage img{max-height:58vh}}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line-2);background:transparent;color:var(--ivory);font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--stone)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn.primary:hover{background:var(--gold-soft);border-color:var(--gold-soft)}
+.btn.small{min-height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn.link{border:0;padding:0;min-height:0;color:var(--stone);text-decoration:underline;text-underline-offset:3px;font-weight:500}
+.hint{margin:0;color:var(--stone);font-size:13.5px}
+details.caption{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+details.caption summary{cursor:pointer;padding:10px 14px;color:var(--stone);font-weight:600;font-size:14px}
+details.caption pre{margin:0;padding:0 14px 14px;white-space:pre-wrap;font:13px/1.55 var(--mono);color:var(--ivory)}
+
+.notice{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 14px;border-radius:12px;background:rgba(216,173,78,.09);border:1px solid rgba(216,173,78,.35);color:var(--ivory);font-size:14px}
+.notice strong{color:var(--gold)}
+form{display:grid;gap:16px;margin:0}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+legend,.lbl{padding:0;color:var(--stone);font-size:13px;font-weight:600;letter-spacing:.01em}
+.field{display:grid;gap:6px;min-width:0}
+.field > span{color:var(--stone);font-size:13px;font-weight:600}
+.field small{color:var(--muted);font-weight:500}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+input,select,textarea{width:100%;min-width:0;background:var(--ink);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;color:var(--ivory);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,173,78,.18)}
+input::placeholder,textarea::placeholder{color:#6F685C}
+input.num,#instrument,#qMarket{font-family:var(--mono);font-variant-numeric:tabular-nums}
+#instrument,#qMarket{text-transform:uppercase}
+textarea{resize:vertical;line-height:1.5}
+#rLines{font:14px/1.6 var(--mono)}
+.count{justify-self:end;color:var(--muted);font:500 12px/1 var(--mono)}
+.warn{margin:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(224,97,63,.45);background:rgba(224,97,63,.08);color:#F1B3A2;font-size:13.5px}
+.help{margin:0;color:var(--stone);font-size:13.5px}
+.help code{font-family:var(--mono);color:var(--ivory);font-size:12.5px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.quick{display:grid;gap:8px;padding:14px;border:1px dashed var(--line-2);border-radius:12px}
+.quick-row{display:grid;grid-template-columns:86px minmax(0,1fr) auto 76px auto;gap:8px;align-items:center}
+.quick-row .seg button{padding:7px 10px}
+@media (max-width:480px){.quick-row{grid-template-columns:1fr 1fr}.quick-row .seg{justify-self:start}}
+.errors{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.errors li{padding:8px 10px;border-radius:8px;background:rgba(224,97,63,.08);border:1px solid rgba(224,97,63,.35);color:#F1B3A2;font-size:13px}
+.errors code{font-family:var(--mono);color:var(--ivory)}
+.summary{padding:10px 12px;border-radius:10px;background:var(--ink);border:1px solid var(--line);font:500 13px/1.5 var(--mono);color:var(--ivory);font-variant-numeric:tabular-nums}
+.form-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ivory);color:var(--ink);font-weight:600;font-size:14px;padding:10px 16px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+canvas#work{display:none}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="-9 -9.5 163.5 131.5" aria-hidden="true" focusable="false"><defs><linearGradient id="uiFoil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E3A3"/><stop offset="0.42" stop-color="#D8AD4E"/><stop offset="0.72" stop-color="#B0812F"/><stop offset="1" stop-color="#E3C06D"/></linearGradient></defs><path fill="url(#uiFoil)" fill-rule="evenodd" d="M11.6 94.27L0 26.59L43.51 55.59L72.51 7.25L101.52 55.59L145.02 26.59L133.42 94.27ZM11.6 102.72H133.42V120.85H11.6ZM29 53.18H33.36V61.63H38.43V84.6H33.36V89.43H29V84.6H23.93V61.63H29ZM70.34 29H74.69V39.88H79.76V79.76H74.69V89.43H70.34V79.76H65.26V39.88H70.34ZM111.67 53.18H116.02V61.63H121.09V84.6H116.02V89.43H111.67V84.6H106.59V61.63H111.67Z"/><path fill="url(#uiFoil)" d="M-8.12 20.54A8.12 8.12 0 1 0 8.12 20.54A8.12 8.12 0 1 0 -8.12 20.54Z"/><path fill="url(#uiFoil)" d="M62.940000000000005 1.21A9.57 9.57 0 1 0 82.08000000000001 1.21A9.57 9.57 0 1 0 62.940000000000005 1.21Z"/><path fill="url(#uiFoil)" d="M136.9 20.54A8.12 8.12 0 1 0 153.14000000000001 20.54A8.12 8.12 0 1 0 136.9 20.54Z"/></svg>
+      <div>
+        <h1>Card Studio</h1>
+        <p>Signal and weekly-results images for Telegram and socials</p>
+      </div>
+    </div>
+    <div class="seg tabs" role="group" aria-label="Card type">
+      <button type="button" id="tabSignal" data-mode="signal" aria-pressed="true">Signal</button>
+      <button type="button" id="tabResults" data-mode="results" aria-pressed="false">Weekly results</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="preview-pane" aria-label="Preview">
+      <div class="size-row">
+        <div class="seg" role="group" aria-label="Image size" id="sizeSeg">
+          <button type="button" data-size="square" aria-pressed="false">Square</button>
+          <button type="button" data-size="portrait" aria-pressed="true">Portrait</button>
+          <button type="button" data-size="story" aria-pressed="false">Story</button>
+        </div>
+        <span class="dims" id="dims">1080 × 1350 PNG</span>
+      </div>
+      <div class="stage"><img id="cardImg" alt="Card preview" width="1080" height="1350"></div>
+      <div class="actions">
+        <button type="button" class="btn primary" id="saveBtn">Save image</button>
+        <button type="button" class="btn" id="copyBtn">Copy caption</button>
+      </div>
+      <p class="hint" id="saveHint" hidden>Saving isn't available in this view. Long-press the card (or right-click it) to save the image.</p>
+      <details class="caption" id="captionBox">
+        <summary>Caption</summary>
+        <pre id="captionText"></pre>
+      </details>
+    </section>
+
+    <section class="form-pane" aria-label="Details">
+      <div class="notice" id="exampleNotice">
+        <span><strong>Example.</strong> Replace these details with your own. The card says EXAMPLE until you edit it.</span>
+        <button type="button" class="btn small" id="clearBtn">Start blank</button>
+      </div>
+
+      <form id="signalForm" autocomplete="off" novalidate>
+        <fieldset>
+          <legend>Signal type</legend>
+          <div class="seg" role="group" aria-label="Signal type" data-field="kind">
+            <button type="button" data-value="algo" aria-pressed="true">Algorithmic signal</button>
+            <button type="button" data-value="aplus" aria-pressed="false">A+ setup</button>
+          </div>
+        </fieldset>
+        <div class="grid2">
+          <label class="field"><span>Market</span><input id="instrument" list="markets" maxlength="12" spellcheck="false" autocapitalize="characters"></label>
+          <label class="field"><span>Order</span>
+            <select id="order">
+              <option value="market">Market</option>
+              <option value="limit">Limit</option>
+              <option value="stop">Stop</option>
+            </select>
+          </label>
+        </div>
+        <fieldset>
+          <legend>Direction</legend>
+          <div class="seg dir" role="group" aria-label="Direction" data-field="side">
+            <button type="button" data-value="buy" aria-pressed="true">Buy</button>
+            <button type="button" data-value="sell" aria-pressed="false">Sell</button>
+          </div>
+        </fieldset>
+        <div class="grid2">
+          <label class="field"><span>Entry</span><input id="entry" class="num" inputmode="decimal"></label>
+          <label class="field"><span>Stop loss</span><input id="sl" class="num" inputmode="decimal"></label>
+          <label class="field"><span>Take profit</span><input id="tp" class="num" inputmode="decimal"></label>
+          <label class="field"><span>Take profit 2 <small>(optional)</small></span><input id="tp2" class="num" inputmode="decimal"></label>
+        </div>
+        <p class="warn" id="levelWarn" hidden></p>
+        <div class="grid2">
+          <label class="field"><span>Status</span>
+            <select id="status">
+              <option value="live">Live</option>
+              <option value="tp">Take profit hit</option>
+              <option value="tp2">Take profit 2 hit</option>
+              <option value="sl">Stop loss hit</option>
+              <option value="be">Breakeven</option>
+              <option value="closed">Closed early</option>
+            </select>
+          </label>
+          <label class="field" id="closedWrap" hidden><span>Result in R</span><input id="closedR" class="num" inputmode="decimal" placeholder="+0.8"></label>
+        </div>
+        <div class="grid2">
+          <label class="field"><span>Date and time</span><input id="when" type="datetime-local"></label>
+          <label class="field"><span>Time zone</span><input id="tz" maxlength="10" spellcheck="false"></label>
+        </div>
+        <label class="field"><span>Reference</span><input id="ref" maxlength="14" spellcheck="false"></label>
+        <label class="field" id="whyWrap"><span>Why I took it</span>
+          <textarea id="why" rows="5" maxlength="420"></textarea>
+          <span class="count" id="whyCount">0 / 420</span>
+        </label>
+      </form>
+
+      <form id="resultsForm" autocomplete="off" novalidate hidden>
+        <div class="grid2">
+          <label class="field"><span>Title</span><input id="rTitle" maxlength="22"></label>
+          <label class="field"><span>Dates</span><input id="rDates" maxlength="30"></label>
+        </div>
+        <div class="quick">
+          <span class="lbl">Add a trade</span>
+          <div class="quick-row">
+            <select id="qDay" aria-label="Day">
+              <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option><option>Sun</option>
+            </select>
+            <input id="qMarket" list="markets" aria-label="Market" placeholder="XAUUSD" maxlength="12" spellcheck="false">
+            <div class="seg dir" role="group" aria-label="Direction" id="qSide">
+              <button type="button" data-value="buy" aria-pressed="true">Buy</button>
+              <button type="button" data-value="sell" aria-pressed="false">Sell</button>
+            </div>
+            <input id="qR" class="num" inputmode="decimal" aria-label="Result in R" placeholder="+2">
+            <button type="button" class="btn small" id="qAdd">Add</button>
+          </div>
+        </div>
+        <label class="field"><span>Trades</span><textarea id="rLines" rows="9" spellcheck="false"></textarea></label>
+        <p class="help">One trade per line: day, market, buy or sell, then the result in R. For example <code>Tue XAUUSD SELL -1</code>. Use 0 for breakeven.</p>
+        <ul class="errors" id="rErrors"></ul>
+        <div class="summary" id="rSummary"></div>
+      </form>
+
+      <div class="form-foot">
+        <span>Drafts stay in this browser.</span>
+        <button type="button" class="btn link" id="exampleBtn">Reset to example</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<datalist id="markets"><option value="XAUUSD"><option value="BTCUSD"><option value="GC"><option value="MGC"></datalist>
+<canvas id="work"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- brand constants ---------- */
+const C = {ink:'#0E0D0B',panel:'#15130F',line:'#2E2A22',line2:'#3A3429',gold:'#D8AD4E',goldSoft:'#E3C06D',
+  ivory:'#F2ECDF',stone:'#A69D8C',royal:'#241640',up:'#35A68C',down:'#E0613F'};
+const F = {display:'"TCP Display", Archivo, sans-serif', sans:'Archivo, "Helvetica Neue", Arial, sans-serif',
+  serif:'"Instrument Serif", Georgia, serif', mono:'"JetBrains Mono", ui-monospace, Menlo, monospace'};
+const FOIL = [[0,'#F6E3A3'],[0.42,'#D8AD4E'],[0.72,'#B0812F'],[1,'#E3C06D']];
+const LOGO = [{"tx":8.12,"ty":12.81,"d":"M11.6 94.27L0 26.59L43.51 55.59L72.51 7.25L101.52 55.59L145.02 26.59L133.42 94.27ZM11.6 102.72H133.42V120.85H11.6ZM29 53.18H33.36V61.63H38.43V84.6H33.36V89.43H29V84.6H23.93V61.63H29ZM70.34 29H74.69V39.88H79.76V79.76H74.69V89.43H70.34V79.76H65.26V39.88H70.34ZM111.67 53.18H116.02V61.63H121.09V84.6H116.02V89.43H111.67V84.6H106.59V61.63H111.67Z","rule":"evenodd","y0":7.25,"y1":120.85,"crown":true},{"tx":8.12,"ty":12.81,"d":"M-8.12 20.54A8.12 8.12 0 1 0 8.12 20.54A8.12 8.12 0 1 0 -8.12 20.54Z","rule":"nonzero","y0":12.42,"y1":28.66,"crown":true},{"tx":8.12,"ty":12.81,"d":"M62.940000000000005 1.21A9.57 9.57 0 1 0 82.08000000000001 1.21A9.57 9.57 0 1 0 62.940000000000005 1.21Z","rule":"nonzero","y0":-8.36,"y1":10.78,"crown":true},{"tx":8.12,"ty":12.81,"d":"M136.9 20.54A8.12 8.12 0 1 0 153.14000000000001 20.54A8.12 8.12 0 1 0 136.9 20.54Z","rule":"nonzero","y0":12.42,"y1":28.66,"crown":true},{"tx":201.27,"ty":0,"d":"M0 0H88V24H56V100H32V24H0Z","rule":"nonzero","y0":0,"y1":100,"crown":false},{"tx":201.27,"ty":0,"d":"M188.06 28A51.5 51.5 0 1 0 188.06 72L158 72A27.5 27.5 0 1 1 158 28Z","rule":"nonzero","y0":-1.5,"y1":101.5,"crown":false},{"tx":201.27,"ty":0,"d":"M202 0H251A35 35 0 0 1 286 35A35 35 0 0 1 251 70H226V100H202ZM226 24V46H251A11 11 0 0 0 262 35A11 11 0 0 0 251 24Z","rule":"evenodd","y0":0,"y1":100,"crown":false}];
+const LOGO_BOX = {x:0, y:4.45, w:487.27, h:129.21};   // crown + TCP, in logo units
+const CROWN_BOX = {x:0, y:4.45, w:161.26, h:129.21};
+const logoEls = LOGO.map(e => Object.assign({}, e, {p: new Path2D(e.d)}));
+const SIZES = {square:[1080,1080], portrait:[1080,1350], story:[1080,1920]};
+const MINUS = '−';
+const CAP = {display:0.686, mono:0.73, sans:0.70};
+
+/* ---------- state ---------- */
+const STORE = 'tcp-card-studio-v1';
+const pad2 = n => String(n).padStart(2,'0');
+function localStamp(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function tzLabel(d){
+  try { const p = new Intl.DateTimeFormat('en-GB',{timeZoneName:'short'}).formatToParts(d).find(x => x.type === 'timeZoneName'); return p ? p.value : ''; }
+  catch(e){ return ''; }
+}
+function refFor(when){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(when || ''); return m ? `${m[2]}${m[3]}-01` : ''; }
+function weekDefaults(now){
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = (d.getDay() + 6) % 7;
+  const mon = new Date(d); mon.setDate(d.getDate() - dow);
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const thu = new Date(Date.UTC(mon.getFullYear(), mon.getMonth(), mon.getDate() + 3));
+  const jan4 = new Date(Date.UTC(thu.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((thu - jan4) / 86400000 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7);
+  const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let dates;
+  if (mon.getFullYear() !== fri.getFullYear()) dates = `${mon.getDate()} ${M[mon.getMonth()]} ${mon.getFullYear()} – ${fri.getDate()} ${M[fri.getMonth()]} ${fri.getFullYear()}`;
+  else if (mon.getMonth() !== fri.getMonth()) dates = `${mon.getDate()} ${M[mon.getMonth()]} – ${fri.getDate()} ${M[fri.getMonth()]} ${fri.getFullYear()}`;
+  else dates = `${mon.getDate()} – ${fri.getDate()} ${M[fri.getMonth()]} ${fri.getFullYear()}`;
+  return {title: `Week ${week}`, dates};
+}
+function exampleSignal(){
+  const now = new Date(); const when = localStamp(now);
+  return {kind:'algo', instrument:'XAUUSD', order:'market', side:'buy', entry:'3742.50', sl:'3727.50', tp:'3772.50', tp2:'',
+    status:'live', closedR:'', when, tz: tzLabel(now), ref: refFor(when),
+    why:'Price swept the Asian-session low into the H4 demand zone and closed back inside it. Entry on the M15 reclaim, stop below the sweep, target at 2R into the prior day\'s high.',
+    example:true};
+}
+function blankSignal(prev){
+  const now = new Date(); const when = localStamp(now);
+  return {kind: prev ? prev.kind : 'algo', instrument:'', order:'market', side:'buy', entry:'', sl:'', tp:'', tp2:'', status:'live', closedR:'',
+    when, tz: tzLabel(now), ref: refFor(when), why:'', example:false};
+}
+function exampleResults(){
+  const w = weekDefaults(new Date());
+  return {title:w.title, dates:w.dates, example:true, lines:[
+    'Mon XAUUSD BUY +2','Tue XAUUSD SELL -1','Tue XAUUSD BUY +2','Wed XAUUSD SELL 0',
+    'Thu XAUUSD BUY -1','Thu XAUUSD BUY +2','Fri XAUUSD SELL +2','Fri XAUUSD BUY -1'].join('\n')};
+}
+function blankResults(){ const w = weekDefaults(new Date()); return {title:w.title, dates:w.dates, lines:'', example:false}; }
+
+let state = {mode:'signal', size:'portrait', signal: exampleSignal(), results: exampleResults()};
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+  if (saved && saved.signal && saved.results) {
+    state = {mode: saved.mode === 'results' ? 'results' : 'signal', size: SIZES[saved.size] ? saved.size : 'portrait',
+      signal: Object.assign(exampleSignal(), saved.signal), results: Object.assign(exampleResults(), saved.results)};
+  }
+} catch(e) {}
+let saveTimer;
+function persist(){ clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e) {} }, 350); }
+
+/* ---------- number helpers ---------- */
+function num(v){ const c = String(v == null ? '' : v).replace(/[,\s]/g,'').replace(/[−–]/g,'-'); if (c === '' || c === '-' || isNaN(+c)) return null; return +c; }
+function decimals(v){ const c = String(v || '').replace(/[,\s]/g,''); const i = c.indexOf('.'); return i < 0 ? 0 : c.length - i - 1; }
+function fmtPrice(v){ const n = num(v); if (n === null) return '—'; const d = Math.min(decimals(v), 6); return n.toLocaleString('en-GB',{minimumFractionDigits:d, maximumFractionDigits:d}); }
+function fmtDiff(n, d){ const s = Math.abs(n).toLocaleString('en-GB',{minimumFractionDigits:d, maximumFractionDigits:d}); return (n > 0 ? '+' : n < 0 ? MINUS : '') + s; }
+function fmtR(r){ const v = Math.round(r * 10) / 10; if (v === 0) return '0.0R'; return (v > 0 ? '+' : MINUS) + Math.abs(v).toFixed(1) + 'R'; }
+function plainR(r){ return fmtR(r).replace(MINUS,'-'); }
+
+function signalModel(s){
+  const entry = num(s.entry), sl = num(s.sl), tp = num(s.tp), tp2 = num(s.tp2);
+  const risk = entry !== null && sl !== null ? Math.abs(entry - sl) : null;
+  const rr1 = risk && tp !== null ? Math.abs(tp - entry) / risk : null;
+  const rr2 = risk && tp2 !== null ? Math.abs(tp2 - entry) / risk : null;
+  const dec = Math.max(decimals(s.entry), decimals(s.sl), decimals(s.tp), decimals(s.tp2));
+  const warnings = [];
+  if (entry !== null && sl !== null && tp !== null) {
+    if (s.side === 'buy' && !(sl < entry && tp > entry)) warnings.push('For a buy, the stop loss goes below the entry and the take profit above it.');
+    if (s.side === 'sell' && !(sl > entry && tp < entry)) warnings.push('For a sell, the stop loss goes above the entry and the take profit below it.');
+  }
+  if (tp2 !== null && tp !== null && entry !== null && Math.abs(tp2 - entry) <= Math.abs(tp - entry)) warnings.push('Take profit 2 should be further from the entry than take profit 1.');
+  let result = null, stamp = null;
+  if (s.status === 'tp' && rr1 !== null) { result = rr1; stamp = 'TP HIT'; }
+  else if (s.status === 'tp2' && (rr2 !== null || rr1 !== null)) { result = rr2 !== null ? rr2 : rr1; stamp = rr2 !== null ? 'TP2 HIT' : 'TP HIT'; }
+  else if (s.status === 'sl') { result = -1; stamp = 'STOPPED'; }
+  else if (s.status === 'be') { result = 0; stamp = 'BREAKEVEN'; }
+  else if (s.status === 'closed') { const r = num(s.closedR); result = r; stamp = 'CLOSED'; }
+  else if (s.status === 'tp' || s.status === 'tp2') { stamp = 'TP HIT'; }
+  return {entry, sl, tp, tp2, risk, rr1, rr2, dec, warnings, result, stamp};
+}
+
+const DAYS = {mon:'MON',monday:'MON',tue:'TUE',tues:'TUE',tuesday:'TUE',wed:'WED',wednesday:'WED',thu:'THU',thur:'THU',thurs:'THU',thursday:'THU',fri:'FRI',friday:'FRI',sat:'SAT',saturday:'SAT',sun:'SUN',sunday:'SUN'};
+function parseTrades(text){
+  const trades = [], errors = [];
+  String(text || '').split(/\r?\n/).forEach((raw, i) => {
+    const line = raw.trim(); if (!line) return;
+    const toks = line.replace(/[,;|\t]+/g,' ').split(/\s+/);
+    let day = '', side = '', r = null, market = '';
+    for (const tok of toks) {
+      const t = tok.toLowerCase();
+      if (!day && DAYS[t]) { day = DAYS[t]; continue; }
+      if (!day && /^\d{1,2}[\/.]\d{1,2}$/.test(t)) { day = tok; continue; }
+      if (!side && /^(buy|long|b)$/.test(t)) { side = 'buy'; continue; }
+      if (!side && /^(sell|short|s)$/.test(t)) { side = 'sell'; continue; }
+      if (r === null && /^(be|breakeven|b\/e)$/.test(t)) { r = 0; continue; }
+      if (r === null && /^[+\-−–]?\d+(\.\d+)?r?$/i.test(t)) { r = parseFloat(t.replace(/[−–]/,'-').replace(/r$/i,'')); continue; }
+      if (!market && /^[a-z0-9.!\/_-]{2,12}$/i.test(tok)) { market = tok.toUpperCase(); continue; }
+    }
+    const missing = [];
+    if (!market) missing.push('the market');
+    if (!side) missing.push('buy or sell');
+    if (r === null) missing.push('the result in R');
+    if (missing.length) errors.push({n: i + 1, line, missing}); else trades.push({day, market, side, r});
+  });
+  return {trades, errors};
+}
+function resultsModel(res){
+  const {trades, errors} = parseTrades(res.lines);
+  const wins = trades.filter(t => t.r > 0).length, losses = trades.filter(t => t.r < 0).length;
+  const be = trades.length - wins - losses;
+  const net = trades.reduce((a, t) => a + t.r, 0);
+  const rate = trades.length ? Math.round(wins / trades.length * 100) : 0;
+  let cum = 0; const curve = [0].concat(trades.map(t => (cum += t.r)));
+  return {trades, errors, wins, losses, be, net, rate, curve};
+}
+
+/* ---------- canvas helpers ---------- */
+function setFont(ctx, weight, size, family, style){ ctx.font = `${style ? style + ' ' : ''}${weight} ${Math.round(size)}px ${family}`; }
+function trackedWidth(ctx, text, sp){ const ch = Array.from(text); return ch.reduce((a, c) => a + ctx.measureText(c).width, 0) + sp * Math.max(0, ch.length - 1); }
+function tracked(ctx, text, x, y, sp, align){
+  const ch = Array.from(text); const ws = ch.map(c => ctx.measureText(c).width);
+  const w = ws.reduce((a, b) => a + b, 0) + sp * Math.max(0, ch.length - 1);
+  let cx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const prev = ctx.textAlign; ctx.textAlign = 'left';
+  ch.forEach((c, i) => { ctx.fillText(c, cx, y); cx += ws[i] + sp; });
+  ctx.textAlign = prev; return w;
+}
+function fitSize(ctx, text, weight, family, maxSize, maxWidth, minSize){
+  let s = maxSize; setFont(ctx, weight, s, family);
+  while (s > minSize && ctx.measureText(text).width > maxWidth) { s -= 2; setFont(ctx, weight, s, family); }
+  return s;
+}
+function fitTracked(ctx, text, weight, family, maxSize, maxWidth, spFactor){
+  let s = maxSize; setFont(ctx, weight, s, family);
+  while (s > 11 && trackedWidth(ctx, text, s * spFactor) > maxWidth) { s -= 0.5; setFont(ctx, weight, s, family); }
+  return s;
+}
+function storyCrown(ctx, W, H){ ctx.save(); ctx.globalAlpha = 0.07; const h = 150; drawLogo(ctx, (W - CROWN_BOX.w * h / CROWN_BOX.h) / 2, H - 250, h, true); ctx.restore(); }
+function wrap(ctx, text, maxWidth){
+  const words = String(text).replace(/\s+/g,' ').trim().split(' '); const lines = []; let cur = '';
+  for (const w of words) {
+    const test = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(test).width <= maxWidth || !cur) { cur = test; } else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur); return lines;
+}
+function rr(ctx, x, y, w, h, r){ const p = new Path2D(); r = Math.min(r, h / 2, w / 2);
+  p.moveTo(x + r, y); p.arcTo(x + w, y, x + w, y + h, r); p.arcTo(x + w, y + h, x, y + h, r); p.arcTo(x, y + h, x, y, r); p.arcTo(x, y, x + w, y, r); p.closePath(); return p; }
+function foilGradient(ctx, y0, y1){ const g = ctx.createLinearGradient(0, y0, 0, y1); FOIL.forEach(([o, c]) => g.addColorStop(o, c)); return g; }
+
+function drawLogo(ctx, x, y, h, crownOnly){
+  const box = crownOnly ? CROWN_BOX : LOGO_BOX; const s = h / box.h;
+  ctx.save(); ctx.translate(x - box.x * s, y - box.y * s); ctx.scale(s, s);
+  for (const e of logoEls) {
+    if (crownOnly && !e.crown) continue;
+    ctx.save(); ctx.translate(e.tx, e.ty);
+    ctx.fillStyle = foilGradient(ctx, e.y0, e.y1);
+    ctx.fill(e.p, e.rule); ctx.restore();
+  }
+  ctx.restore(); return box.w * s;
+}
+function drawBackground(ctx, W, H){
+  ctx.fillStyle = C.ink; ctx.fillRect(0, 0, W, H);
+  let g = ctx.createRadialGradient(W * 0.92, -H * 0.02, 0, W * 0.92, -H * 0.02, W * 0.95);
+  g.addColorStop(0, 'rgba(216,173,78,0.16)'); g.addColorStop(1, 'rgba(216,173,78,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  g = ctx.createRadialGradient(-W * 0.05, H * 1.02, 0, -W * 0.05, H * 1.02, W * 0.9);
+  g.addColorStop(0, 'rgba(58,34,104,0.42)'); g.addColorStop(1, 'rgba(36,22,64,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function drawTag(ctx, text, xRight, yMid, size, royal){
+  setFont(ctx, 600, size, F.mono); const sp = size * 0.16;
+  const tw = trackedWidth(ctx, text, sp); const padX = size * 0.95, h = Math.round(size * 2.05);
+  const x = xRight - tw - padX * 2, y = yMid - h / 2; const p = rr(ctx, x, y, tw + padX * 2, h, h / 2);
+  if (royal) { ctx.fillStyle = C.royal; ctx.fill(p); }
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(216,173,78,0.75)'; ctx.stroke(p);
+  ctx.fillStyle = C.gold; tracked(ctx, text, x + padX, yMid + size * CAP.mono / 2, sp);
+}
+function triangle(ctx, x, cy, size, up){
+  ctx.beginPath();
+  if (up) { ctx.moveTo(x, cy + size * 0.43); ctx.lineTo(x + size, cy + size * 0.43); ctx.lineTo(x + size / 2, cy - size * 0.47); }
+  else { ctx.moveTo(x, cy - size * 0.43); ctx.lineTo(x + size, cy - size * 0.43); ctx.lineTo(x + size / 2, cy + size * 0.47); }
+  ctx.closePath(); ctx.fill();
+}
+function drawExample(ctx, W, H){
+  ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(-0.36);
+  setFont(ctx, 800, W * 0.19, F.display); ctx.textAlign = 'center';
+  ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(14,13,11,0.55)'; ctx.strokeText('EXAMPLE', 0, W * 0.065);
+  ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(227,192,109,0.6)'; ctx.strokeText('EXAMPLE', 0, W * 0.065);
+  setFont(ctx, 600, 26, F.mono); ctx.fillStyle = 'rgba(227,192,109,0.75)';
+  tracked(ctx, 'SAMPLE DATA · NOT A REAL TRADE', 0, W * 0.065 + 58, 4, 'center');
+  ctx.restore();
+}
+function ticketPath(x, y, w, h, r, notchY, nr){
+  const p = new Path2D();
+  p.moveTo(x + r, y); p.lineTo(x + w - r, y); p.arcTo(x + w, y, x + w, y + r, r);
+  p.lineTo(x + w, notchY - nr); p.arc(x + w, notchY, nr, -Math.PI / 2, Math.PI / 2, true);
+  p.lineTo(x + w, y + h - r); p.arcTo(x + w, y + h, x + w - r, y + h, r);
+  p.lineTo(x + r, y + h); p.arcTo(x, y + h, x, y + h - r, r);
+  p.lineTo(x, notchY + nr); p.arc(x, notchY, nr, Math.PI / 2, -Math.PI / 2, true);
+  p.lineTo(x, y + r); p.arcTo(x, y, x + r, y, r); p.closePath(); return p;
+}
+function drawStamp(ctx, cx, cy, size, text, sub, color, angle){
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+  setFont(ctx, 800, size, F.display); const tw = ctx.measureText(text).width;
+  const subSize = size * 0.46; setFont(ctx, 600, subSize, F.mono); const sw = sub ? trackedWidth(ctx, sub, subSize * 0.08) : 0;
+  const padX = size * 0.5, padY = size * 0.34;
+  const innerH = size * CAP.display + (sub ? subSize * 0.5 + subSize * CAP.mono : 0);
+  const w = Math.max(tw, sw) + padX * 2, h = innerH + padY * 2;
+  ctx.globalAlpha = 0.94;
+  ctx.fillStyle = 'rgba(14,13,11,0.78)'; ctx.fill(rr(ctx, -w / 2, -h / 2, w, h, 14));
+  ctx.strokeStyle = color; ctx.lineWidth = 5; ctx.stroke(rr(ctx, -w / 2, -h / 2, w, h, 14));
+  ctx.lineWidth = 2; ctx.stroke(rr(ctx, -w / 2 + 9, -h / 2 + 9, w - 18, h - 18, 8));
+  ctx.fillStyle = color; setFont(ctx, 800, size, F.display); ctx.textAlign = 'center';
+  const top = -h / 2 + padY;
+  ctx.fillText(text, 0, top + size * CAP.display);
+  if (sub) { ctx.fillStyle = C.ivory; setFont(ctx, 600, subSize, F.mono); tracked(ctx, sub, 0, top + size * CAP.display + subSize * 0.5 + subSize * CAP.mono, subSize * 0.08, 'center'); }
+  ctx.restore();
+  return {w, h};
+}
+function stampMeasure(ctx, size, text, sub){
+  setFont(ctx, 800, size, F.display); const tw = ctx.measureText(text).width;
+  const subSize = size * 0.46; setFont(ctx, 600, subSize, F.mono); const sw = sub ? trackedWidth(ctx, sub, subSize * 0.08) : 0;
+  const w = Math.max(tw, sw) + size; const h = size * CAP.display + (sub ? subSize * 0.5 + subSize * CAP.mono : 0) + size * 0.68;
+  const a = 0.14; return {w: w * Math.cos(a) + h * Math.sin(a), h: w * Math.sin(a) + h * Math.cos(a)};
+}
+
+/* ---------- signal card ---------- */
+const SIG = {
+  square:   {m:40, pad:44, top:50,  logoH:52, headGap:30, tag:21, instr:116, pill:76, pillFont:42, label:22, value:50, sub:0,  gap:15, rr:50, whyH:34, why:26, footTop:1080-54, footSerif:32, legal:18, notch:22, stamp:46},
+  portrait: {m:48, pad:56, top:62,  logoH:60, headGap:38, tag:22, instr:146, pill:90,  pillFont:50, label:24, value:58, sub:23, gap:20, rr:58, whyH:40, why:29, footTop:1350-62, footSerif:37, legal:20, notch:26, stamp:56},
+  story:    {m:48, pad:60, top:236, logoH:70, headGap:48, tag:24, instr:168, pill:104, pillFont:58, label:27, value:70, sub:26, gap:28, rr:70, whyH:46, why:33, footTop:1920-296, footSerif:43, legal:22, notch:28, stamp:66},
+};
+function drawSignal(ctx, W, H, s, sizeKey){
+  const L = SIG[sizeKey]; const M = signalModel(s);
+  drawBackground(ctx, W, H);
+  const tX = L.m, tW = W - L.m * 2, x0 = tX + L.pad, x1 = tX + tW - L.pad;
+
+  drawLogo(ctx, x0, L.top, L.logoH);
+  drawTag(ctx, s.kind === 'aplus' ? 'A+ SETUP' : 'ALGORITHMIC SIGNAL', x1, L.top + L.logoH / 2, L.tag, s.kind === 'aplus');
+
+  const tTop = L.top + L.logoH + L.headGap;
+  const footBase = L.footTop;
+  const tBot = footBase - L.footSerif * 1.55;
+
+  // measure the top section
+  const capL = L.label * CAP.mono;
+  const side = s.side === 'sell' ? 'sell' : 'buy';
+  setFont(ctx, 800, L.pillFont, F.display);
+  const pillW = L.pillFont * 0.55 * 2 + L.pillFont * 0.55 + L.pillFont * 0.3 + ctx.measureText(side === 'buy' ? 'BUY' : 'SELL').width;
+  const instrText = (s.instrument || '').trim().toUpperCase() || 'MARKET';
+  const instrSize = fitSize(ctx, instrText, 800, F.display, L.instr, x1 - x0 - pillW - 36, 48);
+  const capI = instrSize * CAP.display;
+
+  let y = tTop + L.pad * 0.85;
+  const metaBase = y + capL;
+  const instrTop = metaBase + L.gap * 1.35;
+  const instrBase = instrTop + Math.max(capI, L.pill * 0.78);
+  const notchY = instrBase + L.gap * 1.9 + (sizeKey === 'square' ? 0 : 6);
+
+  // ticket body
+  const tp = ticketPath(tX, tTop, tW, tBot - tTop, 26, notchY, L.notch);
+  ctx.fillStyle = C.panel; ctx.fill(tp); ctx.lineWidth = 2; ctx.strokeStyle = C.line; ctx.stroke(tp);
+  ctx.save(); ctx.setLineDash([14, 12]); ctx.strokeStyle = C.line2; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(tX + L.notch + 18, notchY); ctx.lineTo(tX + tW - L.notch - 18, notchY); ctx.stroke(); ctx.restore();
+
+  // meta row
+  setFont(ctx, 500, L.label, F.mono); ctx.fillStyle = C.stone;
+  tracked(ctx, 'INSTRUMENT', x0, metaBase, L.label * 0.14);
+  const orderText = s.order === 'limit' ? `${side.toUpperCase()} LIMIT` : s.order === 'stop' ? `${side.toUpperCase()} STOP` : 'MARKET ORDER';
+  const ow = tracked(ctx, orderText, x1, metaBase, L.label * 0.14, 'right');
+  if (s.status === 'live') {
+    const liveW = trackedWidth(ctx, 'LIVE', L.label * 0.14); const lx = x1 - ow - 34 - liveW;
+    ctx.fillStyle = C.ivory; tracked(ctx, 'LIVE', lx, metaBase, L.label * 0.14);
+    ctx.fillStyle = C.up; ctx.beginPath(); ctx.arc(lx - L.label * 0.62, metaBase - capL / 2, L.label * 0.26, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.line2; ctx.fillRect(x1 - ow - 18, metaBase - capL, 2, capL);
+  }
+
+  // instrument + side pill
+  setFont(ctx, 800, instrSize, F.display); ctx.fillStyle = C.ivory; ctx.fillText(instrText, x0, instrBase - (Math.max(capI, L.pill * 0.78) - capI) / 2);
+  const pillMid = instrBase - Math.max(capI, L.pill * 0.78) / 2;
+  {
+    const f = L.pillFont, tri = f * 0.55, gap = f * 0.3, padX = f * 0.55, h = L.pill;
+    setFont(ctx, 800, f, F.display); const label = side === 'buy' ? 'BUY' : 'SELL'; const w = padX * 2 + tri + gap + ctx.measureText(label).width;
+    const px = x1 - w; ctx.fillStyle = side === 'buy' ? C.up : C.down; ctx.fill(rr(ctx, px, pillMid - h / 2, w, h, h / 2));
+    ctx.fillStyle = C.ink; triangle(ctx, px + padX, pillMid, tri, side === 'buy');
+    ctx.fillText(label, px + padX + tri + gap, pillMid + f * CAP.display / 2);
+  }
+
+  // field rows
+  const rows = [['ENTRY', s.entry, null], ['STOP LOSS', s.sl, M.entry !== null && M.sl !== null ? M.sl - M.entry : null], ['TAKE PROFIT', s.tp, M.entry !== null && M.tp !== null ? M.tp - M.entry : null]];
+  if (String(s.tp2 || '').trim()) rows.push(['TAKE PROFIT 2', s.tp2, M.entry !== null && M.tp2 !== null ? M.tp2 - M.entry : null]);
+  const capV = L.value * CAP.mono, subH = L.sub ? L.sub * 1.55 : 0;
+  const rowH = capV + subH;
+  const bottomBase = tBot - L.pad * 0.8;
+  const fieldsTop = notchY + L.gap * 2.1;
+  const rrBlock = L.gap * 1.6 + 2 + L.gap * 1.6 + L.rr * CAP.display;
+  const needFields = rows.length * rowH + (rows.length - 1) * L.gap + rrBlock;
+  const baseAvail = bottomBase - L.label * 2.2 - fieldsTop - needFields;
+  const whyLh = L.why * 1.42, whyHead = L.gap * 2.3 + L.whyH * 0.72 + L.why * 0.5;
+  let whyLines = [];
+  if (s.kind === 'aplus' && String(s.why || '').trim()) { setFont(ctx, 400, L.why, F.sans); whyLines = wrap(ctx, s.why, x1 - x0); }
+  const showWhy = whyLines.length > 0 && baseAvail > whyHead + whyLh * 1.2;
+  const whyMax = showWhy ? Math.max(1, Math.floor((baseAvail - whyHead - L.why * 0.2) / whyLh)) : 0;
+  const whyUsed = Math.min(whyLines.length, whyMax);
+  const spare = baseAvail - (showWhy ? whyHead + whyUsed * whyLh : 0) - L.label * 0.2;
+  const rowGap = L.gap + Math.max(0, Math.min(spare / (rows.length + 1.5), L.gap * 2.6));
+
+  let fy = fieldsTop; let labelRight = 0, valueLeft = Infinity; const fieldBand = [fy, 0];
+  rows.forEach(([label, val, diff], i) => {
+    const base = fy + capV;
+    setFont(ctx, 500, L.label, F.mono); ctx.fillStyle = C.stone;
+    labelRight = Math.max(labelRight, x0 + tracked(ctx, label, x0, base, L.label * 0.14));
+    setFont(ctx, 500, L.value, F.mono); ctx.fillStyle = String(val || '').trim() ? C.ivory : C.stone; ctx.textAlign = 'right';
+    const vt = fmtPrice(val); ctx.fillText(vt, x1, base); valueLeft = Math.min(valueLeft, x1 - ctx.measureText(vt).width); ctx.textAlign = 'left';
+    if (L.sub && diff !== null) { setFont(ctx, 500, L.sub, F.mono); ctx.fillStyle = C.stone; ctx.textAlign = 'right'; ctx.fillText(fmtDiff(diff, M.dec), x1, base + L.sub * 1.5); ctx.textAlign = 'left'; }
+    fy = base + subH + (i < rows.length - 1 ? rowGap : 0);
+  });
+  fieldBand[1] = fy;
+  fy += rowGap * 0.85;
+  ctx.fillStyle = C.line; ctx.fillRect(x0, fy, x1 - x0, 2);
+  fy += L.gap * 1.5;
+  const rrBase = fy + L.rr * CAP.display;
+  setFont(ctx, 500, L.label, F.mono); ctx.fillStyle = C.stone; tracked(ctx, 'RISK : REWARD', x0, rrBase, L.label * 0.14);
+  const rrText = M.rr1 === null ? '—' : `1 : ${M.rr1.toFixed(1)}${M.rr2 !== null ? '  ·  ' + M.rr2.toFixed(1) : ''}`;
+  setFont(ctx, 800, L.rr, F.display); ctx.fillStyle = C.gold; ctx.textAlign = 'right'; ctx.fillText(rrText, x1, rrBase); ctx.textAlign = 'left';
+  fy = rrBase;
+
+  if (showWhy) {
+    let wy = fy + L.gap * 2.3 + L.whyH * 0.72;
+    setFont(ctx, 400, L.whyH, F.serif, 'italic'); ctx.fillStyle = C.gold; ctx.fillText('Why I took it', x0, wy);
+    setFont(ctx, 400, L.why, F.sans); ctx.fillStyle = 'rgba(242,236,223,0.9)';
+    const lh = whyLh; const lines = whyLines; const maxLines = whyUsed;
+    const shown = lines.slice(0, maxLines);
+    if (lines.length > maxLines) { let last = shown[shown.length - 1]; while (last.length && ctx.measureText(last + '…').width > x1 - x0) last = last.slice(0, -1); shown[shown.length - 1] = last.replace(/\s+\S*$/, '') + '…'; }
+    shown.forEach((ln, i) => ctx.fillText(ln, x0, wy + L.why * 0.5 + lh * (i + 1) - L.why * 0.3));
+  }
+
+  // bottom row
+  setFont(ctx, 500, L.label, F.mono); ctx.fillStyle = C.stone;
+  tracked(ctx, whenText(s.when, s.tz), x0, bottomBase, L.label * 0.1);
+  if (String(s.ref || '').trim()) tracked(ctx, 'NO. ' + String(s.ref).trim().toUpperCase(), x1, bottomBase, L.label * 0.1, 'right');
+
+  // status stamp
+  if (s.status !== 'live' && M.stamp) {
+    const color = s.status === 'sl' ? C.down : s.status === 'be' ? C.stone : s.status === 'closed' ? C.gold : C.up;
+    const sub = M.result === null ? '' : fmtR(M.result);
+    const bandL = labelRight + 28, bandR = valueLeft - 28; let size = L.stamp; let dims = stampMeasure(ctx, size, M.stamp, sub);
+    while (dims.w > bandR - bandL && size > L.stamp * 0.66) { size -= 2; dims = stampMeasure(ctx, size, M.stamp, sub); }
+    if (dims.w <= bandR - bandL) {
+      drawStamp(ctx, (bandL + bandR) / 2, (fieldBand[0] + fieldBand[1]) / 2, size, M.stamp, sub, color, -0.14);
+    } else {
+      const sh = L.label * 2.2, sy = notchY - sh / 2;
+      setFont(ctx, 600, L.label, F.mono); const txt = M.stamp + (sub ? '  ' + sub : ''); const tw = trackedWidth(ctx, txt, L.label * 0.14) + L.label * 2.4;
+      ctx.fillStyle = C.ink; ctx.fill(rr(ctx, (W - tw) / 2, sy, tw, sh, sh / 2)); ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke(rr(ctx, (W - tw) / 2, sy, tw, sh, sh / 2));
+      ctx.fillStyle = C.ivory; tracked(ctx, txt, W / 2, sy + sh / 2 + L.label * CAP.mono / 2, L.label * 0.14, 'center');
+    }
+  }
+
+  // footer
+  setFont(ctx, 400, L.footSerif, F.serif, 'italic'); ctx.fillStyle = C.ivory; ctx.fillText('Trade the playbook.', x0, footBase);
+  const serifW = ctx.measureText('Trade the playbook.').width;
+  const legal = 'NOT FINANCIAL ADVICE · HIGH RISK · 18+';
+  const lsz = fitTracked(ctx, legal, 500, F.mono, L.legal, x1 - x0 - serifW - 40, 0.1); ctx.fillStyle = C.stone;
+  tracked(ctx, legal, x1, footBase, lsz * 0.1, 'right');
+
+  if (sizeKey === 'story') storyCrown(ctx, W, H);
+  if (s.example) drawExample(ctx, W, H);
+}
+function whenText(when, tz){
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(when || '');
+  if (!m) return '';
+  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return `${+m[3]} ${MON[+m[2] - 1]} ${m[1]} · ${m[4]}:${m[5]}${tz ? ' ' + String(tz).trim().toUpperCase() : ''}`;
+}
+
+/* ---------- results card ---------- */
+const RES = {
+  square:   {m:40, pad:40, top:48,  logoH:50, headGap:44, tag:21, title:58, dates:21, heroLabel:20, hero:96,  statLabel:19, statVal:42, curve:0,   row:24, rowH:42, head:19, footTop:1080-88, footSerif:30, legal:18},
+  portrait: {m:48, pad:48, top:60,  logoH:58, headGap:58, tag:22, title:78, dates:23, heroLabel:22, hero:128, statLabel:21, statVal:52, curve:128, row:26, rowH:46, head:20, footTop:1350-96, footSerif:34, legal:19},
+  story:    {m:48, pad:56, top:236, logoH:68, headGap:64, tag:24, title:92, dates:26, heroLabel:25, hero:150, statLabel:24, statVal:60, curve:170, row:30, rowH:54, head:22, footTop:1920-330, footSerif:40, legal:20},
+};
+function drawResults(ctx, W, H, res, sizeKey){
+  const L = RES[sizeKey]; const R = resultsModel(res);
+  drawBackground(ctx, W, H);
+  const pX = L.m, pW = W - L.m * 2, x0 = pX + L.pad, x1 = pX + pW - L.pad;
+
+  drawLogo(ctx, x0, L.top, L.logoH);
+  drawTag(ctx, 'WEEKLY RESULTS', x1, L.top + L.logoH / 2, L.tag, false);
+
+  // title row
+  const titleBase = L.top + L.logoH + L.headGap + L.title * CAP.display;
+  const title = String(res.title || '').trim() || 'This week';
+  setFont(ctx, 600, L.dates, F.mono); const datesText = String(res.dates || '').trim().toUpperCase(); const dW = trackedWidth(ctx, datesText, L.dates * 0.1);
+  const tSize = fitSize(ctx, title, 800, F.display, L.title, x1 - x0 - dW - 32, 36);
+  setFont(ctx, 800, tSize, F.display); ctx.fillStyle = C.ivory; ctx.fillText(title, x0, titleBase);
+  setFont(ctx, 600, L.dates, F.mono); ctx.fillStyle = C.stone; tracked(ctx, datesText, x1, titleBase, L.dates * 0.1, 'right');
+
+  // summary panel
+  const panTop = titleBase + L.title * 0.42;
+  let y = panTop + L.pad * 0.8;
+  const heroLabelBase = y + L.heroLabel * CAP.mono;
+  const heroBase = heroLabelBase + L.heroLabel * 0.9 + L.hero * CAP.display;
+  const statLabelBase = heroBase + L.hero * 0.34 + L.statLabel * CAP.mono;
+  const statValBase = statLabelBase + L.statLabel * 0.75 + L.statVal * CAP.display;
+  let panBot = statValBase + L.pad * 0.8;
+  const curveTop = statValBase + L.pad * 0.95, curveH = L.curve;
+  if (curveH) panBot = curveTop + L.statLabel * 1.9 + curveH + L.pad * 0.7;
+  ctx.fillStyle = C.panel; ctx.fill(rr(ctx, pX, panTop, pW, panBot - panTop, 26)); ctx.lineWidth = 2; ctx.strokeStyle = C.line; ctx.stroke(rr(ctx, pX, panTop, pW, panBot - panTop, 26));
+
+  setFont(ctx, 500, L.heroLabel, F.mono); ctx.fillStyle = C.stone; tracked(ctx, 'NET RESULT', x0, heroLabelBase, L.heroLabel * 0.14);
+  const netText = R.trades.length ? fmtR(R.net) : '0.0R';
+  const heroSize = fitSize(ctx, netText, 800, F.display, L.hero, x1 - x0 - L.hero * 0.6, 60);
+  setFont(ctx, 800, heroSize, F.display); ctx.fillStyle = C.ivory; ctx.fillText(netText, x0, heroBase);
+  const nw = ctx.measureText(netText).width; const nv = Math.round(R.net * 10) / 10;
+  if (R.trades.length && nv !== 0) { ctx.fillStyle = nv > 0 ? C.up : C.down; triangle(ctx, x0 + nw + heroSize * 0.14, heroBase - heroSize * CAP.display / 2, heroSize * 0.3, nv > 0); }
+
+  const stats = [['TRADES', String(R.trades.length)], ['WINS', String(R.wins)], ['LOSSES', String(R.losses)], ['BREAKEVEN', String(R.be)], ['WIN RATE', R.trades.length ? R.rate + '%' : '—']];
+  const tileW = (x1 - x0) / stats.length;
+  stats.forEach(([lab, val], i) => {
+    const tx = x0 + i * tileW + (i ? L.statLabel * 1.1 : 0);
+    if (i) { ctx.fillStyle = C.line2; ctx.fillRect(x0 + i * tileW, statLabelBase - L.statLabel * CAP.mono, 2, statValBase - statLabelBase + L.statLabel * CAP.mono); }
+    setFont(ctx, 500, L.statLabel, F.mono); ctx.fillStyle = C.stone; tracked(ctx, lab, tx, statLabelBase, L.statLabel * 0.1);
+    setFont(ctx, 800, L.statVal, F.display); ctx.fillStyle = C.ivory; ctx.fillText(val, tx, statValBase);
+  });
+
+  if (curveH) {
+    ctx.fillStyle = C.line; ctx.fillRect(x0, curveTop - L.pad * 0.45, x1 - x0, 2);
+    setFont(ctx, 500, L.statLabel, F.mono); ctx.fillStyle = C.stone;
+    const cLabelBase = curveTop + L.statLabel * CAP.mono + 4; tracked(ctx, 'CUMULATIVE R, TRADE BY TRADE', x0, cLabelBase, L.statLabel * 0.1);
+    const top = cLabelBase + L.statLabel * 1.2, bot = top + curveH;
+    const pts = R.curve; const lo = Math.min(0, ...pts), hi = Math.max(0, ...pts); const span = (hi - lo) || 1;
+    const labW = 70; const cx0 = x0 + labW, cx1 = x1 - 16;
+    const xs = i => pts.length > 1 ? cx0 + (cx1 - cx0) * i / (pts.length - 1) : cx0;
+    const ys = v => bot - (v - lo) / span * (bot - top);
+    const zy = ys(0);
+    ctx.fillStyle = C.line2; ctx.fillRect(cx0, zy - 1, cx1 - cx0, 2);
+    setFont(ctx, 500, Math.max(22, L.statLabel * 1.05), F.mono); ctx.fillStyle = C.stone; ctx.textAlign = 'right'; ctx.fillText('0R', cx0 - 14, zy + L.statLabel * 0.38); ctx.textAlign = 'left';
+    if (pts.length > 1) {
+      ctx.beginPath(); pts.forEach((v, i) => { const X = xs(i), Y = ys(v); if (i) ctx.lineTo(X, Y); else ctx.moveTo(X, Y); });
+      ctx.lineTo(xs(pts.length - 1), zy); ctx.lineTo(xs(0), zy); ctx.closePath(); ctx.fillStyle = 'rgba(216,173,78,0.12)'; ctx.fill();
+      ctx.beginPath(); pts.forEach((v, i) => { const X = xs(i), Y = ys(v); if (i) ctx.lineTo(X, Y); else ctx.moveTo(X, Y); });
+      ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = C.gold; ctx.stroke();
+      const ex = xs(pts.length - 1), ey = ys(pts[pts.length - 1]);
+      ctx.fillStyle = C.panel; ctx.beginPath(); ctx.arc(ex, ey, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = C.gold; ctx.beginPath(); ctx.arc(ex, ey, 9, 0, Math.PI * 2); ctx.fill();
+      setFont(ctx, 600, Math.max(24, L.statLabel * 1.2), F.mono); ctx.fillStyle = C.ivory; ctx.textAlign = 'right';
+      const endLabel = fmtR(pts[pts.length - 1]); const above = ey - top > L.statLabel * 2;
+      ctx.fillText(endLabel, ex - 2, above ? ey - 24 : ey + 24 + L.statLabel * 0.8); ctx.textAlign = 'left';
+    }
+  }
+
+  // trade list
+  const footBase = L.footTop;
+  const listTop = panBot + L.rowH * 0.9;
+  const listBottom = footBase - L.footSerif * 1.6;
+  const headBase = listTop + L.head * CAP.mono;
+  const firstRowTop = headBase + L.head * 0.9;
+  const perCol = Math.max(1, Math.floor((listBottom - firstRowTop) / L.rowH));
+  const total = R.trades.length;
+  const cols = total > perCol ? 2 : 1;
+  const capacity = perCol * cols;
+  const shownTrades = total > capacity ? R.trades.slice(0, capacity) : R.trades;
+  const colGap = 56; const colW = cols === 2 ? (x1 - x0 - colGap) / 2 : x1 - x0;
+  const rowsPerCol = cols === 2 ? Math.ceil(shownTrades.length / 2) : Math.max(1, shownTrades.length);
+  const maxAbs = Math.max(1, ...R.trades.map(t => Math.abs(t.r)));
+  const rowFont = cols === 2 ? Math.round(L.row * 0.94) : L.row;
+  setFont(ctx, 500, rowFont, F.mono);
+  const cw = ctx.measureText('0').width, triS = rowFont * 0.62;
+  const dayW = ctx.measureText('WED').width + cw * 1.3;
+  const mkMax = cols === 2 ? cw * 7 : cw * 10;
+  const mkW = Math.min(Math.max(cw * 4, ...shownTrades.map(t => ctx.measureText(t.market).width)), mkMax) + cw * 1.3;
+  const sideW = triS + cw * 0.6 + ctx.measureText('SELL').width + cw * 1.3;
+  const valW = ctx.measureText('+10.0R').width;
+  let layout;
+  if (cols === 2) {
+    let bw = colW - dayW - mkW - sideW - valW - cw * 1.2; bw = bw < 40 ? 0 : Math.min(bw, 90);
+    layout = {day: 0, market: dayW, side: dayW + mkW, bar: colW - valW - cw * 1.2 - bw, barW: bw, valueRight: colW, mkLimit: mkW - cw * 1.1};
+  } else {
+    const market = Math.max(dayW, colW * 0.13), side = Math.max(market + mkW, colW * 0.4);
+    const bar = Math.max(side + sideW, colW * 0.6);
+    layout = {day: 0, market, side, bar, barW: Math.max(0, Math.min(Math.round(colW * 0.17), colW - valW - cw * 1.2 - bar)), valueRight: colW, mkLimit: side - market - cw * 1.1};
+  }
+  if (!total) {
+    setFont(ctx, 400, L.footSerif, F.serif, 'italic'); ctx.fillStyle = C.stone; ctx.fillText('No trades yet. Add them on the left.', x0, firstRowTop + L.rowH * 0.8);
+  }
+  for (let c = 0; c < cols && total; c++) {
+    if (c * rowsPerCol >= shownTrades.length) break;
+    const cx = x0 + c * (colW + colGap);
+    setFont(ctx, 500, L.head, F.mono); ctx.fillStyle = C.stone;
+    tracked(ctx, 'DAY', cx + layout.day, headBase, L.head * 0.12);
+    tracked(ctx, 'MARKET', cx + layout.market, headBase, L.head * 0.12);
+    tracked(ctx, 'SIDE', cx + layout.side, headBase, L.head * 0.12);
+    tracked(ctx, 'RESULT', cx + layout.valueRight, headBase, L.head * 0.12, 'right');
+  }
+  shownTrades.forEach((t, i) => {
+    const c = Math.floor(i / rowsPerCol), r = i % rowsPerCol; const cx = x0 + c * (colW + colGap);
+    const top = firstRowTop + r * L.rowH; const base = top + L.rowH / 2 + rowFont * CAP.mono / 2;
+    ctx.fillStyle = C.line; ctx.fillRect(cx, top, colW, 1.5);
+    setFont(ctx, 500, rowFont, F.mono); ctx.fillStyle = C.ivory;
+    ctx.fillText(t.day || '—', cx + layout.day, base);
+    let mk = t.market; while (mk.length > 3 && ctx.measureText(mk).width > layout.mkLimit) mk = mk.slice(0, -1);
+    ctx.fillText(mk, cx + layout.market, base);
+    ctx.fillStyle = t.side === 'buy' ? C.up : C.down;
+    triangle(ctx, cx + layout.side, base - rowFont * CAP.mono / 2, triS, t.side === 'buy');
+    ctx.fillStyle = C.ivory; ctx.fillText(t.side === 'buy' ? 'BUY' : 'SELL', cx + layout.side + triS + cw * 0.6, base);
+    const barW = layout.barW, bx = cx + layout.bar + barW / 2, bh = Math.max(8, rowFont * 0.42), by = base - rowFont * CAP.mono / 2 - bh / 2;
+    const len = Math.abs(t.r) / maxAbs * (barW / 2 - 2);
+    if (barW > 0) { ctx.fillStyle = C.line2; ctx.fillRect(bx - 1, by - 5, 2, bh + 10); }
+    if (barW <= 0) { /* no room for bars in this layout */ }
+    else if (t.r > 0) { ctx.fillStyle = C.up; ctx.fill(rr(ctx, bx + 1, by, Math.max(len, 6), bh, 4)); ctx.fillRect(bx + 1, by, Math.min(5, len), bh); }
+    else if (t.r < 0) { ctx.fillStyle = C.down; ctx.fill(rr(ctx, bx - 1 - Math.max(len, 6), by, Math.max(len, 6), bh, 4)); ctx.fillRect(bx - 1 - Math.min(5, len), by, Math.min(5, len), bh); }
+    else { ctx.fillStyle = C.stone; ctx.beginPath(); ctx.arc(bx, by + bh / 2, 5, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = C.ivory; ctx.textAlign = 'right'; ctx.fillText(fmtR(t.r), cx + layout.valueRight, base); ctx.textAlign = 'left';
+  });
+
+  // footer
+  const allShown = shownTrades.length === total;
+  setFont(ctx, 400, L.footSerif, F.serif, 'italic'); ctx.fillStyle = C.gold;
+  ctx.fillText(allShown ? 'Every trade shown, losses included.' : `Showing ${shownTrades.length} of ${total} trades. The totals include all of them.`, x0, footBase);
+  const legalR = "PAST RESULTS DON'T GUARANTEE FUTURE RESULTS · NOT FINANCIAL ADVICE · 18+";
+  const lsz = fitTracked(ctx, legalR, 500, F.mono, L.legal, x1 - x0, 0.06); ctx.fillStyle = C.stone;
+  tracked(ctx, legalR, x0, footBase + L.legal * 2.1, lsz * 0.06);
+
+  if (sizeKey === 'story') storyCrown(ctx, W, H);
+  if (res.example) drawExample(ctx, W, H);
+  return R;
+}
+
+/* ---------- captions ---------- */
+function captionSignal(s){
+  const M = signalModel(s); const mk = (s.instrument || 'MARKET').trim().toUpperCase(); const side = s.side === 'sell' ? 'SELL' : 'BUY';
+  const order = s.order === 'limit' ? ` LIMIT` : s.order === 'stop' ? ` STOP` : '';
+  const lines = [`${mk} · ${side}${order}`];
+  if (M.entry !== null) lines.push(`Entry ${fmtPrice(s.entry)}`);
+  if (M.sl !== null) lines.push(`Stop loss ${fmtPrice(s.sl)}`);
+  if (M.tp !== null) lines.push(`Take profit ${fmtPrice(s.tp)}`);
+  if (M.tp2 !== null) lines.push(`Take profit 2 ${fmtPrice(s.tp2)}`);
+  if (M.rr1 !== null) lines.push(`Risk : reward 1 : ${M.rr1.toFixed(1)}${M.rr2 !== null ? ' / ' + M.rr2.toFixed(1) : ''}`);
+  if (s.status !== 'live' && M.stamp) lines.push('', `${({tp:'Take profit hit', tp2:'Take profit 2 hit', sl:'Stop loss hit', be:'Closed at breakeven', closed:'Closed early'})[s.status]}${M.result !== null ? ': ' + plainR(M.result) : ''}`);
+  if (s.kind === 'aplus' && String(s.why || '').trim()) lines.push('', 'Why I took it: ' + String(s.why).trim());
+  lines.push('', s.kind === 'aplus' ? 'A+ setup · TCP — The Crypto Playbook' : 'Algorithmic signal · TCP Quant Terminal', 'Not financial advice. Trading is high risk. 18+');
+  return lines.join('\n');
+}
+function captionResults(res){
+  const R = resultsModel(res);
+  const head = `${String(res.title || '').trim() || 'This week'}${String(res.dates || '').trim() ? ' · ' + String(res.dates).trim() : ''}`;
+  if (!R.trades.length) return head + '\nNo trades logged yet.';
+  return [head,
+    `Net ${plainR(R.net)} · ${R.trades.length} trades · ${R.wins} wins · ${R.losses} losses${R.be ? ' · ' + R.be + ' breakeven' : ''} · win rate ${R.rate}%`,
+    '', 'Every trade shown, losses included.',
+    "Past results don't guarantee future results. Not financial advice. 18+"].join('\n');
+}
+
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
+const canvas = $('work'); const img = $('cardImg');
+const sigForm = $('signalForm'), resForm = $('resultsForm');
+const fields = ['instrument','order','entry','sl','tp','tp2','status','closedR','when','tz','ref','why'];
+
+function syncSignalForm(){
+  const s = state.signal;
+  fields.forEach(k => { const el = $(k); if (el && el.value !== String(s[k] ?? '')) el.value = s[k] ?? ''; });
+  sigForm.querySelectorAll('.seg[data-field]').forEach(seg => seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(s[seg.dataset.field] === b.dataset.value))));
+  $('closedWrap').hidden = s.status !== 'closed';
+  $('whyWrap').hidden = s.kind !== 'aplus';
+  $('whyCount').textContent = `${String(s.why || '').length} / 420`;
+  const M = signalModel(s); $('levelWarn').hidden = !M.warnings.length; $('levelWarn').textContent = M.warnings.join(' ');
+}
+function syncResultsForm(){
+  const r = state.results;
+  [['rTitle','title'],['rDates','dates'],['rLines','lines']].forEach(([id, k]) => { if ($(id).value !== String(r[k] ?? '')) $(id).value = r[k] ?? ''; });
+  const R = resultsModel(r);
+  const errs = $('rErrors'); errs.textContent = '';
+  R.errors.forEach(e => { const li = document.createElement('li'); li.append(`Line ${e.n} is missing ${e.missing.join(', ')}: `); const code = document.createElement('code'); code.textContent = e.line; li.append(code); errs.append(li); });
+  $('rSummary').textContent = R.trades.length
+    ? `${R.trades.length} trades · net ${fmtR(R.net)} · ${R.wins} wins · ${R.losses} losses · ${R.be} breakeven · win rate ${R.rate}%`
+    : 'No trades yet.';
+}
+function syncChrome(){
+  const cur = state.mode === 'signal' ? state.signal : state.results;
+  $('tabSignal').setAttribute('aria-pressed', String(state.mode === 'signal'));
+  $('tabResults').setAttribute('aria-pressed', String(state.mode === 'results'));
+  sigForm.hidden = state.mode !== 'signal'; resForm.hidden = state.mode !== 'results';
+  $('exampleNotice').hidden = !cur.example;
+  $('sizeSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.size === state.size)));
+  const [w, h] = SIZES[state.size]; $('dims').textContent = `${w} × ${h} PNG`;
+  $('captionText').textContent = state.mode === 'signal' ? captionSignal(state.signal) : captionResults(state.results);
+}
+
+let renderTimer = null, lastUrl = null, lastBlob = null, renderSeq = 0;
+function draw(){
+  const [W, H] = SIZES[state.size];
+  if (canvas.width !== W) canvas.width = W; if (canvas.height !== H) canvas.height = H;
+  const ctx = canvas.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.globalAlpha = 1;
+  if (state.mode === 'signal') drawSignal(ctx, W, H, state.signal, state.size); else drawResults(ctx, W, H, state.results, state.size);
+}
+function toBlob(){ return new Promise(res => canvas.toBlob(b => res(b), 'image/png')); }
+async function render(){
+  const seq = ++renderSeq; draw(); const blob = await toBlob(); if (!blob || seq !== renderSeq) return;
+  lastBlob = blob; const url = URL.createObjectURL(blob); const prev = lastUrl; lastUrl = url;
+  img.onload = () => { if (prev) URL.revokeObjectURL(prev); };
+  const [w, h] = SIZES[state.size]; img.width = w; img.height = h; img.src = url;
+  img.alt = state.mode === 'signal'
+    ? `Preview of the ${(state.signal.instrument || 'market').toUpperCase()} ${state.signal.side} signal card`
+    : `Preview of the ${state.results.title || 'weekly'} results card`;
+}
+function schedule(){ clearTimeout(renderTimer); renderTimer = setTimeout(render, 80); }
+function changed(){ syncChrome(); persist(); schedule(); }
+
+function edit(which, patch){ Object.assign(state[which], patch, {example:false}); if (which === 'signal') syncSignalForm(); else syncResultsForm(); changed(); }
+
+fields.forEach(k => { const el = $(k); if (!el) return; el.addEventListener('input', () => {
+  const patch = {[k]: k === 'instrument' ? el.value.toUpperCase() : el.value};
+  if (k === 'when') { const auto = refFor(state.signal.when); if (!state.signal.ref || state.signal.ref === auto) patch.ref = refFor(el.value); }
+  edit('signal', patch);
+}); });
+sigForm.querySelectorAll('.seg[data-field]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; edit('signal', {[seg.dataset.field]: b.dataset.value});
+}));
+[['rTitle','title'],['rDates','dates'],['rLines','lines']].forEach(([id, k]) => $(id).addEventListener('input', () => edit('results', {[k]: $(id).value})));
+
+let qSide = 'buy';
+$('qSide').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; qSide = b.dataset.value; $('qSide').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
+$('qAdd').addEventListener('click', () => {
+  const market = $('qMarket').value.trim().toUpperCase(); const r = num($('qR').value);
+  if (!market) { toast('Add the market first'); $('qMarket').focus(); return; }
+  if (r === null) { toast('Add the result in R, for example +2 or -1'); $('qR').focus(); return; }
+  const line = `${$('qDay').value} ${market} ${qSide.toUpperCase()} ${plainR(r).replace(/R$/, '')}`;
+  const cur = state.results.example ? '' : String(state.results.lines || '').replace(/\s+$/, '');
+  edit('results', {lines: cur ? cur + '\n' + line : line}); $('qR').value = ''; toast('Trade added');
+});
+$('qR').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('qAdd').click(); } });
+
+document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.mode = b.dataset.mode; changed(); });
+$('sizeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.size = b.dataset.size; changed(); });
+$('clearBtn').addEventListener('click', () => {
+  if (state.mode === 'signal') { state.signal = blankSignal(state.signal); syncSignalForm(); } else { state.results = blankResults(); syncResultsForm(); }
+  changed(); toast('Blank card ready');
+});
+$('exampleBtn').addEventListener('click', () => {
+  if (state.mode === 'signal') { state.signal = exampleSignal(); syncSignalForm(); } else { state.results = exampleResults(); syncResultsForm(); }
+  changed();
+});
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+
+/* ---------- copy caption ---------- */
+$('copyBtn').addEventListener('click', () => {
+  const text = $('captionText').textContent;
+  const fallback = () => { $('captionBox').open = true; const r = document.createRange(); r.selectNodeContents($('captionText')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Caption selected. Copy it from here.'); };
+  try { navigator.clipboard.writeText(text).then(() => toast('Caption copied'), fallback); } catch(e) { fallback(); }
+});
+
+/* ---------- save image ---------- */
+let downloads;
+const dlReady = (window.claude && typeof window.claude.use === 'function')
+  ? window.claude.use('downloads').catch(() => null)
+  : Promise.resolve(null);
+dlReady.then(d => { downloads = d; $('saveBtn').hidden = !d; $('saveHint').hidden = !!d; });
+function fileName(){
+  const d = new Date(); const stamp = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const slug = v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return state.mode === 'signal'
+    ? `tcp-${slug(state.signal.instrument) || 'signal'}-${state.signal.side}-${(state.signal.when || stamp).slice(0, 10)}-${state.size}.png`
+    : `tcp-results-${slug(state.results.title) || stamp}-${state.size}.png`;
+}
+$('saveBtn').addEventListener('click', async () => {
+  const d = downloads === undefined ? await dlReady : downloads;
+  if (!d) { $('saveBtn').hidden = true; $('saveHint').hidden = false; return; }
+  clearTimeout(renderTimer); draw(); const blob = await toBlob();
+  if (!blob) { toast("The image couldn't be made. Try again."); return; }
+  try {
+    const r = await d.save({filename: fileName(), data: blob});
+    if (r && r.status === 'saved') toast('Image saved');
+  } catch(e) {
+    const code = e && e.code;
+    if (code === 'declined') toast('Not saved');
+    else if (code === 'rate_limited') toast('A save is already waiting for you to confirm');
+    else { toast("Saving isn't available here"); $('saveHint').hidden = false; }
+  }
+});
+
+/* ---------- fonts, then first paint ---------- */
+const FONT_LOADS = ['800 100px "TCP Display"','400 30px Archivo','500 30px Archivo','italic 400 40px "Instrument Serif"','500 26px "JetBrains Mono"','600 26px "JetBrains Mono"'];
+function loadFonts(){ if (!document.fonts || !document.fonts.load) return; Promise.allSettled(FONT_LOADS.map(f => document.fonts.load(f))).then(schedule); }
+const gf = $('gfonts');
+if (gf.sheet) loadFonts(); else gf.addEventListener('load', loadFonts);
+if (document.fonts) { document.fonts.ready.then(schedule); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', schedule); }
+
+syncSignalForm(); syncResultsForm(); syncChrome(); render();
+})();
+</script>
