@@ -2,6 +2,23 @@
 
 Tagline: **Trade the playbook.**
 
+## The final two
+
+The Crown Candles crown (a crown with three candlesticks cut through it)
+over TCP, in two voices. Files are in `logo/final/`; `logo/final/overview.png`
+shows both side by side.
+
+| | Voice | TCP set in | Profile picture |
+|---|---|---|---|
+| 1 | Regal | Cinzel (Roman capitals) | `final/regal/profile-picture-1080.png` (+ `-royal`) |
+| 2 | Bold | The heavy geometric TCP wordmark | `final/bold/profile-picture-1080.png` (+ `-royal`) |
+
+Each voice folder has `stacked-*` (crown above TCP), `horizontal-*` (crown
+beside TCP, for banners), `inner-circle-*` (for the Telegram group) and
+`badge-*` (crown + TCP without the tagline). `-foil` files use the metallic
+gold; the flat files are for small sizes and print. `final/icon/` holds the
+crown on its own, including `profile-picture-crown-1080.png`.
+
 ## Logo concepts
 
 | | Concept | Idea | Profile picture |
@@ -70,12 +87,12 @@ transparent background and are the ones to upload to social apps.
 
 ## Rebuilding the logo files
 
-`source/build_logos.py` (round 1) and `source/build_logos_r2.py` (round 2)
-draw every logo from code; `source/render.js` turns the SVGs into PNGs. To
+`source/build_logos_final.py` (the final two), `source/build_logos_r2.py`
+(round 2) and `source/build_logos.py` (round 1) draw every logo from code; `source/render.js` turns the SVGs into PNGs. To
 change a colour or shape, edit the script and rebuild. This needs Python with
 `fonttools`, plus these Google Fonts saved in `source/fonts/`:
-`archivo-semiexp-600.ttf`, `archivo-700.ttf` and `instrument-serif.ttf`.
+`archivo-semiexp-600.ttf`, `archivo-700.ttf`, `instrument-serif.ttf` and `cinzel-700.ttf`.
 
 ```
-cd brand/source && python3 build_logos.py out && python3 build_logos_r2.py out2
+cd brand/source && python3 build_logos_final.py out_final
 ```
