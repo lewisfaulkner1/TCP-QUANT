@@ -3,7 +3,8 @@
 // Members open it from the bot. Telegram signs who they are (the Mini App's
 // initData, checked here with the bot token), and the Worker asks Telegram
 // whether they're in the Inner Circle (or the team group) before sending
-// any data. Nobody logs in and nothing is stored.
+// any data. Nobody logs in. The only thing stored is the Playbook (see
+// playbook.js): Lewis's setups and what became of them.
 //
 // Each market's answer carries the probability engine's inputs (see lib.js):
 // the hour-by-hour volatility profile from two months of hourly bars, the time
@@ -15,7 +16,9 @@
 //   INNER_CIRCLE_CHAT_ID   members of this group get in
 //   ADMIN_CHAT_ID          optional: the team group gets in too
 //   TWELVE_DATA_KEY        secret: a free twelvedata.com key, for gold prices
+//   DB, POSTER_IDS, PLAYBOOK_MODE, PLAYBOOK_THREAD_ID, PLAYBOOK_TAGS: the Playbook (playbook.js)
 import { MARKETS, toDays, snapshot, marketStatus, marketOpen, volProfile, marketState, calibrate, dayEnd } from './lib.js';
+import { createPlaybook } from './playbook.js';
 import { PAGE, FONTS } from './assets.js';
 
 const SIGN_IN_MAX_AGE = 24 * 3600; // Telegram's signature on a Mini App session
@@ -86,6 +89,17 @@ async function telegram(env, method, payload) {
   return data;
 }
 
+// The same with a file attached (a photo or a document), as multipart form data.
+async function telegramUpload(env, method, fields, field, blob, filename) {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+  form.append(field, blob, filename);
+  const res = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`, { method: 'POST', body: form });
+  const data = await res.json().catch(() => ({ ok: false, description: `HTTP ${res.status}` }));
+  if (!data.ok) console.error(`telegram ${method} failed: ${data.description}`);
+  return data;
+}
+
 const members = new Map(); // user id -> { role, until }
 // Coming-soon features a member can ask to hear about; the team group is told once.
 const FEATURES = { connect: 'account connection (MT5 or wallet)', copy: 'copy trading', ai: 'the AI features', alerts: 'price and odds alerts' };
@@ -139,14 +153,18 @@ async function getJson(url, headers = {}) {
 const utcSeconds = (s) => Date.UTC(+s.slice(0, 4), s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16), +s.slice(17, 19)) / 1000;
 
 // Twelve Data: [{ datetime: '2026-09-23 14:00:00', open, high, low, close }], newest first.
-async function twelveData(env, interval, size) {
-  const url = `https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=${interval}&outputsize=${size}&timezone=UTC&apikey=${encodeURIComponent(env.TWELVE_DATA_KEY)}`;
-  const data = await getJson(url);
+// One credit a request, however many bars. A window with no trading at all is empty, not an error.
+async function twelveSeries(env, params) {
+  const query = Object.entries({ symbol: 'XAU/USD', timezone: 'UTC', ...params, apikey: env.TWELVE_DATA_KEY })
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  const data = await getJson(`https://api.twelvedata.com/time_series?${query}`);
+  if (data.status === 'error' && /no data is available/i.test(data.message || '')) return [];
   if (data.status !== 'ok' || !Array.isArray(data.values)) throw new Error(`Twelve Data: ${data.message || 'no data'}`);
   return data.values
     .map((v) => ({ t: utcSeconds(v.datetime), o: +v.open, h: +v.high, l: +v.low, c: +v.close }))
     .sort((a, b) => a.t - b.t);
 }
+const twelveData = (env, interval, size) => twelveSeries(env, { interval, outputsize: String(size) });
 
 const tidy = (bars) => [...new Map(bars.map((b) => [b.t, b])).values()].sort((a, b) => a.t - b.t);
 const valid = (b) => Number.isInteger(b.t) && b.o > 0 && b.h > 0 && b.l > 0 && b.c > 0 && b.h >= b.l;
@@ -192,7 +210,7 @@ const FEEDS = {
     name: 'Binance (BTC/USDT)', max: 1000, paged: true,
     // [[open time in ms, open, high, low, close, ...]], from Binance's public market-data host.
     async page(step, limit, end) {
-      const interval = step === 900 ? '15m' : '1h';
+      const interval = { 60: '1m', 900: '15m', 3600: '1h' }[step];
       const rows = await getJson(`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}&endTime=${end * 1000}`);
       if (!Array.isArray(rows)) throw new Error('no data');
       return rows.map(([t, o, h, l, c]) => ({ t: Math.round(t / 1000), o: +o, h: +h, l: +l, c: +c }));
@@ -251,6 +269,32 @@ async function loadRecent(env, symbol, at) {
   return bitcoinBars(900, 200, at, 96);
 }
 
+// The Playbook's check: one-minute bars from `from` to `to`, or 15-minute bars when the gap
+// is too long for one request. Gold asks from an hour early, in case Twelve Data reads the
+// dates in another time zone. Bars from before `from` stay in: the walk through them skips
+// what it has seen, and the latest bar is the price for a tap on Close, even in the minute
+// the setup was logged.
+const stamp = (t) => isoTime(t).slice(0, 19).replace('T', ' ');
+async function minuteBars(env, symbol, from, to) {
+  if (symbol === 'XAUUSD') {
+    if (!env.TWELVE_DATA_KEY) throw new Error('no Twelve Data key');
+    const step = to - from <= 4800 * 60 ? 60 : 900;
+    const bars = await twelveSeries(env, {
+      interval: step === 60 ? '1min' : '15min', start_date: stamp(from - 3600), end_date: stamp(to), outputsize: '5000',
+    });
+    return { bars: goldBars(bars), step };
+  }
+  // Bitcoin: a day of minutes pages back through the exchanges; a feed that can't reach back
+  // that far (Kraken keeps 12 hours of minutes) means 15-minute bars for the whole gap.
+  for (const step of to - from <= 86400 ? [60, 900] : [900]) {
+    const count = Math.min(step === 60 ? 1500 : 1000, Math.ceil((to - from) / step) + 2);
+    const { bars } = await bitcoinBars(step, count, to, 1);
+    if (step === 60 && bars[0].t > from + 120) continue;
+    return { bars, step };
+  }
+  throw new Error('no bars');
+}
+
 async function loadMarket(env, symbol, at) {
   const market = MARKETS[symbol];
   const open = marketStatus(market, at).open;
@@ -297,11 +341,13 @@ const json = (body, status = 200) =>
 const SECURITY = {
   'content-security-policy':
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; " +
-    "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; " +
+    "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; " +
     "connect-src 'self' wss://ws-feed.exchange.coinbase.com wss://ws.bitstamp.net wss://ws.kraken.com wss://data-stream.binance.vision",
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
 };
+
+const playbook = createPlaybook({ telegram, upload: telegramUpload, loadMarket, minuteBars });
 
 async function api(request, env, path, url) {
   const initData = (request.headers.get('authorization') || '').replace(/^tma /, '');
@@ -311,6 +357,8 @@ async function api(request, env, path, url) {
   if (!role) return json({ error: 'not_member', message: 'The Quant Terminal is for TCP Inner Circle members.' }, 403);
 
   if (path === '/api/me') return json({ user: { id: user.id, first_name: user.first_name || '', username: user.username || '' }, role });
+
+  if (path === '/api/playbook' || path.startsWith('/api/playbook/')) return playbook.api(request, env, path, user, now());
 
   if (path === '/api/interest' && request.method === 'POST') {
     const body = await request.json().catch(() => null);
@@ -364,6 +412,10 @@ export default {
     }
     return new Response('Not found', { status: 404 });
   },
+  // The Cron Trigger (every 5 minutes): the Playbook's fills, targets and stops.
+  async scheduled(controller, env, ctx) {
+    ctx.waitUntil(playbook.scheduled(env, now()).catch((err) => console.error(`playbook check failed: ${err.message}`)));
+  },
 };
 
 // For tests: forget cached answers between cases.
@@ -372,4 +424,10 @@ export function resetCaches() {
   cache.clear();
   interested.clear();
   btcOrder = Object.keys(FEEDS);
+  playbook.reset();
+}
+
+// For tests: run the Playbook's check at a given moment.
+export function checkPlaybook(env, at) {
+  return playbook.scheduled(env, at);
 }

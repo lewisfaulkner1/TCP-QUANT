@@ -162,6 +162,47 @@
 
   <!-- =========================================================== Signals -->
   <section id="signals" hidden>
+    <div class="card pb-card" id="pbCard">
+      <div class="row spread"><h2 class="label">The Playbook</h2><span class="tag" id="pbTag">loading</span></div>
+      <p class="pb-lede">Lewis's setups, logged <b>before</b> the result, with his reasons. Each one is followed to the end automatically, and every result counts.</p>
+      <div id="pbBody">
+        <div class="pb-stats">
+          <div><span>Results</span><b id="pbResults">—</b></div>
+          <div><span>Won · lost</span><b id="pbWL">—</b></div>
+          <div><span>Average</span><b id="pbAvg">—</b></div>
+          <div><span>Total</span><b id="pbTotal">—</b></div>
+        </div>
+        <div class="pb-chart" id="pbChart">
+          <canvas id="pbCurve" role="img" aria-label="The average result after each setup closed, with the band the true average likely sits in"></canvas>
+          <div class="pb-tip" id="pbTip" hidden></div>
+        </div>
+        <div class="pb-legend" aria-hidden="true">
+          <span><i class="k-line"></i>Average, after costs</span>
+          <span><i class="k-band"></i>95% band</span>
+          <span><i class="k-won"></i>Won</span>
+          <span><i class="k-lost"></i>Lost</span>
+        </div>
+        <div class="pb-verdict" id="pbVerdict"></div>
+        <p class="pb-first" id="pbFirst"></p>
+        <p class="fine">Results in R after an assumed spread. With no edge, the average sits on zero; an edge shows when the whole band clears it, and that takes many results.</p>
+      </div>
+      <p class="pb-empty" id="pbEmpty" hidden></p>
+      <button class="pb-more" id="pbExport" type="button" hidden>SEND ME THE WHOLE RECORD</button>
+    </div>
+
+    <div id="pbActive"></div>
+
+    <div class="card" id="pbHistoryCard" hidden>
+      <div class="row spread"><h2 class="label">History</h2><span class="tag" id="pbCount"></span></div>
+      <div id="pbHistory"></div>
+    </div>
+
+    <div class="card" id="pbReadsCard" hidden>
+      <div class="row spread"><h2 class="label">Early reads</h2><span class="tag">not evidence</span></div>
+      <div id="pbReads"></div>
+      <p class="fine">Averages after costs for each reason, market and session with at least 5 results. With this many ways to slice a small record, some will look good by luck: treat them as questions, not answers.</p>
+    </div>
+
     <div class="card">
       <div class="row spread"><h2 class="label">From the algo to your account</h2><span class="tag">the plan</span></div>
       <div class="pipe">
@@ -226,7 +267,17 @@
         <button class="notify" type="button" data-feature="ai">Notify me</button>
       </div>
     </div>
+    <div class="card ai-memory" id="aiMemory">
+      <div class="row spread"><h2 class="label">What TCP AI will learn from</h2><span class="state testing">Building now</span></div>
+      <div class="mem-grid">
+        <div><b id="memSetups">0</b><span>setups logged</span></div>
+        <div><b id="memResults">0</b><span>results</span></div>
+        <div><b id="memReasons">0</b><span>reasons</span></div>
+      </div>
+      <p>Every Playbook setup is kept with Lewis's reasons, his chart, the engine's read of the market at that moment, and what happened next. That record is what TCP AI will learn from: which reasons and conditions hold up, and which don't.</p>
+    </div>
     <div class="card feature-list">
+      <div class="feature"><b>Snap to log</b><p>Send a screenshot of your chart and TCP AI reads the indicator's panel to fill in the setup: zone, fib, confirmations.</p><span class="state soon-tag">Soon</span></div>
       <div class="feature"><b>AI trade reviews</b><p>After every trade: what went to plan, what didn't, and what to change.</p><span class="state soon-tag">Soon</span></div>
       <div class="feature"><b>AI market briefings</b><p>A morning note on gold and Bitcoin in your Telegram before London opens.</p><span class="state soon-tag">Soon</span></div>
       <div class="feature"><b>Ask TCP AI</b><p>Ask about a level, a setup or your risk, and get answers built on the engine's numbers.</p><span class="state soon-tag">Soon</span></div>
@@ -263,6 +314,35 @@
     </div>
   </section>
 </main>
+
+<button class="pb-fab" id="pbNew" type="button" hidden>+ LOG A SETUP</button>
+
+<div class="sheet" id="pbSheet" role="dialog" aria-modal="true" aria-labelledby="pbSheetTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="pbSheetTitle">Log a setup</h2><button class="link" id="pbClose" type="button">Close</button></div>
+    <div class="field"><label>Market</label><div class="chips" id="pbSymbol"><button type="button" data-v="XAUUSD">Gold</button><button type="button" data-v="BTCUSD">Bitcoin</button></div></div>
+    <div class="field"><label>Direction</label><div class="chips" id="pbSide"><button type="button" data-v="buy">Buy</button><button type="button" data-v="sell">Sell</button></div></div>
+    <div class="field"><label>Order</label><div class="chips" id="pbKind"><button type="button" data-v="market">Market</button><button type="button" data-v="limit">Limit</button><button type="button" data-v="stop">Stop</button></div></div>
+    <div class="pb-prices">
+      <div class="field"><label for="pbEntry">Entry</label><input id="pbEntry" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="pbSl">Stop</label><input id="pbSl" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="pbTp">Target</label><input id="pbTp" inputmode="decimal" autocomplete="off"></div>
+    </div>
+    <div class="pb-plan" id="pbPlan">Enter the stop and the target.</div>
+    <div class="field" id="pbExpiryField" hidden><label>Waits for its price</label><div class="chips" id="pbExpiry"><button type="button" data-v="4">4 hours</button><button type="button" data-v="24">A day</button><button type="button" data-v="168">A week</button></div></div>
+    <div class="field"><label>Reasons</label><div class="tagpick" id="pbTags"></div>
+      <input id="pbTagNew" placeholder="Add your own reason" maxlength="24" autocomplete="off" enterkeyhint="done"></div>
+    <div class="field"><label for="pbNote">Why</label><textarea id="pbNote" rows="3" maxlength="400" placeholder="The reason for this trade, in a sentence or two. It goes out with the setup."></textarea></div>
+    <div class="field"><label>Chart</label>
+      <label class="pb-photo" id="pbPhotoLabel"><input type="file" id="pbPhoto" accept="image/*" hidden><span id="pbPhotoText">Add a screenshot of your chart</span><img id="pbPhotoPreview" alt="Your chart" hidden></label></div>
+    <div class="pb-error" id="pbError" role="alert" hidden></div>
+    <button class="cta pb-submit" id="pbSubmit" type="button">LOG AND POST</button>
+    <p class="fine" id="pbSubmitNote"></p>
+  </div>
+</div>
+
+<div class="viewer" id="pbViewer" hidden><img id="pbViewerImg" alt="The chart for this setup"><button class="link" id="pbViewerClose" type="button">Close</button></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <nav aria-label="Terminal">
   <button data-tab="markets" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 3v4M6 17v4M12 6v3M12 17v3M18 4v3M18 14v6"/><rect x="4" y="7" width="4" height="10" rx="1"/><rect x="10" y="9" width="4" height="8" rx="1"/><rect x="16" y="7" width="4" height="7" rx="1"/></svg>MARKETS</button>

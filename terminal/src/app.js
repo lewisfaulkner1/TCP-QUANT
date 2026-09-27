@@ -1061,6 +1061,10 @@ function heartbeat() {
     if (++beats % 15 === 0) renderCone(now);
     if (beats % 5 === 0) renderBriefing();
   }
+  if (!$('signals').hidden) {
+    pbLive();
+    if (now % 45 === 0) { pbLoad(true); pbPrices(); }
+  }
 }
 
 // ------------------------------------------------------------------- risk
@@ -1142,7 +1146,9 @@ function showTab(tab) {
     else b.removeAttribute('aria-current');
   }
   if (tab === 'markets') { levelOrder = ''; renderOdds(); resumeSwarm(); }
-  if (tab === 'ai') startOrb();
+  if (tab === 'ai') { startOrb(); pbLoad(); }
+  if (tab === 'signals') { pbRender(); pbLoad(); pbPrices(); }
+  pbFab();
   window.scrollTo(0, 0);
 }
 for (const b of document.querySelectorAll('nav button')) b.addEventListener('click', () => { haptic(); showTab(b.dataset.tab); });
@@ -1186,6 +1192,7 @@ async function start() {
     window.tcpDemo = { price: (p) => { demoWalk[state.symbol].price = p; onTick(state.symbol, p, Date.now() / 1000); } }; // for previews
   }
   $('gate').hidden = true;
+  pbInit();
   selectSymbol(state.symbol);
   selectRiskMarket(state.symbol);
   heartbeat();
