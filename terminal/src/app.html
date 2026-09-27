@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TCP Quant Terminal</title>
+<meta name="color-scheme" content="dark">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js" integrity="sha384-stKllnUqA9AD0gsKCuUtf5XlqAW7PwIgDagoNsTWkjkBmJ/GZ/uHTgEBxdLV2VSK" crossorigin="anonymous"></script>
+<style>
+@font-face{font-family:"Archivo";src:url(/fonts/archivo-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"TCP Display";src:url(/fonts/archivo-expanded-800.woff2) format("woff2");font-weight:800;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url(/fonts/jetbrains-mono-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url(/fonts/jetbrains-mono-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Instrument Serif";src:url(/fonts/instrument-serif-italic.woff2) format("woff2");font-style:italic;font-display:swap}
+:root{
+  --ink:#0E0D0B;--panel:#16140F;--panel-2:#1C1A15;--line:#2E2A22;--line-2:#3A3429;
+  --gold:#D8AD4E;--gold-soft:#E3C06D;--ivory:#F2ECDF;--stone:#A69D8C;--muted:#8A8274;
+  --royal:#8C7BD1;--up:#35A68C;--down:#E0613F;
+  --display:"TCP Display","Archivo",system-ui,sans-serif;--sans:"Archivo",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;--serif:"Instrument Serif",Georgia,serif;
+  --foil:linear-gradient(180deg,#F6E3A3 0%,#D8AD4E 42%,#B0812F 72%,#E3C06D 100%);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--ivory)}
+body{font:400 15px/1.45 var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 50% at 50% -12%,rgba(216,173,78,.13),transparent 62%),var(--ink);
+  padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button,input,select{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.mono{font-family:var(--mono)}
+.label{font:500 10.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--stone);white-space:nowrap}
+
+header{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
+header svg{width:30px;height:auto;flex:none}
+.brand{display:flex;flex-direction:column;gap:3px}
+.brand b{font:800 17px/1 var(--display);letter-spacing:.02em}
+.brand span{font:600 9.5px/1 var(--mono);letter-spacing:.26em;color:var(--gold)}
+.who{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--stone)}
+.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);
+  border:1px solid var(--line-2);font:600 12px/1 var(--mono);color:var(--gold)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 16px}
+.card h2{margin:0 0 12px}
+.card > .row:first-child{margin-bottom:12px}
+.card .row h2{margin:0}
+.row{display:flex;align-items:center;gap:10px}
+.spread{justify-content:space-between}
+
+.segment{display:flex;gap:8px;margin:10px 16px 0}
+.segment button{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 14px;border-radius:14px;
+  background:var(--panel);border:1px solid var(--line);cursor:pointer;text-align:left}
+.segment button b{font:600 14px/1 var(--mono);letter-spacing:.04em}
+.segment button span{font-size:12px;color:var(--stone)}
+.segment button[aria-pressed="true"]{border-color:var(--gold);background:var(--panel-2)}
+.segment button[aria-pressed="true"] b{color:var(--gold)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);
+  font:500 11.5px/1 var(--mono);color:var(--stone);white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.pill.open .dot{background:var(--up);box-shadow:0 0 0 3px rgba(53,166,140,.18)}
+.pill.open{color:var(--ivory)}
+
+.price{font:600 36px/1.05 var(--mono);letter-spacing:-.02em;margin:10px 0 6px}
+.change{font:500 13.5px/1.2 var(--mono)}
+.up{color:var(--up)}.down{color:var(--down)}
+.meta{font-size:12px;color:var(--muted);margin-top:8px}
+.warn{color:var(--gold-soft)}
+
+#chart{height:280px;margin:0 -6px;position:relative}
+.chart-note{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:20px}
+.keys{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font:500 10.5px/1 var(--mono);color:var(--stone)}
+.keys i{display:inline-block;width:14px;height:0;border-top:2px dashed;vertical-align:middle;margin-right:5px}
+
+.gauge{position:relative;height:10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);margin:14px 0 8px;overflow:visible}
+.gauge .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--foil)}
+.gauge .avg{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ivory);opacity:.7}
+.gauge-scale{position:relative;height:12px;font:500 10px/1 var(--mono);color:var(--muted)}
+.gauge-scale span{position:absolute;top:0}
+.gauge-scale span:nth-child(2){left:66.6%;transform:translateX(-50%)}
+.gauge-scale span:last-child{right:0}
+.big{font:600 26px/1.1 var(--mono)}
+.sub{color:var(--stone);font-size:13.5px}
+
+.sessions{display:grid;gap:8px}
+.session{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line)}
+.session .code{font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--stone)}
+.session.open{border-color:rgba(53,166,140,.45)}
+.session.open .code{color:var(--up)}
+.session b{font-weight:600;font-size:14px}
+.session small{display:block;color:var(--stone);font-size:12px;margin-top:2px}
+.session time{font:500 12px/1 var(--mono);color:var(--muted)}
+.overlap{margin-top:10px;font-size:12.5px;color:var(--gold-soft)}
+
+.levels{display:grid}
+.level{display:grid;grid-template-columns:1fr auto 78px;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--line)}
+.level:last-child{border-bottom:0}
+.level span{font-size:13.5px}
+.level b{font:600 13.5px/1 var(--mono)}
+.level em{font:500 12px/1 var(--mono);font-style:normal;color:var(--muted);text-align:right}
+.level.now{border:1px solid rgba(216,173,78,.5);border-radius:10px;padding:9px 10px;margin:4px -8px;background:rgba(216,173,78,.07)}
+.level.now span,.level.now b{color:var(--gold)}
+
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--stone)}
+.inputs{display:flex;gap:8px}
+input,select{width:100%;min-width:0;background:var(--panel-2);border:1px solid var(--line-2);border-radius:12px;padding:12px 12px;
+  font:500 16px/1.2 var(--mono);outline:none}
+select{appearance:none;-webkit-appearance:none;width:auto;min-width:96px;flex:none;padding-right:34px;background-image:linear-gradient(45deg,transparent 50%,var(--stone) 50%),linear-gradient(135deg,var(--stone) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+input:focus,select:focus{border-color:var(--gold)}
+.chips{display:flex;gap:6px}
+.chips button{padding:8px 12px;border-radius:999px;border:1px solid var(--line-2);background:transparent;font:500 13px/1 var(--mono);cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.hint{font-size:12px;color:var(--muted)}
+.link{background:none;border:0;padding:0;color:var(--gold);font-size:12.5px;cursor:pointer}
+.result{text-align:center;padding:22px 16px}
+.lots{font:800 46px/1 var(--display);background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent;margin:8px 0 4px}
+.facts{display:grid;gap:8px;margin-top:16px;text-align:left}
+.facts div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--stone)}
+.facts b{font:600 13.5px/1.3 var(--mono);color:var(--ivory)}
+#targets{width:100%;border-collapse:collapse;margin-top:14px;font:500 13px/1 var(--mono)}
+#targets th{font:500 10px/1 var(--mono);letter-spacing:.16em;color:var(--muted);text-align:left;padding:0 0 8px}
+#targets td{padding:9px 0;border-top:1px solid var(--line);text-align:left}
+#targets td:last-child,#targets th:last-child{text-align:right}
+.note{font-size:12px;color:var(--muted);margin:14px 16px 0;text-align:center}
+
+.soon h2{font:800 20px/1.15 var(--display);margin:6px 0 8px}
+.soon p{color:var(--stone);margin:0 0 12px}
+.soon ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.soon li{display:flex;gap:10px;align-items:baseline;font-size:14px}
+.soon li:before{content:"";width:6px;height:6px;border-radius:2px;background:var(--gold);transform:translateY(-2px);flex:none}
+.serif{font:italic 400 19px/1.2 var(--serif);color:var(--gold-soft)}
+
+nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(14,13,11,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+nav button{display:grid;justify-items:center;gap:4px;padding:6px 0;background:none;border:0;color:var(--muted);font:500 10.5px/1 var(--mono);letter-spacing:.08em;cursor:pointer}
+nav svg{width:22px;height:22px}
+nav button[aria-current="page"]{color:var(--gold)}
+
+.gate{position:fixed;inset:0;display:grid;place-items:center;padding:32px;text-align:center;background:var(--ink);z-index:5}
+.gate svg{width:64px;margin-bottom:18px}
+.gate h1{font:800 22px/1.15 var(--display);margin:0 0 10px}
+.gate p{color:var(--stone);margin:0 0 20px}
+.cta{display:inline-block;padding:13px 20px;border-radius:14px;background:var(--foil);color:var(--ink);font:600 14px/1 var(--mono);letter-spacing:.06em;text-decoration:none;border:0;cursor:pointer}
+.skeleton{border-radius:8px;background:linear-gradient(90deg,var(--panel-2),#24211A,var(--panel-2));background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
+</style>
+</head>
+<body>
+<template id="crown"><svg viewBox="-19.2 -19.53 238.4 194.2" aria-hidden="true"><defs><linearGradient id="foil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E3A3"/><stop offset="0.42" stop-color="#D8AD4E"/><stop offset="0.72" stop-color="#B0812F"/><stop offset="1" stop-color="#E3C06D"/></linearGradient></defs><path fill="url(#foil)" fill-rule="evenodd" d="M16 130L0 36.67L60 76.67L100 10L140 76.67L200 36.67L184 130ZM16 141.67H184V166.67H16ZM40 73.33H46V85H53V116.67H46V123.33H40V116.67H33V85H40ZM97 40H103V55H110V110H103V123.33H97V110H90V55H97ZM154 73.33H160V85H167V116.67H160V123.33H154V116.67H147V85H154Z"/><circle cx="0" cy="28.33" r="11.2" fill="url(#foil)"/><circle cx="100" cy="1.67" r="13.2" fill="url(#foil)"/><circle cx="200" cy="28.33" r="11.2" fill="url(#foil)"/></svg></template>
+
+<header>
+  <span data-crown></span>
+  <div class="brand"><b>TCP</b><span>QUANT TERMINAL</span></div>
+  <div class="who" id="who" hidden><span id="whoName"></span><span class="avatar" id="whoInitial"></span></div>
+</header>
+
+<main>
+  <!-- ============================================================ Markets -->
+  <section id="markets">
+    <div class="segment" role="group" aria-label="Market">
+      <button data-symbol="XAUUSD" aria-pressed="true"><b>XAUUSD</b><span>Gold</span></button>
+      <button data-symbol="BTCUSD" aria-pressed="false"><b>BTCUSD</b><span>Bitcoin</span></button>
+    </div>
+
+    <div class="card" id="quote">
+      <div class="row spread"><span class="label" id="quoteName">Gold · spot</span><span class="pill" id="status"><span class="dot"></span><span></span></span></div>
+      <div class="price" id="price"><span class="skeleton" style="display:inline-block;width:180px;height:34px"></span></div>
+      <div class="change" id="change">&nbsp;</div>
+      <div class="meta" id="updated">&nbsp;</div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Chart · 15 min</h2><span class="label" id="tzLabel"></span></div>
+      <div id="chart"><div class="chart-note" id="chartNote">Loading the chart…</div></div>
+      <div class="keys">
+        <span><i style="color:var(--gold)"></i>Previous day</span>
+        <span><i style="color:var(--gold-soft);border-top-style:solid"></i>Previous week</span>
+        <span><i style="color:var(--ivory);border-top-style:dotted"></i>Day open</span>
+        <span><i style="color:var(--royal)"></i>Asia range</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="label">Volatility today</h2>
+      <div class="row spread" style="align-items:flex-end">
+        <div><div class="big" id="range">—</div><div class="sub">moved today</div></div>
+        <div style="text-align:right"><div class="big" id="rangePct">—</div><div class="sub">of an average day</div></div>
+      </div>
+      <div class="gauge" aria-hidden="true"><div class="fill" id="gaugeFill" style="width:0"></div><div class="avg" style="left:66.6%"></div></div>
+      <div class="gauge-scale"><span>0%</span><span>100%</span><span>150%</span></div>
+      <div class="meta" id="atrLine">&nbsp;</div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Sessions</h2><span class="label" id="localTime"></span></div>
+      <div class="sessions" id="sessions"></div>
+      <div class="overlap" id="overlap" hidden></div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Key levels</h2><span class="label">distance</span></div>
+      <div class="levels" id="levels"><div class="skeleton" style="height:120px"></div></div>
+      <div class="meta">Previous day and week, today's opens, session highs and lows, and round numbers. The algo's zones join here once it passes its forward test.</div>
+    </div>
+  </section>
+
+  <!-- ============================================================== Risk -->
+  <section id="risk" hidden>
+    <div class="card">
+      <h2 class="label">Position size</h2>
+      <div class="field">
+        <label for="balance">Account balance</label>
+        <div class="inputs"><input id="balance" inputmode="decimal" placeholder="10000" autocomplete="off"><select id="currency" aria-label="Account currency"><option>USD</option><option>GBP</option><option>EUR</option></select></div>
+        <div class="hint" id="fxHint" hidden></div>
+      </div>
+      <div class="field">
+        <label for="riskPct">Risk per trade (%)</label>
+        <div class="inputs"><input id="riskPct" inputmode="decimal" value="1" autocomplete="off">
+          <div class="chips" id="riskChips"><button data-risk="0.5">0.5</button><button data-risk="1">1</button><button data-risk="2">2</button></div></div>
+      </div>
+      <div class="field">
+        <label>Market</label>
+        <div class="chips" id="riskMarket"><button data-symbol="XAUUSD">XAUUSD</button><button data-symbol="BTCUSD">BTCUSD</button></div>
+      </div>
+      <div class="field">
+        <div class="row spread"><label for="entry">Entry</label><button class="link" id="useLive" type="button">Use live price</button></div>
+        <input id="entry" inputmode="decimal" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="stop">Stop loss</label>
+        <input id="stop" inputmode="decimal" autocomplete="off" placeholder="Your stop price">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="contract">Contract size (per 1.00 lot)</label>
+        <input id="contract" inputmode="decimal" autocomplete="off">
+        <div class="hint">Gold is usually 100 oz and Bitcoin 1 BTC. Check yours in MT5: tap the symbol, then Specification.</div>
+      </div>
+    </div>
+
+    <div class="card result" id="result">
+      <div class="label">Lot size</div>
+      <div class="lots" id="lots">—</div>
+      <div class="sub" id="lotsLine">Enter your balance and stop loss.</div>
+      <div class="facts" id="facts" hidden></div>
+      <table id="targets" hidden><thead><tr><th>TARGET</th><th>PRICE</th><th>PROFIT</th></tr></thead><tbody></tbody></table>
+    </div>
+    <p class="note">A calculator, not advice. Check the numbers in MT5 before you place a trade.</p>
+  </section>
+
+  <!-- =========================================================== Signals -->
+  <section id="signals" hidden>
+    <div class="card soon">
+      <span class="pill"><span class="dot" style="background:var(--gold)"></span>In testing</span>
+      <h2>Algo signals</h2>
+      <p>The TCP algorithm is in its forward test. Once it passes, its entries, exits and zones appear here and in the Inner Circle, with every result posted in full.</p>
+      <ul><li>Entry, stop and targets, sized for your account</li><li>Live updates as trades move</li><li>A running record of every signal, wins and losses</li></ul>
+    </div>
+    <p class="note serif">Proven first. Then live.</p>
+  </section>
+
+  <!-- ========================================================= My stats -->
+  <section id="stats" hidden>
+    <div class="card soon">
+      <span class="pill"><span class="dot" style="background:var(--gold)"></span>Coming next</span>
+      <h2>Your trading, measured</h2>
+      <p>Connect your MT5 account to see how you really trade, and get a plain-English AI report on what to keep and what to cut.</p>
+      <ul><li>Profit factor, win rate and average R</li><li>Drawdown and your equity curve</li><li>Your best and worst sessions, days and markets</li><li>Weekly AI reports on your trading</li></ul>
+    </div>
+  </section>
+</main>
+
+<nav aria-label="Terminal">
+  <button data-tab="markets" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 3v4M6 17v4M12 6v3M12 17v3M18 4v3M18 14v6"/><rect x="4" y="7" width="4" height="10" rx="1"/><rect x="10" y="9" width="4" height="8" rx="1"/><rect x="16" y="7" width="4" height="7" rx="1"/></svg>MARKETS</button>
+  <button data-tab="risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>RISK</button>
+  <button data-tab="signals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>SIGNALS</button>
+  <button data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 20h16M7 16v-4M12 16V8M17 16v-7"/></svg>MY STATS</button>
+</nav>
+
+<div class="gate" id="gate">
+  <div>
+    <span data-crown></span>
+    <h1 id="gateTitle">Checking your membership…</h1>
+    <p id="gateText">One moment.</p>
+    <a class="cta" id="gateCta" hidden></a>
+  </div>
+</div>
+
+<script type="module">
+/*LIB*/
+
+// ------------------------------------------------------------------ setup
+const BOT = 'TCPInnerCircleBot';
+const tg = window.Telegram && window.Telegram.WebApp;
+const demo = new URLSearchParams(location.search).has('demo');
+const $ = (id) => document.getElementById(id);
+const store = {
+  get: (k) => { try { return localStorage.getItem('tcp.' + k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem('tcp.' + k, v); } catch {} },
+};
+for (const el of document.querySelectorAll('[data-crown]')) el.replaceWith($('crown').content.cloneNode(true));
+if (tg) {
+  tg.ready();
+  tg.expand();
+  try { tg.setHeaderColor('#0E0D0B'); tg.setBackgroundColor('#0E0D0B'); tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch {}
+}
+const haptic = () => { try { tg && tg.HapticFeedback.selectionChanged(); } catch {} };
+const clock = () => Math.floor(Date.now() / 1000);
+const money = (v, ccy) => (ccy === 'GBP' ? '£' : ccy === 'EUR' ? '€' : '$') + fmtNum(v, 2);
+const signed = (v, d) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmtNum(Math.abs(v), d);
+const ago = (t) => { const s = clock() - t; return s < 90 ? 'just now' : `${fmtDuration(s)} ago`; };
+
+// --------------------------------------------------------------- the data
+async function call(path) {
+  const res = await fetch(path, { headers: { authorization: 'tma ' + (tg ? tg.initData : '') } });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(body.message || 'Something went wrong'), { code: body.error, status: res.status });
+  return body;
+}
+
+// Demo mode (?demo): made-up prices run through the same maths, for previews. No member data.
+function demoMarket(symbol) {
+  const m = MARKETS[symbol];
+  let seed = symbol === 'XAUUSD' ? 7 : 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) - 0.5;
+  const now = clock();
+  const start = now - 24 * 86400;
+  const base = symbol === 'XAUUSD' ? 3712 : 64250;
+  const step = symbol === 'XAUUSD' ? 1.6 : 95;
+  const bars = [];
+  let price = base;
+  for (let t = start - (start % 900); t < now; t += 900) {
+    if (symbol === 'XAUUSD' && !marketStatus(m, t).open) continue;
+    const o = price;
+    const c = o + rnd() * step * 2 + Math.sin(t / 43200) * step * 0.18;
+    bars.push({ t, o, h: Math.max(o, c) + Math.abs(rnd()) * step, l: Math.min(o, c) - Math.abs(rnd()) * step, c });
+    price = c;
+  }
+  const days = symbol === 'XAUUSD' ? toDays(bars, m) : groupBars(bars, (b) => dayKey(b.t, m));
+  return { ...snapshot(m, days, bars, now), bars: bars.slice(-192).map((b) => [b.t, b.o, b.h, b.l, b.c]),
+    source: 'demo data', updated: now - 60, stale: false, fx: { USD: 1, GBP: 1.34, EUR: 1.17 } };
+}
+
+// ---------------------------------------------------------------- markets
+const state = { symbol: store.get('symbol') === 'BTCUSD' ? 'BTCUSD' : 'XAUUSD', data: {}, fx: null };
+let chart = null;
+let series = null;
+let lines = [];
+
+function renderStatus() {
+  const m = MARKETS[state.symbol];
+  const s = marketStatus(m, clock());
+  const pill = $('status');
+  pill.classList.toggle('open', s.open);
+  pill.lastElementChild.textContent = m.day === 'utc' ? 'Open 24/7'
+    : s.open ? `Open · ${s.weekendClose ? 'weekend' : 'break'} in ${fmtDuration(s.closesAt - clock())}`
+    : `${s.reason === 'weekend' ? 'Weekend' : 'Break'} · opens in ${fmtDuration(s.opensAt - clock())}`;
+}
+
+function renderSessions() {
+  const now = clock();
+  const list = sessionClock(now);
+  const codes = { sydney: 'SYD', tokyo: 'TKY', london: 'LDN', newyork: 'NY' };
+  $('sessions').innerHTML = list.map((s) => `
+    <div class="session${s.open ? ' open' : ''}">
+      <span class="code">${codes[s.id]}</span>
+      <div><b>${s.name}</b><small>${s.open ? `Open · closes in ${fmtDuration(s.closesIn)}` : s.opensIn != null ? `Opens in ${fmtDuration(s.opensIn)}` : 'Closed'}</small></div>
+      <time>${new Date((s.open ? s.until : s.at) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+    </div>`).join('');
+  const open = list.filter((s) => s.open).map((s) => s.name);
+  $('overlap').hidden = open.length < 2;
+  $('overlap').textContent = open.length > 1 ? `${open.join(' and ')} overlap: usually the busiest hours.` : '';
+  $('localTime').textContent = new Date(now * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' your time';
+  renderStatus();
+}
+
+function ensureChart() {
+  if (chart || !window.LightweightCharts) return !!chart;
+  $('chartNote').remove();
+  chart = LightweightCharts.createChart($('chart'), {
+    autoSize: true,
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#A69D8C', fontFamily: 'JetBrains Mono', fontSize: 10 },
+    grid: { vertLines: { color: 'rgba(58,52,41,.35)' }, horzLines: { color: 'rgba(58,52,41,.35)' } },
+    rightPriceScale: { borderColor: '#2E2A22', scaleMargins: { top: 0.12, bottom: 0.08 } },
+    timeScale: { borderColor: '#2E2A22', timeVisible: true, secondsVisible: false, rightOffset: 4 },
+    crosshair: { mode: 1, vertLine: { color: '#6B6352', labelBackgroundColor: '#3A3429' }, horzLine: { color: '#6B6352', labelBackgroundColor: '#3A3429' } },
+  });
+  series = chart.addCandlestickSeries({ upColor: '#35A68C', downColor: '#E0613F', borderVisible: false, wickUpColor: '#35A68C', wickDownColor: '#E0613F' });
+  return true;
+}
+
+const LINE_STYLE = {
+  pdh: ['PDH', '#D8AD4E', 2], pdl: ['PDL', '#D8AD4E', 2], pwh: ['PWH', '#E3C06D', 0], pwl: ['PWL', '#E3C06D', 0],
+  do: ['Open', 'rgba(242,236,223,.7)', 1], tokyo_h: ['Asia H', '#8C7BD1', 2], tokyo_l: ['Asia L', '#8C7BD1', 2],
+};
+
+function renderChart(d) {
+  if (!ensureChart()) {
+    if (!window.LightweightCharts) $('chartNote').textContent = "The chart couldn't load. Levels and prices below are live.";
+    return;
+  }
+  const offset = -new Date().getTimezoneOffset() * 60; // show bars in the member's local time
+  const precision = d.digits;
+  series.applyOptions({ priceFormat: { type: 'price', precision, minMove: 1 / 10 ** precision } });
+  series.setData(d.bars.map(([t, o, h, l, c]) => ({ time: t + offset, open: o, high: h, low: l, close: c })));
+  for (const l of lines) series.removePriceLine(l);
+  lines = d.levels.filter((l) => LINE_STYLE[l.id]).map((l) => {
+    const [title, color, lineStyle] = LINE_STYLE[l.id];
+    return series.createPriceLine({ price: l.price, color, lineWidth: 1, lineStyle, axisLabelVisible: true, title });
+  });
+  chart.timeScale().fitContent();
+}
+
+function renderMarket() {
+  const d = state.data[state.symbol];
+  const m = MARKETS[state.symbol];
+  $('quoteName').textContent = `${m.name} · ${state.symbol === 'XAUUSD' ? 'spot' : 'BTC-USD'}`;
+  renderStatus();
+  if (!d || d.error) {
+    const message = d ? d.message : 'Loading…';
+    $('price').textContent = '—';
+    $('change').textContent = '';
+    $('updated').innerHTML = `<span class="warn">${message}</span>`;
+    if ($('chartNote')) $('chartNote').textContent = message;
+    if (series) series.setData([]);
+    $('levels').innerHTML = `<div class="meta">${message}</div>`;
+    for (const id of ['range', 'rangePct']) $(id).textContent = '—';
+    $('gaugeFill').style.width = '0';
+    $('atrLine').textContent = '';
+    return;
+  }
+  const digits = d.digits;
+  $('price').textContent = fmtNum(d.price, digits);
+  const ch = $('change');
+  ch.className = 'change ' + (d.change > 0 ? 'up' : d.change < 0 ? 'down' : '');
+  ch.textContent = d.change == null ? 'No trading yet today' : `${signed(d.change, digits)} (${signed(d.changePct, 2)}%) today`;
+  $('updated').innerHTML = (d.stale ? '<span class="warn">Showing the last prices we had · </span>' : '') + `Updated ${ago(d.updated)} · ${d.source}`;
+
+  $('range').textContent = d.todayRange ? fmtNum(d.todayRange, digits) : '—';
+  $('rangePct').textContent = d.rangePct != null && d.todayRange ? `${Math.round(d.rangePct)}%` : '—';
+  $('gaugeFill').style.width = `${Math.min(100, ((d.rangePct || 0) / 150) * 100)}%`;
+  $('atrLine').textContent = d.atr ? `An average day (ATR 14) moves ${fmtNum(d.atr, digits)}.` + (d.rangePct > 100 ? ' Today is already bigger than usual.' : '') : '';
+
+  const rows = d.levels.map((l) => ({ ...l, dist: l.price - d.price }));
+  const at = rows.findIndex((l) => l.price < d.price);
+  rows.splice(at < 0 ? rows.length : at, 0, { now: true, name: 'Price now', price: d.price });
+  $('levels').innerHTML = rows.map((l) => l.now
+    ? `<div class="level now"><span>${l.name}</span><b>${fmtNum(l.price, digits)}</b><em>—</em></div>`
+    : `<div class="level"><span>${l.name}</span><b>${fmtNum(l.price, digits)}</b><em>${signed(l.dist, digits)}</em></div>`).join('');
+  renderChart(d);
+  if (!$('entry').value || $('entry').dataset.live === '1') setLiveEntry();
+}
+
+const inflight = {};
+function loadMarket(symbol) {
+  inflight[symbol] ||= (async () => {
+    try {
+      const d = demo ? demoMarket(symbol) : await call(`/api/markets?symbol=${symbol}`);
+      state.data[symbol] = d;
+      if (d.fx) state.fx = d.fx;
+    } catch (err) {
+      if (!state.data[symbol] || state.data[symbol].error) state.data[symbol] = { error: err.code || 'failed', message: err.message };
+    } finally {
+      delete inflight[symbol];
+    }
+    if (symbol === state.symbol) renderMarket();
+    renderRisk();
+  })();
+  return inflight[symbol];
+}
+
+function selectSymbol(symbol) {
+  state.symbol = symbol;
+  store.set('symbol', symbol);
+  for (const b of document.querySelectorAll('.segment button')) b.setAttribute('aria-pressed', String(b.dataset.symbol === symbol));
+  renderMarket();
+  loadMarket(symbol);
+}
+for (const b of document.querySelectorAll('.segment button')) b.addEventListener('click', () => { haptic(); selectSymbol(b.dataset.symbol); });
+
+// ------------------------------------------------------------------- risk
+const risk = { symbol: state.symbol };
+const num = (id) => parseFloat(String($(id).value).replace(/,/g, ''));
+$('balance').value = store.get('balance') || '';
+$('currency').value = store.get('currency') || 'USD';
+$('riskPct').value = store.get('riskPct') || '1';
+
+function setLiveEntry() {
+  const d = state.data[risk.symbol];
+  if (d && Number.isFinite(d.price)) { $('entry').value = d.price.toFixed(d.digits); $('entry').dataset.live = '1'; }
+}
+function selectRiskMarket(symbol) {
+  risk.symbol = symbol;
+  for (const b of document.querySelectorAll('#riskMarket button')) b.setAttribute('aria-pressed', String(b.dataset.symbol === symbol));
+  $('contract').value = store.get('contract.' + symbol) || String(MARKETS[symbol].contract);
+  $('stop').value = '';
+  setLiveEntry();
+  if (!state.data[symbol]) loadMarket(symbol);
+  renderRisk();
+}
+
+function renderRisk() {
+  const ccy = $('currency').value;
+  const usdPerUnit = state.fx ? state.fx[ccy] : ccy === 'USD' ? 1 : null;
+  $('fxHint').hidden = ccy === 'USD';
+  $('fxHint').textContent = usdPerUnit ? `1 ${ccy} = ${fmtNum(usdPerUnit, 4)} USD (ECB rate)` : `The ${ccy} exchange rate isn't available right now, so use your USD balance.`;
+  for (const b of document.querySelectorAll('#riskChips button')) b.setAttribute('aria-pressed', String(parseFloat(b.dataset.risk) === num('riskPct')));
+  const d = state.data[risk.symbol];
+  const digits = d && d.digits != null ? d.digits : MARKETS[risk.symbol].digits;
+  const r = usdPerUnit && lotSize({ balance: num('balance'), riskPct: num('riskPct'), entry: num('entry'), stop: num('stop'), contract: num('contract'), usdPerUnit });
+  const show = !!r;
+  $('facts').hidden = !show;
+  $('targets').hidden = !show || r.tooSmall;
+  if (!show) {
+    $('lots').textContent = '—';
+    $('lotsLine').textContent = !usdPerUnit ? 'Switch the account to USD for now.' : 'Enter your balance, entry and stop loss.';
+    return;
+  }
+  $('lots').textContent = r.tooSmall ? '0.00' : fmtNum(r.lots, 2);
+  $('lotsLine').innerHTML = r.tooSmall
+    ? '<span class="warn">Below the 0.01 minimum: this stop is too wide for this risk.</span>'
+    : `${r.side === 'long' ? 'Buy' : 'Sell'} ${risk.symbol}, risking ${money(r.actualRisk, ccy)}`;
+  $('facts').innerHTML = [
+    ['Risk budget', `${money(r.riskMoney, ccy)} (${fmtNum(num('riskPct'), 2)}%)`],
+    ['Stop distance', fmtNum(r.distance, digits)],
+    ['Each $1 price move', money(r.perPoint, ccy)],
+    ['Loss per 1.00 lot at stop', money(r.riskPerLot, ccy)],
+  ].map(([k, v]) => `<div>${k}<b>${v}</b></div>`).join('');
+  $('targets').tBodies[0].innerHTML = r.targets.map((t) => `<tr><td>${t.r}R</td><td>${fmtNum(t.price, digits)}</td><td class="up">+${money(t.profit, ccy)}</td></tr>`).join('');
+}
+
+for (const id of ['balance', 'currency', 'riskPct', 'entry', 'stop', 'contract']) {
+  $(id).addEventListener('input', () => {
+    if (id === 'entry') $('entry').dataset.live = '0';
+    if (['balance', 'currency', 'riskPct'].includes(id)) store.set(id, $(id).value);
+    if (id === 'contract') store.set('contract.' + risk.symbol, $(id).value);
+    renderRisk();
+  });
+}
+$('currency').addEventListener('change', renderRisk);
+for (const b of document.querySelectorAll('#riskChips button')) b.addEventListener('click', () => { $('riskPct').value = b.dataset.risk; store.set('riskPct', b.dataset.risk); haptic(); renderRisk(); });
+for (const b of document.querySelectorAll('#riskMarket button')) b.addEventListener('click', () => { haptic(); selectRiskMarket(b.dataset.symbol); });
+$('useLive').addEventListener('click', () => { setLiveEntry(); renderRisk(); });
+
+// ------------------------------------------------------------------- tabs
+function showTab(tab) {
+  for (const s of document.querySelectorAll('main > section')) s.hidden = s.id !== tab;
+  for (const b of document.querySelectorAll('nav button')) {
+    if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  }
+  if (tab === 'markets' && chart) chart.timeScale().fitContent();
+  window.scrollTo(0, 0);
+}
+for (const b of document.querySelectorAll('nav button')) b.addEventListener('click', () => { haptic(); showTab(b.dataset.tab); });
+
+// ------------------------------------------------------------ sign-in gate
+function gate(title, text, cta) {
+  $('gateTitle').textContent = title;
+  $('gateText').textContent = text;
+  const a = $('gateCta');
+  a.hidden = !cta;
+  if (cta) {
+    a.textContent = cta.label;
+    a.href = cta.href;
+    a.onclick = (e) => { if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(cta.href); } };
+  }
+}
+
+async function start() {
+  $('tzLabel').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g, ' ');
+  if (!demo) {
+    if (!tg || !tg.initData) {
+      return gate('Open the terminal from Telegram', 'The TCP Quant Terminal opens inside Telegram, for Inner Circle members.', { label: 'OPEN IN TELEGRAM', href: `https://t.me/${BOT}` });
+    }
+    try {
+      const me = await call('/api/me');
+      $('whoName').textContent = me.user.first_name;
+      $('whoInitial').textContent = (me.user.first_name || '?').slice(0, 1).toUpperCase();
+      $('who').hidden = false;
+    } catch (err) {
+      if (err.code === 'not_member') {
+        return gate('Members only', 'The Quant Terminal is part of the TCP Inner Circle. Join, and it unlocks here.', { label: 'JOIN THE INNER CIRCLE', href: `https://t.me/${BOT}?start=terminal` });
+      }
+      return gate("Couldn't sign you in", 'Close the terminal and open it again from the bot.', null);
+    }
+  }
+  if (demo) {
+    $('whoName').textContent = 'Demo';
+    $('whoInitial').textContent = 'D';
+    $('who').hidden = false;
+  }
+  $('gate').hidden = true;
+  selectSymbol(state.symbol);
+  selectRiskMarket(state.symbol);
+  renderSessions();
+  setInterval(renderSessions, 30e3);
+  setInterval(() => document.visibilityState === 'visible' && loadMarket(state.symbol), 60e3);
+}
+start();
+</script>
+</body>
+</html>
