@@ -75,7 +75,7 @@ test('18+ yes: qualifies, explains, asks about the broker, and posts a lead card
   assert.match(toUser[0].text, /you qualified/);
   assert.match(toUser[1].text, /partner of both and may earn a commission/);
   assert.match(toUser[1].text, /high risk of losing money/);
-  assert.deepEqual(buttonsOf(toUser[2]).map((b) => b.callback_data), ['brk:pu', 'brk:va', 'brk:none']);
+  assert.deepEqual(buttonsOf(toUser[2]).map((b) => b.callback_data), ['brk:pu:ig', 'brk:va:ig', 'brk:none:ig']);
   const [card] = sent(-1001).map((c) => c.payload);
   assert.equal(card.parse_mode, 'HTML');
   for (const bit of ['New lead', 'Sam Lee · @samlee', 'Source: ig', 'ID: 555']) assert.ok(card.text.includes(bit), bit);
@@ -130,9 +130,39 @@ test('Done asks for the account number; the reply reaches the team as "Ready to 
   await deliver(dm(' 12345678 ', { reply_to_message: { message_id: 21, from: { id: 99, is_bot: true }, text: ask.text } }));
   assert.match(sent(555)[0].payload.text, /The team will verify your account/);
   const card = sent(-1001)[0].payload.text;
-  for (const bit of ['Ready to verify', 'Broker: PU Prime · new account', '<code>12345678</code>', 'ID: 555', '/approve']) {
+  for (const bit of ['Ready to verify', 'Broker: PU Prime · new account', 'Source: not stated', '<code>12345678</code>', 'ID: 555', '/approve']) {
     assert.ok(card.includes(bit), bit);
   }
+});
+
+test('the lead source travels from /start to the Ready to verify card', async () => {
+  telegram();
+  await deliver(press('age:y:card_sam'));
+  assert.deepEqual(buttonsOf(sent(555)[2].payload).map((b) => b.callback_data), ['brk:pu:card_sam', 'brk:va:card_sam', 'brk:none:card_sam']);
+  telegram();
+  await deliver(press('brk:none:card_sam'));
+  assert.deepEqual(buttonsOf(sent(555)[0].payload).map((b) => b.callback_data), ['new:pu:card_sam', 'new:va:card_sam']);
+  telegram();
+  await deliver(press('new:va:card_sam'));
+  assert.equal(buttonsOf(sent(555)[0].payload)[1].callback_data, 'done:va:n:card_sam');
+  telegram();
+  await deliver(press('brk:pu:card_sam'));
+  assert.equal(buttonsOf(sent(555)[0].payload)[0].callback_data, 'done:pu:t:card_sam');
+  telegram();
+  await deliver(press('done:va:n:card_sam'));
+  const [ask] = sent(555).map((c) => c.payload);
+  assert.match(ask.text, /\(Vantage · new account · ref card_sam\)/);
+  telegram();
+  await deliver(dm('12345678', { reply_to_message: { message_id: 21, from: { id: 99, is_bot: true }, text: ask.text } }));
+  const card = sent(-1001)[0].payload.text;
+  for (const bit of ['Ready to verify', 'Broker: Vantage · new account', 'Source: card_sam', '<code>12345678</code>']) assert.ok(card.includes(bit), bit);
+  for (const c of calls) assert.ok(!c.payload.reply_markup?.inline_keyboard?.flat().some((b) => (b.callback_data || '').length > 64), 'callback data fits 64 bytes');
+});
+
+test('a forged source in button data is dropped, not shown to the team', async () => {
+  telegram();
+  await deliver(press('done:pu:t:<b>x</b>'));
+  assert.match(sent(555)[0].payload.text, /\(PU Prime · transfer\)$/);
 });
 
 test('a bare account number without replying still reaches the team', async () => {

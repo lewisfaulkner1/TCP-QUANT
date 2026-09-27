@@ -41,7 +41,8 @@ Buttons: **Yes, PU Prime** · **Yes, Vantage** · **Not yet**
 ## 4. Account number
 
 After **✅ Done** the bot asks for the account number. The reply goes to the team group as a
-🟢 **Ready to verify** card.
+🟢 **Ready to verify** card, with the broker and the **Source** the person came from (the tag in their
+link: `ig`, `tt`, `card`, `card_sam` ...), so a sign-up can be credited to the right platform or team card.
 
 ## 5. Hand-off
 

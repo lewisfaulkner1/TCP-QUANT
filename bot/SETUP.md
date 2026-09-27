@@ -56,6 +56,7 @@ From your phone open `https://t.me/YourBotUsername?start=test`, then:
 | TikTok | `https://t.me/YourBotUsername?start=tt` |
 | X | `https://t.me/YourBotUsername?start=x` |
 | YouTube | `https://t.me/YourBotUsername?start=yt` |
+| Business cards | the QR code on the card (`?start=card`; team cards use `card_<name>`, see `brand/business-cards/`) |
 
 The tag after `start=` shows on each lead card as **Source**, so you can see which platform
 brings members in.
@@ -63,8 +64,9 @@ brings members in.
 ## Daily use
 
 - 🟡 **New lead · 18+**: someone passed the age check.
-- 🟢 **Ready to verify**: someone sent their account number. Check it in your partner portal,
-  then reply `/approve` to the card. They get a single-use invite that expires in 7 days.
+- 🟢 **Ready to verify**: someone sent their account number. The card shows their broker and
+  where they came from (Source). Check the account in your partner portal, then reply `/approve`
+  to the card. They get a single-use invite that expires in 7 days.
 - 💬 **Message**: someone wrote to the bot. Reply to the card to answer; your reply is sent from the bot.
 
 Keep your other Inner Circle invite links switched off, so every new member comes through the bot.

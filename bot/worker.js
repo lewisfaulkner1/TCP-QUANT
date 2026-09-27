@@ -16,8 +16,8 @@
 //   PUPRIME_CODE, VANTAGE_CODE       partner codes for account transfers
 
 // ------------------------------------------------------------------ wording
-// Edit any message here, then Deploy. Keep the ({broker} · {kind}) line in
-// accountQuestion: the bot reads it back when someone replies.
+// Edit any message here, then Deploy. Keep the ({broker} · {kind} · ref {source})
+// line in accountQuestion: the bot reads it back when someone replies.
 const TEXT = {
   greeting: '👋 Thanks for reaching out\nLewis or his team will be with you shortly to assist you further',
   ageQuestion:
@@ -61,9 +61,9 @@ const TEXT = {
     '3. Once they confirm, come back here and tap ✅ Done\n\n' +
     'Opened it through my link already? Skip straight to ✅ Done.',
   doneButton: '✅ Done',
-  accountQuestion: (broker, kind) =>
+  accountQuestion: (broker, kind, source) =>
     `Brilliant 👑 Reply to this message with your ${broker} account number so the team can verify it ` +
-    `and unlock your access.\n\n(${broker} · ${kind})`,
+    `and unlock your access.\n\n(${broker} · ${kind}${source ? ` · ref ${source}` : ''})`,
   accountThanks: 'Got it ✅ The team will verify your account and send your Inner Circle invite here shortly.',
   invite: (link) =>
     "You're in 👑\n\nWelcome to the TCP Inner Circle. Here's your private invite link. " +
@@ -79,7 +79,7 @@ const TEXT = {
 
 const BROKERS = { pu: 'PU Prime', va: 'Vantage' };
 const KINDS = { n: 'new account', t: 'transfer' };
-const ACCOUNT_TAG = /\((PU Prime|Vantage) · (new account|transfer)\)/;
+const ACCOUNT_TAG = /\((PU Prime|Vantage) · (new account|transfer)(?: · ref ([\w-]{1,32}))?\)/;
 const LEAD_ID = /\bID: (\d+)/;
 
 // ------------------------------------------------------------ pure logic
@@ -111,6 +111,10 @@ const react = (chatId, messageId) => ({
   method: 'setMessageReaction',
   payload: { chat_id: chatId, message_id: messageId, reaction: [{ type: 'emoji', emoji: '👍' }] },
 });
+// Where a lead came from (ig, tt, card, card_sam ...) rides along in every button,
+// so the Ready to verify card can say it too. Buttons sent before this existed have none.
+const tagOf = (s) => (/^[\w-]{1,32}$/.test(s || '') ? s : '');
+const withTag = (data, source) => (source ? `${data}:${source}` : data);
 const command = (text) => (/^\/([a-z_]+)(?:@\w+)?(?:\s+(.*))?$/i.exec(text.trim()) || []).slice(1);
 
 function who(user) {
@@ -128,7 +132,7 @@ function onPrivate(msg, cfg) {
   const [cmd, arg] = command(text);
 
   if (cmd === 'start') {
-    const source = /^[\w-]{1,32}$/.test(arg || '') ? arg : 'direct';
+    const source = tagOf(arg) || 'direct';
     return [
       send(chat, TEXT.greeting),
       send(chat, TEXT.ageQuestion, buttons([[btn(TEXT.ageYesButton, `age:y:${source}`)], [btn(TEXT.ageNoButton, 'age:n')]])),
@@ -141,9 +145,10 @@ function onPrivate(msg, cfg) {
   const asked = ACCOUNT_TAG.exec(msg.reply_to_message?.from?.is_bot ? msg.reply_to_message.text || '' : '');
   if (text && (asked || /^\s*\d{5,12}\s*$/.test(text))) {
     const broker = asked ? `${asked[1]} · ${asked[2]}` : 'not stated';
+    const source = (asked && asked[3]) || 'not stated';
     return [
       send(chat, TEXT.accountThanks),
-      ...toTeam(cfg, `🟢 <b>Ready to verify</b>\n${who(msg.from)}\nBroker: ${broker}\n` +
+      ...toTeam(cfg, `🟢 <b>Ready to verify</b>\n${who(msg.from)}\nBroker: ${broker}\nSource: ${esc(source)}\n` +
         `Account: <code>${esc(text.trim().slice(0, 64))}</code>\nID: ${msg.from.id}\n\n` +
         'Reply /approve to send their Inner Circle invite, or reply with a message to answer them.'),
     ];
@@ -159,37 +164,41 @@ function onPrivate(msg, cfg) {
 
 function onButton(cq, cfg) {
   const chat = cq.message?.chat?.id;
-  const [step, a, b] = String(cq.data || '').split(':');
+  const [step, a, b, c] = String(cq.data || '').split(':');
   const done = [{ method: 'answerCallbackQuery', payload: { callback_query_id: cq.id } }];
   if (!chat) return done;
   // Take the buttons off the message that was answered, so it can't be pressed twice.
   done.push({ method: 'editMessageReplyMarkup', payload: { chat_id: chat, message_id: cq.message.message_id, reply_markup: { inline_keyboard: [] } } });
 
   if (step === 'age' && a === 'y') {
-    const source = /^[\w-]{1,32}$/.test(b || '') ? b : 'direct';
+    const source = tagOf(b) || 'direct';
     return [
       ...done,
       send(chat, TEXT.qualified),
       send(chat, TEXT.about),
-      send(chat, TEXT.brokerQuestion, buttons([[btn(TEXT.hasPuButton, 'brk:pu'), btn(TEXT.hasVaButton, 'brk:va')], [btn(TEXT.notYetButton, 'brk:none')]])),
+      send(chat, TEXT.brokerQuestion, buttons([
+        [btn(TEXT.hasPuButton, withTag('brk:pu', source)), btn(TEXT.hasVaButton, withTag('brk:va', source))],
+        [btn(TEXT.notYetButton, withTag('brk:none', source))],
+      ])),
       ...toTeam(cfg, `🟡 <b>New lead · 18+</b>\n${who(cq.from)}\nSource: ${esc(source)}\nID: ${cq.from.id}`),
     ];
   }
   if (step === 'age' && a === 'n') return [...done, send(chat, TEXT.underage)];
   if (step === 'brk' && a === 'none') {
-    return [...done, send(chat, TEXT.chooseBroker, buttons([[btn('PU Prime', 'new:pu'), btn('Vantage', 'new:va')]]))];
+    const source = tagOf(b);
+    return [...done, send(chat, TEXT.chooseBroker, buttons([[btn('PU Prime', withTag('new:pu', source)), btn('Vantage', withTag('new:va', source))]]))];
   }
   if (step === 'brk' && BROKERS[a]) {
-    return [...done, send(chat, TEXT.transferSteps(BROKERS[a], cfg.codes[a]), buttons([[btn(TEXT.doneButton, `done:${a}:t`)]]))];
+    return [...done, send(chat, TEXT.transferSteps(BROKERS[a], cfg.codes[a]), buttons([[btn(TEXT.doneButton, withTag(`done:${a}:t`, tagOf(b)))]]))];
   }
   if (step === 'new' && BROKERS[a]) {
     const link = cfg.links[a];
-    const rows = [[btn(TEXT.doneButton, `done:${a}:n`)]];
+    const rows = [[btn(TEXT.doneButton, withTag(`done:${a}:n`, tagOf(b)))]];
     if (link) rows.unshift([{ text: TEXT.openButton(BROKERS[a]), url: link }]);
     return [...done, send(chat, TEXT.newSteps(BROKERS[a]) + (link ? '' : TEXT.linkMissing), buttons(rows))];
   }
   if (step === 'done' && BROKERS[a] && KINDS[b]) {
-    return [...done, send(chat, TEXT.accountQuestion(BROKERS[a], KINDS[b]), {
+    return [...done, send(chat, TEXT.accountQuestion(BROKERS[a], KINDS[b], tagOf(c)), {
       reply_markup: { force_reply: true, input_field_placeholder: 'Account number' },
     })];
   }
