@@ -83,6 +83,9 @@ async function telegram(env, method, payload) {
 }
 
 const members = new Map(); // user id -> { role, until }
+// Coming-soon features a member can ask to hear about; the team group is told once.
+const FEATURES = { connect: 'account connection (MT5 or wallet)', copy: 'copy trading', ai: 'the AI features', alerts: 'price and odds alerts' };
+const interested = new Set(); // "user id:feature" already passed on
 
 export async function membership(env, userId, at = now()) {
   const hit = members.get(userId);
@@ -215,6 +218,24 @@ async function api(request, env, path, url) {
 
   if (path === '/api/me') return json({ user: { id: user.id, first_name: user.first_name || '', username: user.username || '' }, role });
 
+  if (path === '/api/interest' && request.method === 'POST') {
+    const body = await request.json().catch(() => null);
+    const id = body && typeof body.feature === 'string' ? body.feature : '';
+    if (!Object.hasOwn(FEATURES, id)) return json({ error: 'unknown_feature' }, 400);
+    const feature = FEATURES[id];
+    const key = `${user.id}:${id}`;
+    if (!interested.has(key) && env.ADMIN_CHAT_ID) {
+      interested.add(key);
+      const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'A member';
+      // Plain text, and the same "ID:" line as the bot's lead cards, so the team can reply to it.
+      await telegram(env, 'sendMessage', {
+        chat_id: env.ADMIN_CHAT_ID,
+        text: `💡 Wants ${feature}\n${name}${user.username ? ` · @${user.username}` : ''}\nID: ${user.id}\n\n(from the Quant Terminal)`,
+      });
+    }
+    return json({ ok: true });
+  }
+
   if (path === '/api/markets') {
     const symbol = url.searchParams.get('symbol');
     if (!MARKETS[symbol]) return json({ error: 'unknown_symbol' }, 400);
@@ -255,4 +276,5 @@ export default {
 export function resetCaches() {
   members.clear();
   cache.clear();
+  interested.clear();
 }

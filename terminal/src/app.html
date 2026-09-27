@@ -8,219 +8,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js" integrity="sha384-stKllnUqA9AD0gsKCuUtf5XlqAW7PwIgDagoNsTWkjkBmJ/GZ/uHTgEBxdLV2VSK" crossorigin="anonymous"></script>
 <style>
-@font-face{font-family:"Archivo";src:url(/fonts/archivo-400.woff2) format("woff2");font-weight:400;font-display:swap}
-@font-face{font-family:"TCP Display";src:url(/fonts/archivo-expanded-800.woff2) format("woff2");font-weight:800;font-display:swap}
-@font-face{font-family:"JetBrains Mono";src:url(/fonts/jetbrains-mono-500.woff2) format("woff2");font-weight:500;font-display:swap}
-@font-face{font-family:"JetBrains Mono";src:url(/fonts/jetbrains-mono-600.woff2) format("woff2");font-weight:600;font-display:swap}
-@font-face{font-family:"Instrument Serif";src:url(/fonts/instrument-serif-italic.woff2) format("woff2");font-style:italic;font-display:swap}
-:root{
-  --ink:#0E0D0B;--panel:#16140F;--panel-2:#1C1A15;--line:#2E2A22;--line-2:#3A3429;
-  --gold:#D8AD4E;--gold-soft:#E3C06D;--ivory:#F2ECDF;--stone:#A69D8C;--muted:#8A8274;
-  --royal:#8C7BD1;--up:#35A68C;--down:#E0613F;
-  --display:"TCP Display","Archivo",system-ui,sans-serif;--sans:"Archivo",system-ui,-apple-system,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,monospace;--serif:"Instrument Serif",Georgia,serif;
-  --foil:linear-gradient(180deg,#F6E3A3 0%,#D8AD4E 42%,#B0812F 72%,#E3C06D 100%);
-  --foil-x:linear-gradient(90deg,#B0812F 0%,#D8AD4E 45%,#F6E3A3 100%);
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--ink);color:var(--ivory)}
-body{font:400 15px/1.45 var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;
-  background:radial-gradient(120% 50% at 50% -12%,rgba(216,173,78,.13),transparent 62%),var(--ink);
-  padding-bottom:calc(76px + env(safe-area-inset-bottom))}
-button,input,select{font:inherit;color:inherit}
-[hidden]{display:none!important}
-.label{font:500 10.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--stone);white-space:nowrap}
-
-header{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
-header svg{width:30px;height:auto;flex:none}
-.brand{display:flex;flex-direction:column;gap:3px}
-.brand b{font:800 17px/1 var(--display);letter-spacing:.02em}
-.brand span{font:600 9.5px/1 var(--mono);letter-spacing:.26em;color:var(--gold)}
-.who{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--stone)}
-.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);
-  border:1px solid var(--line-2);font:600 12px/1 var(--mono);color:var(--gold)}
-
-/* ---------------------------------------------------------- engine strip */
-.engine{position:relative;overflow:hidden;display:flex;align-items:center;gap:9px;margin:8px 16px 0;padding:9px 12px;
-  border:1px solid var(--line);border-radius:12px;background:linear-gradient(90deg,rgba(216,173,78,.07),rgba(22,20,15,.6));
-  font:600 10.5px/1 var(--mono);letter-spacing:.16em;color:var(--stone)}
-.engine::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(246,227,163,.10) 50%,transparent 70%);
-  transform:translateX(-100%);animation:sweep 3.6s ease-in-out infinite}
-.engine b{color:var(--ivory);font-weight:600}
-.engine .sync{margin-left:auto;letter-spacing:.06em;font-weight:500;color:var(--muted);white-space:nowrap}
-.pulse{width:8px;height:8px;border-radius:50%;background:var(--up);flex:none;box-shadow:0 0 0 0 rgba(53,166,140,.6);animation:pulse 1.8s ease-out infinite}
-.engine.closed .pulse,.engine.delayed .pulse{background:var(--gold);animation:none;box-shadow:none}
-.engine.closed .eq i,.engine.delayed .eq i{animation-play-state:paused}
-.eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
-.eq i{width:3px;height:100%;border-radius:1px;background:var(--gold);transform-origin:bottom;animation:eq 1.2s ease-in-out infinite}
-.eq i:nth-child(2){animation-delay:-.3s}.eq i:nth-child(3){animation-delay:-.6s}.eq i:nth-child(4){animation-delay:-.9s}
-@keyframes sweep{to{transform:translateX(100%)}}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(53,166,140,.55)}80%,100%{box-shadow:0 0 0 9px rgba(53,166,140,0)}}
-@keyframes eq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
-
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 16px}
-.card h2{margin:0 0 12px}
-.card > .row:first-child{margin-bottom:12px}
-.card .row h2{margin:0}
-.row{display:flex;align-items:center;gap:10px}
-.spread{justify-content:space-between}
-.meta{font-size:12px;color:var(--muted);margin-top:10px}
-.warn{color:var(--gold-soft)}
-.up{color:var(--up)}.down{color:var(--down)}
-
-.segment{display:flex;gap:8px;margin:10px 16px 0}
-.segment button{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 14px;border-radius:14px;
-  background:var(--panel);border:1px solid var(--line);cursor:pointer;text-align:left}
-.segment button b{font:600 14px/1 var(--mono);letter-spacing:.04em}
-.segment button span{font-size:12px;color:var(--stone)}
-.segment button[aria-pressed="true"]{border-color:var(--gold);background:var(--panel-2)}
-.segment button[aria-pressed="true"] b{color:var(--gold)}
-
-.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);
-  font:500 11.5px/1 var(--mono);color:var(--stone);white-space:nowrap}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
-.pill.open .dot{background:var(--up);box-shadow:0 0 0 3px rgba(53,166,140,.18)}
-.pill.open{color:var(--ivory)}
-
-/* ----------------------------------------------------------------- quote */
-.quote{display:grid;grid-template-columns:1fr 112px;gap:8px;align-items:end}
-.price{font:600 36px/1.05 var(--mono);letter-spacing:-.02em;margin:10px 0 6px;border-radius:8px;padding:0 4px;margin-left:-4px;transition:color .5s}
-.price.tick-up{animation:up .7s ease-out}
-.price.tick-down{animation:down .7s ease-out}
-@keyframes up{0%{background:rgba(53,166,140,.28);color:#7FE0C4}100%{background:transparent}}
-@keyframes down{0%{background:rgba(224,97,63,.28);color:#FFB39E}100%{background:transparent}}
-.change{font:500 13.5px/1.2 var(--mono)}
-#spark{width:112px;height:46px;overflow:visible}
-
-/* ----------------------------------------------------------------- chart */
-#chart{height:300px;margin:0 -6px;position:relative}
-.chart-note{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:20px}
-.keys{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font:500 10.5px/1 var(--mono);color:var(--stone)}
-.keys i{display:inline-block;width:14px;height:0;border-top:2px dashed;vertical-align:middle;margin-right:5px}
-.timer{font:600 11px/1 var(--mono);color:var(--gold-soft);letter-spacing:.06em}
-
-/* ----------------------------------------------------------- probability */
-.bands{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.band{padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line)}
-.band span{display:block;font:500 10px/1 var(--mono);letter-spacing:.16em;color:var(--stone);margin-bottom:7px}
-.band b{display:block;font:600 13.5px/1.5 var(--mono)}
-.band b small{font:500 10px/1 var(--mono);color:var(--muted);margin-right:6px}
-.touched{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-.touched .label{width:100%;margin-bottom:2px}
-.touched span:not(.label){padding:4px 9px;border-radius:999px;border:1px solid var(--line-2);font:500 11px/1.2 var(--mono);color:var(--stone)}
-.closed-note{margin:10px 0 2px;font-size:12.5px;color:var(--gold-soft)}
-.lv{padding:10px 0;border-bottom:1px solid var(--line)}
-.lv:last-child{border-bottom:0}
-.lv-top{display:grid;grid-template-columns:1fr auto 70px;gap:10px;align-items:baseline}
-.lv-name{font-size:13.5px}
-.lv-price{font:600 13.5px/1 var(--mono)}
-.lv-dist{font:500 12px/1 var(--mono);font-style:normal;color:var(--muted);text-align:right}
-.lv-odds{display:grid;grid-template-columns:1fr 44px;gap:10px;align-items:center;margin-top:8px}
-.lv-bar{height:6px;border-radius:999px;background:var(--panel-2);overflow:hidden}
-.lv-bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--foil-x);transition:width .8s cubic-bezier(.2,.8,.2,1)}
-.lv.below .lv-bar i{background:linear-gradient(90deg,#6C5BB8,#8C7BD1,#B7AAF0)}
-.lv-pct{font:600 13px/1 var(--mono);text-align:right;color:var(--gold-soft)}
-.lv.below .lv-pct{color:#B7AAF0}
-.hit{display:inline-block;margin-top:8px;padding:3px 8px;border-radius:999px;border:1px solid var(--line-2);font:500 10.5px/1.2 var(--mono);color:var(--muted);letter-spacing:.06em}
-.lv.now{border:1px solid rgba(216,173,78,.5);border-radius:12px;padding:10px 12px;margin:6px -8px;background:rgba(216,173,78,.07);
-  display:flex;justify-content:space-between;align-items:center}
-.lv.now span{font-size:13.5px;color:var(--gold)}
-.lv.now b{font:600 14px/1 var(--mono);color:var(--gold)}
-.fine{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
-
-/* ----------------------------------------------------------------- gauges */
-.gauge{position:relative;height:10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);margin:14px 0 8px}
-.gauge .fill{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--foil);transition:width .8s cubic-bezier(.2,.8,.2,1)}
-.gauge .avg{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ivory);opacity:.7}
-.gauge-scale{position:relative;height:12px;font:500 10px/1 var(--mono);color:var(--muted)}
-.gauge-scale span{position:absolute;top:0}
-.gauge-scale span:nth-child(2){left:66.6%;transform:translateX(-50%)}
-.gauge-scale span:last-child{right:0}
-.big{font:600 26px/1.1 var(--mono)}
-.sub{color:var(--stone);font-size:13.5px}
-.meter{margin-bottom:16px}
-.meter:last-child{margin-bottom:0}
-.meter .row{justify-content:space-between;align-items:baseline}
-.meter b{font:600 14px/1 var(--mono)}
-.meter small{font-size:12.5px;color:var(--stone)}
-.track{position:relative;height:8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);margin-top:9px;overflow:hidden}
-.track i{position:absolute;top:0;bottom:0;left:0;border-radius:999px;background:var(--foil-x);transition:width .8s cubic-bezier(.2,.8,.2,1),left .8s cubic-bezier(.2,.8,.2,1)}
-.track.mid::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line-2);z-index:1}
-.mom{display:grid;grid-template-columns:34px 1fr 58px;gap:10px;align-items:center;margin-top:8px}
-.mom span{font:500 11px/1 var(--mono);color:var(--stone)}
-.mom em{font:600 12px/1 var(--mono);font-style:normal;text-align:right}
-.mom .track{margin-top:0}
-.mom .track i.pos{background:linear-gradient(90deg,rgba(53,166,140,.5),#35A68C)}
-.mom .track i.neg{background:linear-gradient(90deg,#E0613F,rgba(224,97,63,.5))}
-.tag{font:500 10.5px/1 var(--mono);letter-spacing:.1em;color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:4px 8px}
-
-/* --------------------------------------------------------------- sessions */
-.sessions{display:grid;gap:8px}
-.session{position:relative;overflow:hidden;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line)}
-.session .code{font:600 11px/1 var(--mono);letter-spacing:.12em;color:var(--stone)}
-.session.open{border-color:rgba(53,166,140,.45)}
-.session.open .code{color:var(--up)}
-.session b{font-weight:600;font-size:14px}
-.session small{display:block;color:var(--stone);font-size:12px;margin-top:2px;font-variant-numeric:tabular-nums}
-.session time{font:500 12px/1 var(--mono);color:var(--muted)}
-.session .prog{position:absolute;left:0;bottom:0;height:2px;background:linear-gradient(90deg,rgba(53,166,140,.2),#35A68C);transition:width 1s linear}
-.overlap{margin-top:10px;font-size:12.5px;color:var(--gold-soft)}
-
-/* ------------------------------------------------------------ model check */
-#checkChart{width:100%;height:auto;display:block;margin:4px 0 6px}
-.check-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.check-stats div{padding:10px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);text-align:center}
-.check-stats b{display:block;font:600 16px/1.1 var(--mono);color:var(--gold-soft)}
-.check-stats span{font-size:11px;color:var(--stone)}
-
-/* -------------------------------------------------------------------- risk */
-.field{display:grid;gap:6px;margin-bottom:14px}
-.field label{font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--stone)}
-.inputs{display:flex;gap:8px}
-input,select{width:100%;min-width:0;background:var(--panel-2);border:1px solid var(--line-2);border-radius:12px;padding:12px 12px;
-  font:500 16px/1.2 var(--mono);outline:none}
-select{appearance:none;-webkit-appearance:none;width:auto;min-width:96px;flex:none;padding-right:34px;background-image:linear-gradient(45deg,transparent 50%,var(--stone) 50%),linear-gradient(135deg,var(--stone) 50%,transparent 50%);
-  background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat}
-input:focus,select:focus{border-color:var(--gold)}
-.chips{display:flex;gap:6px}
-.chips button{padding:8px 12px;border-radius:999px;border:1px solid var(--line-2);background:transparent;font:500 13px/1 var(--mono);cursor:pointer}
-.chips button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
-.hint{font-size:12px;color:var(--muted)}
-.link{background:none;border:0;padding:0;color:var(--gold);font-size:12.5px;cursor:pointer}
-.result{text-align:center;padding:22px 16px}
-.lots{font:800 46px/1 var(--display);background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent;margin:8px 0 4px}
-.facts{display:grid;gap:8px;margin-top:16px;text-align:left}
-.facts div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--stone)}
-.facts b{font:600 13.5px/1.3 var(--mono);color:var(--ivory)}
-#targets{width:100%;border-collapse:collapse;margin-top:14px;font:500 13px/1 var(--mono)}
-#targets th{font:500 10px/1 var(--mono);letter-spacing:.16em;color:var(--muted);text-align:left;padding:0 0 8px}
-#targets td{padding:9px 0;border-top:1px solid var(--line);text-align:left}
-#targets td:last-child,#targets th:last-child{text-align:right}
-.odds-note{margin-top:14px;text-align:left;font-size:12.5px;color:var(--stone);line-height:1.5}
-.odds-note b{color:var(--gold-soft);font-family:var(--mono);font-weight:600}
-.note{font-size:12px;color:var(--muted);margin:14px 16px 0;text-align:center}
-
-.soon h2{font:800 20px/1.15 var(--display);margin:6px 0 8px}
-.soon p{color:var(--stone);margin:0 0 12px}
-.soon ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-.soon li{display:flex;gap:10px;align-items:baseline;font-size:14px}
-.soon li:before{content:"";width:6px;height:6px;border-radius:2px;background:var(--gold);transform:translateY(-2px);flex:none}
-.serif{font:italic 400 19px/1.2 var(--serif);color:var(--gold-soft)}
-
-nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));
-  background:rgba(14,13,11,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:4}
-nav button{display:grid;justify-items:center;gap:4px;padding:6px 0;background:none;border:0;color:var(--muted);font:500 10.5px/1 var(--mono);letter-spacing:.08em;cursor:pointer}
-nav svg{width:22px;height:22px}
-nav button[aria-current="page"]{color:var(--gold)}
-
-.gate{position:fixed;inset:0;display:grid;place-items:center;padding:32px;text-align:center;background:var(--ink);z-index:5}
-.gate svg{width:64px;margin-bottom:18px}
-.gate h1{font:800 22px/1.15 var(--display);margin:0 0 10px}
-.gate p{color:var(--stone);margin:0 0 20px}
-.cta{display:inline-block;padding:13px 20px;border-radius:14px;background:var(--foil);color:var(--ink);font:600 14px/1 var(--mono);letter-spacing:.06em;text-decoration:none;border:0;cursor:pointer}
-.skeleton{border-radius:8px;background:linear-gradient(90deg,var(--panel-2),#24211A,var(--panel-2));background-size:200% 100%;animation:shimmer 1.4s infinite}
-@keyframes shimmer{to{background-position:-200% 0}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/*CSS*/
 </style>
 </head>
 <body>
@@ -256,7 +44,13 @@ nav button[aria-current="page"]{color:var(--gold)}
         </div>
         <svg id="spark" viewBox="0 0 112 46" preserveAspectRatio="none" aria-label="Last 48 hours"></svg>
       </div>
+      <div class="testing" id="testing" hidden></div>
       <div class="meta" id="updated">&nbsp;</div>
+    </div>
+
+    <div class="card brief">
+      <div class="row spread"><h2 class="label">Engine briefing</h2><span class="tag">from the numbers</span></div>
+      <p id="briefing" aria-live="polite"><span class="skeleton" style="display:block;height:54px"></span></p>
     </div>
 
     <div class="card">
@@ -269,6 +63,13 @@ nav button[aria-current="page"]{color:var(--gold)}
         <span><i style="color:rgba(227,192,109,.9)"></i>68% cone</span>
         <span><i style="color:rgba(166,157,140,.8);border-top-style:dotted"></i>95% cone</span>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Probability swarm</h2><span class="tag" id="swarmTag">paths to the close</span></div>
+      <canvas id="swarm" role="img" aria-label="Simulated price paths from now to the close"></canvas>
+      <div class="swarm-legend" id="swarmLegend"></div>
+      <div class="fine">Each dot is one possible path from the live price to the close, drawn with this market's hour-by-hour volatility. A dot lights up when it touches a level, and the share that do settles on the engine's odds. At the close they stack into the spread of where it could finish. Tap to run it again.</div>
     </div>
 
     <div class="card">
@@ -296,6 +97,11 @@ nav button[aria-current="page"]{color:var(--gold)}
       <div class="gauge" aria-hidden="true"><div class="fill" id="gaugeFill" style="width:0"></div><div class="avg" style="left:66.6%"></div></div>
       <div class="gauge-scale"><span>0%</span><span>100%</span><span>150%</span></div>
       <div class="meta" id="atrLine">&nbsp;</div>
+      <div class="vclock">
+        <div class="row spread"><span class="label" id="vclockTitle">When it moves</span><span class="label">your time</span></div>
+        <svg id="vclock" viewBox="0 0 320 96" preserveAspectRatio="none" role="img" aria-label="Typical move for each hour of the day"></svg>
+        <div class="meta" id="vclockNote"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -356,22 +162,104 @@ nav button[aria-current="page"]{color:var(--gold)}
 
   <!-- =========================================================== Signals -->
   <section id="signals" hidden>
-    <div class="card soon">
-      <span class="pill"><span class="dot" style="background:var(--gold)"></span>In testing</span>
-      <h2>Algo signals</h2>
-      <p>The TCP algorithm is in its forward test. Once it passes, its entries, exits and zones appear here and in the Inner Circle, each with its tested win rate, and every result posted in full.</p>
-      <ul><li>Entry, stop and targets, sized for your account</li><li>Live updates as trades move</li><li>A running record of every signal, wins and losses</li></ul>
+    <div class="card">
+      <div class="row spread"><h2 class="label">From the algo to your account</h2><span class="tag">the plan</span></div>
+      <div class="pipe">
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 18 9 12l4 3 7-9"/><path d="M15 6h5v5"/></svg></span>
+          <div><b>TCP algo</b><small>Finds the trade: entry, stop and targets, by fixed rules.</small></div>
+          <span class="state testing">In forward test</span>
+        </div>
+        <div class="flow" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></span>
+          <div><b>Terminal and Inner Circle</b><small>The signal lands here and in the group at the same moment, with its odds.</small></div>
+          <span class="state testing">Waiting on the algo</span>
+        </div>
+        <div class="flow" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+          <div><b>The TCP EA</b><small>Places the trade on Lewis's account, exactly as signalled.</small></div>
+          <span class="state testing">Dry run</span>
+        </div>
+        <div class="flow" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 11.5a3 3 0 1 0 0-6M17.5 20h4a5.5 5.5 0 0 0-4.5-5.4"/></svg></span>
+          <div><b>Your account</b><small>Copy trading: the same trade on your MT5, at the size you choose.</small></div>
+          <span class="state soon-tag">Coming soon</span>
+        </div>
+      </div>
+      <p class="note serif" style="margin:14px 0 0">Proven first. Then live.</p>
     </div>
-    <p class="note serif">Proven first. Then live.</p>
+
+    <div class="card example">
+      <div class="row spread"><h2 class="label">What a signal will look like</h2><span class="tag">example</span></div>
+      <div class="sig">
+        <div class="sig-top"><b>XAUUSD</b><span class="sig-side">BUY</span><span class="sig-time">09:12 · London</span></div>
+        <div class="sig-grid">
+          <div><span>Entry</span><b>3,742.50</b></div>
+          <div><span>Stop</span><b>3,737.50</b></div>
+          <div><span>Target 1 · 1R</span><b>3,747.50</b></div>
+          <div><span>Target 2 · 2R</span><b>3,752.50</b></div>
+        </div>
+        <div class="sig-foot"><span>Tested win rate <b>—</b></span><span>Your size at 1% <b>0.20 lots</b></span></div>
+        <span class="watermark">EXAMPLE</span>
+      </div>
+      <div class="fine">Not a live signal. Once the algo passes its forward test, each signal shows its tested win rate and a size worked out for your account, and every result is posted in full.</div>
+    </div>
+
+    <div class="card soon-card" data-feature="copy">
+      <div class="row spread"><h2 class="label">Copy trading</h2><span class="state soon-tag">Coming soon</span></div>
+      <p>Connect your MT5 account and the algo's trades copy onto it automatically, at the risk you set. Pause or stop whenever you like.</p>
+      <button class="notify" type="button">Notify me</button>
+    </div>
   </section>
 
-  <!-- ========================================================= My stats -->
-  <section id="stats" hidden>
-    <div class="card soon">
-      <span class="pill"><span class="dot" style="background:var(--gold)"></span>Coming next</span>
-      <h2>Your trading, measured</h2>
-      <p>Connect your MT5 account to see how you really trade, and get a plain-English AI report on what to keep and what to cut.</p>
-      <ul><li>Profit factor, win rate and average R</li><li>Drawdown and your equity curve</li><li>Your best and worst sessions, days and markets</li><li>Weekly AI reports on your trading</li></ul>
+  <!-- ================================================================ AI -->
+  <section id="ai" hidden>
+    <div class="card ai-hero">
+      <canvas id="orb" aria-hidden="true"></canvas>
+      <div class="ai-copy">
+        <span class="state soon-tag">Coming soon</span>
+        <h2>TCP AI</h2>
+        <p>Your trading and the markets, explained by AI in plain English, using the numbers behind this terminal.</p>
+        <button class="notify" type="button" data-feature="ai">Notify me</button>
+      </div>
+    </div>
+    <div class="card feature-list">
+      <div class="feature"><b>AI trade reviews</b><p>After every trade: what went to plan, what didn't, and what to change.</p><span class="state soon-tag">Soon</span></div>
+      <div class="feature"><b>AI market briefings</b><p>A morning note on gold and Bitcoin in your Telegram before London opens.</p><span class="state soon-tag">Soon</span></div>
+      <div class="feature"><b>Ask TCP AI</b><p>Ask about a level, a setup or your risk, and get answers built on the engine's numbers.</p><span class="state soon-tag">Soon</span></div>
+      <div class="feature"><b>Your AI coach</b><p>A weekly look at your habits: best sessions, overtrading, and how well you keep to your stops.</p><span class="state soon-tag">Soon</span></div>
+    </div>
+    <p class="note">AI features follow account connection. The engine briefing on Markets is written from the numbers, not by AI.</p>
+  </section>
+
+  <!-- ============================================================ Account -->
+  <section id="account" hidden>
+    <div class="card profile">
+      <span class="avatar big-avatar" id="profileInitial">?</span>
+      <div><b id="profileName">Member</b><small id="profileRole">TCP Inner Circle</small></div>
+    </div>
+    <div class="card soon-card" data-feature="connect">
+      <div class="row spread"><h2 class="label">Connect your account</h2><span class="state soon-tag">Coming soon</span></div>
+      <p>Link your MT5 account or wallet to see your real results here. Read-only: the terminal can see your trades, never move your money.</p>
+      <button class="notify" type="button">Notify me</button>
+    </div>
+    <div class="card soon-card">
+      <div class="row spread"><h2 class="label">Your trading, measured</h2><span class="state soon-tag">After connecting</span></div>
+      <div class="stat-preview">
+        <div><span>Profit factor</span><b>—</b></div>
+        <div><span>Win rate</span><b>—</b></div>
+        <div><span>Average R</span><b>—</b></div>
+        <div><span>Max drawdown</span><b>—</b></div>
+      </div>
+      <p style="margin-top:12px">Plus your equity curve, and your best and worst sessions, days and markets.</p>
+    </div>
+    <div class="card soon-card" data-feature="alerts">
+      <div class="row spread"><h2 class="label">Price and odds alerts</h2><span class="state soon-tag">Coming soon</span></div>
+      <p>A Telegram message when gold reaches a level you pick, or when the odds of a touch climb past your line.</p>
+      <button class="notify" type="button">Notify me</button>
     </div>
   </section>
 </main>
@@ -380,7 +268,8 @@ nav button[aria-current="page"]{color:var(--gold)}
   <button data-tab="markets" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 3v4M6 17v4M12 6v3M12 17v3M18 4v3M18 14v6"/><rect x="4" y="7" width="4" height="10" rx="1"/><rect x="10" y="9" width="4" height="8" rx="1"/><rect x="16" y="7" width="4" height="7" rx="1"/></svg>MARKETS</button>
   <button data-tab="risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>RISK</button>
   <button data-tab="signals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>SIGNALS</button>
-  <button data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 20h16M7 16v-4M12 16V8M17 16v-7"/></svg>MY STATS</button>
+  <button data-tab="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg>AI</button>
+  <button data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>ACCOUNT</button>
 </nav>
 
 <div class="gate" id="gate">
@@ -393,635 +282,7 @@ nav button[aria-current="page"]{color:var(--gold)}
 </div>
 
 <script type="module">
-/*LIB*/
-
-// ------------------------------------------------------------------ setup
-const BOT = 'TCPInnerCircleBot';
-const tg = window.Telegram && window.Telegram.WebApp;
-const demo = new URLSearchParams(location.search).has('demo');
-const $ = (id) => document.getElementById(id);
-const store = {
-  get: (k) => { try { return localStorage.getItem('tcp.' + k); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem('tcp.' + k, v); } catch {} },
-};
-for (const el of document.querySelectorAll('[data-crown]')) el.replaceWith($('crown').content.cloneNode(true));
-if (tg) {
-  tg.ready();
-  tg.expand();
-  try { tg.setHeaderColor('#0E0D0B'); tg.setBackgroundColor('#0E0D0B'); tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch {}
-}
-const haptic = () => { try { tg && tg.HapticFeedback.selectionChanged(); } catch {} };
-const clock = () => Math.floor(Date.now() / 1000);
-const money = (v, ccy) => (ccy === 'GBP' ? '£' : ccy === 'EUR' ? '€' : '$') + fmtNum(v, 2);
-const signed = (v, d) => (v > 0 ? '+' : v < 0 ? '−' : '') + fmtNum(Math.abs(v), d);
-const pct = (p) => (p == null ? '—' : p >= 0.995 ? '>99%' : p < 0.005 ? '<1%' : `${Math.round(p * 100)}%`);
-const ago = (t) => { const s = clock() - t; return s < 10 ? 'just now' : s < 90 ? `${s}s ago` : `${fmtDuration(s)} ago`; };
-const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
-const tzOffset = () => -new Date().getTimezoneOffset() * 60; // the chart shows the member's local time
-
-// ------------------------------------------------------------------- data
-async function call(path) {
-  const res = await fetch(path, { headers: { authorization: 'tma ' + (tg ? tg.initData : '') } });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(body.message || 'Something went wrong'), { code: body.error, status: res.status });
-  return body;
-}
-
-// Demo mode (?demo): two months of made-up prices, run through the same engine. No member data.
-const demoWalk = {};
-function demoData(symbol) {
-  const m = MARKETS[symbol];
-  let seed = symbol === 'XAUUSD' ? 11 : 29;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const normal = () => Math.sqrt(-2 * Math.log(rand() + 1e-12)) * Math.cos(2 * Math.PI * rand());
-  const now = clock();
-  const quiet = symbol === 'XAUUSD' ? 0.0011 : 0.0035;
-  const hourSd = (h) => (h >= 8 && h < 12 ? quiet * 2.6 : h >= 3 && h < 8 ? quiet * 1.6 : quiet);
-  const bars = [];
-  let price = symbol === 'XAUUSD' ? 3712 : 64250;
-  for (let t = Math.floor((now - 90 * 86400) / 900) * 900; t <= now - 900; t += 900) {
-    if (m.day !== 'utc' && !marketStatus(m, t).open) continue;
-    const sd = hourSd(nyHour(t)) / 2 / Math.sqrt(3);
-    const o = price;
-    let h = o;
-    let l = o;
-    for (let k = 0; k < 3; k++) { price *= Math.exp(sd * normal()); h = Math.max(h, price); l = Math.min(l, price); }
-    bars.push({ t, o, h, l, c: price });
-  }
-  const hourly = groupBars(bars, (b) => Math.floor(b.t / 3600)).map((b) => ({ t: Math.floor(b.t / 3600) * 3600, o: b.o, h: b.h, l: b.l, c: b.c }));
-  const snap = snapshot(m, toDays(hourly, m), bars.slice(-400), now);
-  const profile = volProfile(hourly);
-  demoWalk[symbol] = { price: snap.price, sd: (t) => hourSd(nyHour(t)), normal };
-  return {
-    ...snap,
-    engine: { profile, dayEnd: dayEnd(snap.day, m), state: marketState([...hourly, { t: now, o: snap.price, h: snap.price, l: snap.price, c: snap.price }], profile), check: calibrate(hourly, m) },
-    spark: hourly.slice(-47).map((b) => b.c).concat(snap.price),
-    bars: bars.slice(-192).map((b) => [b.t, b.o, b.h, b.l, b.c]),
-    source: 'demo data', updated: now - 20, stale: false, fx: { USD: 1, GBP: 1.34, EUR: 1.17 },
-  };
-}
-
-// ------------------------------------------------------------------ state
-const state = { symbol: store.get('symbol') === 'BTCUSD' ? 'BTCUSD' : 'XAUUSD', data: {}, fx: null, streaming: false };
-const live = {}; // symbol -> { price, high, low, t }
-const current = () => state.data[state.symbol];
-function quoteOf(symbol) {
-  const d = state.data[symbol];
-  const l = live[symbol];
-  if (!d || d.error) return null;
-  return { price: l ? l.price : d.price, high: l ? l.high : d.dayHigh, low: l ? l.low : d.dayLow };
-}
-
-// A new price from the stream (or the demo): the quote, today's range, the last candle and the odds follow it.
-function onTick(symbol, price, t) {
-  const d = state.data[symbol];
-  if (!d || d.error || !(price > 0)) return;
-  const m = MARKETS[symbol];
-  const l = (live[symbol] ||= { price: d.price, high: d.dayHigh ?? d.price, low: d.dayLow ?? d.price });
-  const direction = Math.sign(price - l.price);
-  l.price = price;
-  l.t = t;
-  if (dayKey(t, m) !== d.day) { loadMarket(symbol); return; }
-  l.high = Math.max(l.high, price);
-  l.low = Math.min(l.low, price);
-  const slot = Math.floor(t / 900) * 900;
-  const last = d.bars[d.bars.length - 1];
-  if (last && last[0] === slot) { last[2] = Math.max(last[2], price); last[3] = Math.min(last[3], price); last[4] = price; }
-  else if (!last || slot > last[0]) d.bars.push([slot, last ? last[4] : price, Math.max(price, last ? last[4] : price), Math.min(price, last ? last[4] : price), price]);
-  if (symbol === state.symbol) {
-    if (series) series.update(candle(d.bars[d.bars.length - 1]));
-    frame(direction);
-  }
-}
-
-let pendingDirection = 0;
-let framed = false;
-function frame(direction = 0) {
-  if (direction) pendingDirection = direction;
-  if (framed) return;
-  framed = true;
-  requestAnimationFrame(() => {
-    framed = false;
-    renderPrice(pendingDirection);
-    pendingDirection = 0;
-    renderOdds();
-  });
-}
-
-// Bitcoin streams from Coinbase tick by tick; the stream reconnects on its own.
-let ws = null;
-let wsTimer = null;
-let wsRetry = 0;
-function streamBitcoin(on) {
-  if (demo) return;
-  clearTimeout(wsTimer);
-  if (!on) {
-    if (ws) { ws.onclose = null; ws.close(); ws = null; }
-    state.streaming = false;
-    return;
-  }
-  if (ws) return;
-  try { ws = new WebSocket('wss://ws-feed.exchange.coinbase.com'); } catch { return; }
-  ws.onopen = () => { wsRetry = 0; ws.send(JSON.stringify({ type: 'subscribe', product_ids: ['BTC-USD'], channels: ['ticker'] })); };
-  ws.onmessage = (e) => {
-    let msg;
-    try { msg = JSON.parse(e.data); } catch { return; }
-    if (msg.type !== 'ticker' || msg.product_id !== 'BTC-USD') return;
-    state.streaming = true;
-    onTick('BTCUSD', parseFloat(msg.price), Date.parse(msg.time) / 1000 || clock());
-  };
-  ws.onclose = () => {
-    ws = null;
-    state.streaming = false;
-    if (state.symbol === 'BTCUSD') wsTimer = setTimeout(() => streamBitcoin(true), Math.min(60e3, 2000 * 2 ** wsRetry++));
-  };
-  ws.onerror = () => ws && ws.close();
-}
-
-// Demo ticks: the same random walk, second by second, so previews move like the real thing.
-function demoTick() {
-  const w = demoWalk[state.symbol];
-  const m = MARKETS[state.symbol];
-  const now = Date.now() / 1000;
-  if (!w || !marketStatus(m, now).open) return;
-  w.price *= Math.exp(w.sd(now) * Math.sqrt(1.5 / 3600) * 2.2 * w.normal());
-  onTick(state.symbol, w.price, now);
-}
-
-// ---------------------------------------------------------------- engine strip
-function renderEngine(now) {
-  const d = current();
-  const m = MARKETS[state.symbol];
-  const open = marketStatus(m, now).open;
-  const el = $('engine');
-  let mode = 'live';
-  let text = 'starting…';
-  if (d && !d.error) {
-    if (demo) text = 'demo prices · ticking';
-    else if (!open) { mode = 'closed'; const s = marketStatus(m, now); text = `opens in ${fmtDuration(s.opensAt - now)}`; }
-    else if (d.stale) { mode = 'delayed'; text = `last prices ${ago(d.updated)}`; }
-    else if (state.symbol === 'BTCUSD' && state.streaming) text = 'streaming ticks';
-    else text = `synced ${ago(d.updated)}`;
-  }
-  el.className = `engine ${mode}`;
-  $('engineState').textContent = demo ? 'DEMO' : mode === 'live' ? 'LIVE' : mode === 'closed' ? 'CLOSED' : 'DELAYED';
-  $('engineSync').textContent = text;
-}
-
-// ------------------------------------------------------------------ quote
-function renderStatus(now) {
-  const m = MARKETS[state.symbol];
-  const s = marketStatus(m, now);
-  const pill = $('status');
-  pill.classList.toggle('open', s.open);
-  pill.lastElementChild.textContent = m.day === 'utc' ? 'Open 24/7'
-    : s.open ? `Open · ${s.weekendClose ? 'weekend' : 'break'} in ${fmtDuration(s.closesAt - now)}`
-    : `${s.reason === 'weekend' ? 'Weekend' : 'Break'} · opens in ${fmtDuration(s.opensAt - now)}`;
-}
-
-function renderPrice(direction = 0) {
-  const d = current();
-  const q = quoteOf(state.symbol);
-  if (!q) return;
-  const el = $('price');
-  el.textContent = fmtNum(q.price, d.digits);
-  if (direction) {
-    el.classList.remove('tick-up', 'tick-down');
-    void el.offsetWidth; // restart the flash
-    el.classList.add(direction > 0 ? 'tick-up' : 'tick-down');
-  }
-  const change = d.dayOpen != null ? q.price - d.dayOpen : null;
-  const ch = $('change');
-  ch.className = 'change ' + (change > 0 ? 'up' : change < 0 ? 'down' : '');
-  ch.textContent = change == null ? 'No trading yet today' : `${signed(change, d.digits)} (${signed((change / d.dayOpen) * 100, 2)}%) today`;
-  if (!direction || Date.now() - sparkAt > 2000) { sparkAt = Date.now(); renderSpark(d, q.price); }
-}
-let sparkAt = 0;
-
-function renderSpark(d, price) {
-  const values = d.spark.slice(0, -1).concat(price);
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
-  const x = (i) => (i / (values.length - 1)) * 110 + 1;
-  const y = (v) => 44 - ((v - lo) / (hi - lo || 1)) * 40;
-  const path = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-  const rising = price >= values[0];
-  const color = rising ? '#35A68C' : '#E0613F';
-  $('spark').innerHTML = `<defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>` +
-    `<path d="${path} L111 46 L1 46 Z" fill="url(#sparkFill)"/><path d="${path}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/>` +
-    `<circle cx="${x(values.length - 1)}" cy="${y(price)}" r="2.6" fill="${color}"><animate attributeName="r" values="2.6;5;2.6" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.5;1" dur="1.8s" repeatCount="indefinite"/></circle>`;
-}
-
-// ------------------------------------------------------------------ chart
-let chart = null;
-let series = null;
-let lines = [];
-let coneLines = [];
-let framedFor = null;
-const candle = ([t, o, h, l, c]) => ({ time: t + tzOffset(), open: o, high: h, low: l, close: c });
-
-function ensureChart() {
-  if (chart || !window.LightweightCharts) return !!chart;
-  if ($('chartNote')) $('chartNote').remove();
-  chart = LightweightCharts.createChart($('chart'), {
-    autoSize: true,
-    layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#A69D8C', fontFamily: 'JetBrains Mono', fontSize: 10 },
-    grid: { vertLines: { color: 'rgba(58,52,41,.35)' }, horzLines: { color: 'rgba(58,52,41,.35)' } },
-    rightPriceScale: { borderColor: '#2E2A22', scaleMargins: { top: 0.1, bottom: 0.08 } },
-    timeScale: { borderColor: '#2E2A22', timeVisible: true, secondsVisible: false, rightOffset: 2 },
-    crosshair: { mode: 1, vertLine: { color: '#6B6352', labelBackgroundColor: '#3A3429' }, horzLine: { color: '#6B6352', labelBackgroundColor: '#3A3429' } },
-  });
-  series = chart.addCandlestickSeries({ upColor: '#35A68C', downColor: '#E0613F', borderVisible: false, wickUpColor: '#35A68C', wickDownColor: '#E0613F' });
-  coneLines = [
-    ['rgba(166,157,140,.75)', 1], ['rgba(227,192,109,.9)', 2], ['rgba(227,192,109,.9)', 2], ['rgba(166,157,140,.75)', 1],
-  ].map(([color, lineStyle]) => chart.addLineSeries({ color, lineWidth: 1, lineStyle, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false }));
-  return true;
-}
-
-const LINE_STYLE = {
-  pdh: ['PDH', '#D8AD4E', 2], pdl: ['PDL', '#D8AD4E', 2], pwh: ['PWH', '#E3C06D', 0], pwl: ['PWL', '#E3C06D', 0],
-  tokyo_h: ['Asia H', '#8C7BD1', 2], tokyo_l: ['Asia L', '#8C7BD1', 2],
-};
-
-function renderChart(d) {
-  if (!ensureChart()) {
-    if (!window.LightweightCharts && $('chartNote')) $('chartNote').textContent = "The chart couldn't load. Everything else is live.";
-    return;
-  }
-  series.applyOptions({ priceFormat: { type: 'price', precision: d.digits, minMove: 1 / 10 ** d.digits } });
-  series.setData(d.bars.map(candle));
-  for (const l of lines) series.removePriceLine(l);
-  lines = d.levels.filter((l) => LINE_STYLE[l.id]).map((l) => {
-    const [title, color, lineStyle] = LINE_STYLE[l.id];
-    return series.createPriceLine({ price: l.price, color, lineWidth: 1, lineStyle, axisLabelVisible: true, title });
-  });
-  const points = renderCone(clock());
-  if (framedFor !== state.symbol) {
-    framedFor = state.symbol;
-    chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, d.bars.length - 88), to: d.bars.length + Math.min(points, 40) + 1 });
-  }
-}
-
-// The 68% and 95% cones from now to the close, on the chart's 15-minute grid.
-function renderCone(now) {
-  const d = current();
-  if (!chart || !d || d.error) return 0;
-  const m = MARKETS[state.symbol];
-  const q = quoteOf(state.symbol);
-  const empty = () => { for (const s of coneLines) s.setData([]); return 0; };
-  if (!marketStatus(m, now).open || !d.engine) return empty();
-  const slot = Math.floor(now / 900) * 900;
-  const points = cone(q.price, d.engine.profile, now, d.engine.dayEnd).filter((p) => p.t % 900 === 0 || p.t === d.engine.dayEnd);
-  if (!points.length) return empty();
-  const off = tzOffset();
-  const apex = { time: slot + off, value: q.price };
-  ['u2', 'u1', 'l1', 'l2'].forEach((key, i) => coneLines[i].setData([apex, ...points.filter((p) => p.t > slot).map((p) => ({ time: p.t + off, value: p[key] }))]));
-  return points.length;
-}
-
-// ------------------------------------------------------------ probability
-let levelOrder = '';
-function renderOdds() {
-  const d = current();
-  const q = quoteOf(state.symbol);
-  if (!d || d.error || !q || !d.engine) return;
-  const now = clock();
-  const m = MARKETS[state.symbol];
-  const open = marketStatus(m, now).open;
-  const variance = open ? varianceBetween(d.engine.profile, now, d.engine.dayEnd) : 0;
-  $('closeIn').textContent = open ? `close in ${fmtDuration(d.engine.dayEnd - now)}` : 'market closed';
-  if (variance > 0) {
-    const [l1, u1] = band(q.price, variance, 1);
-    const [l2, u2] = band(q.price, variance, 2);
-    const pair = (lo, hi) => `<small>HIGH</small>${fmtNum(hi, d.digits)}<br><small>LOW&nbsp;</small>${fmtNum(lo, d.digits)}`;
-    $('band68').innerHTML = pair(l1, u1);
-    $('band95').innerHTML = pair(l2, u2);
-  } else {
-    $('band68').textContent = $('band95').textContent = 'at the open';
-  }
-  const odds = levelOdds(d.levels, q.price, q.high, q.low, variance);
-  const inPlay = odds.filter((o) => !o.touched);
-  const touched = odds.filter((o) => o.touched);
-  const order = `${open}|` + odds.map((o) => o.id + (o.touched ? '*' : o.side === 'above' ? '+' : '-')).join();
-  if (order !== levelOrder) {
-    levelOrder = order;
-    const rows = inPlay.map((o) => `
-      <div class="lv ${o.side}" data-id="${o.id}">
-        <div class="lv-top"><span class="lv-name">${o.name}</span><b class="lv-price">${fmtNum(o.price, d.digits)}</b><em class="lv-dist"></em></div>
-        ${open ? '<div class="lv-odds"><div class="lv-bar"><i></i></div><span class="lv-pct"></span></div>' : ''}
-      </div>`);
-    const at = inPlay.findIndex((o) => o.side === 'below');
-    rows.splice(at < 0 ? rows.length : at, 0, '<div class="lv now"><span>Price now</span><b id="lvNow"></b></div>');
-    $('levels').innerHTML = (open ? '' : '<div class="closed-note">The market is closed: the odds come back at the open.</div>') + rows.join('') +
-      (touched.length ? `<div class="touched"><span class="label">Touched today</span>${touched.map((o) => `<span>${o.name} ${fmtNum(o.price, d.digits)}</span>`).join('')}</div>` : '');
-  }
-  for (const o of inPlay) {
-    const row = $('levels').querySelector(`[data-id="${o.id}"]`);
-    if (!row) continue;
-    row.querySelector('.lv-dist').textContent = signed(o.price - q.price, d.digits);
-    if (!open) continue;
-    const width = `${Math.max(1.5, o.touch * 100)}%`;
-    requestAnimationFrame(() => { row.querySelector('.lv-bar i').style.width = width; });
-    row.querySelector('.lv-pct').textContent = pct(o.touch);
-  }
-  if ($('lvNow')) $('lvNow').textContent = fmtNum(q.price, d.digits);
-}
-
-// ---------------------------------------------------------- market state
-function meter(label, value, note, width) {
-  return `<div class="meter"><div class="row"><small>${label}</small><b>${value}</b></div>
-    <div class="track"><i style="width:0" data-w="${width}"></i></div><div class="meta" style="margin-top:6px">${note}</div></div>`;
-}
-const grow = (root) => requestAnimationFrame(() => requestAnimationFrame(() => {
-  for (const i of root.querySelectorAll('[data-w]')) { i.style.width = `${i.dataset.w}%`; if (i.dataset.l) i.style.left = `${i.dataset.l}%`; }
-}));
-function renderState(d) {
-  const s = d.engine && d.engine.state;
-  if (!s) { $('state').innerHTML = '<div class="meta">The engine needs more history for this market.</div>'; return; }
-  const rank = Math.round(s.volRank * 100);
-  const volWord = rank < 25 ? 'Quiet' : rank < 60 ? 'Normal' : rank < 85 ? 'Active' : 'Extreme';
-  const eff = Math.round(s.efficiency * 100);
-  const trendWord = eff < 20 ? 'Choppy' : eff < 45 ? 'Two-way' : eff < 70 ? 'Trending' : 'Strong trend';
-  const mom = [['1h', s.momentum.h1], ['4h', s.momentum.h4], ['24h', s.momentum.h24]].map(([k, z]) => {
-    const c = Math.max(-3, Math.min(3, z || 0));
-    const w = (Math.abs(c) / 3) * 50;
-    return `<div class="mom"><span>${k}</span><div class="track mid"><i class="${c >= 0 ? 'pos' : 'neg'}" style="left:50%;width:0" data-l="${c >= 0 ? 50 : 50 - w}" data-w="${w}"></i></div><em class="${c > 0 ? 'up' : c < 0 ? 'down' : ''}">${c >= 0 ? '+' : '−'}${Math.abs(z || 0).toFixed(1)}σ</em></div>`;
-  }).join('');
-  $('state').innerHTML =
-    meter('Volatility, last 24h', `${volWord} · ${ordinal(rank)} pct`, 'Ranked against the last two months.', Math.max(3, rank)) +
-    meter('Trend efficiency, last 24h', `${trendWord} · ${eff}%`, 'Net move ÷ total distance travelled.', Math.max(3, eff)) +
-    `<div class="meter"><div class="row"><small>Momentum</small><b style="font-size:12px;color:var(--stone)">in standard deviations</b></div>${mom}</div>`;
-  grow($('state'));
-}
-
-// ------------------------------------------------------------ volatility
-function renderVolatility(d) {
-  $('range').textContent = d.todayRange ? fmtNum(d.todayRange, d.digits) : '—';
-  $('rangePct').textContent = d.rangePct != null && d.todayRange ? `${Math.round(d.rangePct)}%` : '—';
-  $('gaugeFill').style.width = `${Math.min(100, ((d.rangePct || 0) / 150) * 100)}%`;
-  $('atrLine').textContent = d.atr ? `An average day (ATR 14) moves ${fmtNum(d.atr, d.digits)}.` + (d.rangePct > 100 ? ' Today is already bigger than usual.' : '') : '';
-}
-
-// ------------------------------------------------------------ model check
-function renderCheck(d) {
-  const c = d.engine && d.engine.check;
-  if (!c) { $('check').innerHTML = '<div class="meta">The model check needs about six weeks of history for this market.</div>'; return; }
-  const W = 320;
-  const H = 180;
-  const x = (p) => 34 + p * (W - 46);
-  const y = (p) => H - 26 - p * (H - 40);
-  const grid = [0, 0.5, 1].map((p) => `<line x1="${x(0)}" x2="${x(1)}" y1="${y(p)}" y2="${y(p)}" stroke="#2E2A22"/><text x="${x(0) - 6}" y="${y(p) + 3.5}" text-anchor="end" fill="#8A8274" font-size="9" font-family="JetBrains Mono">${p * 100}%</text>`).join('');
-  const xs = [0, 0.5, 1].map((p) => `<text x="${x(p)}" y="${H - 10}" text-anchor="middle" fill="#8A8274" font-size="9" font-family="JetBrains Mono">${p * 100}%</text>`).join('');
-  const max = Math.max(...c.bins.map((b) => b.n));
-  const dots = c.bins.map((b) => `<circle cx="${x(b.predicted)}" cy="${y(b.observed)}" r="${4 + 7 * Math.sqrt(b.n / max)}" fill="rgba(216,173,78,.22)" stroke="#E3C06D" stroke-width="1.4"/>`).join('');
-  $('check').innerHTML = `
-    <svg id="checkChart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecast against outcome">
-      ${grid}${xs}
-      <line x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}" stroke="#A69D8C" stroke-dasharray="4 4" stroke-width="1"/>
-      <line x1="${x(0.02)}" x2="${x(0.1)}" y1="${y(0.86)}" y2="${y(0.86)}" stroke="#A69D8C" stroke-dasharray="4 4"/>
-      <text x="${x(0.12)}" y="${y(0.86) + 3}" fill="#A69D8C" font-size="9" font-family="JetBrains Mono">honest line</text>
-      ${dots}
-      <text x="${x(0.5)}" y="12" text-anchor="middle" fill="#A69D8C" font-size="9" font-family="JetBrains Mono">what happened ↑ · what the engine said →</text>
-    </svg>
-    <div class="check-stats">
-      <div><b>${c.n.toLocaleString('en-GB')}</b><span>forecasts</span></div>
-      <div><b>${c.days}</b><span>days replayed</span></div>
-      <div><b>${c.skill > 0 ? '+' : ''}${Math.round(c.skill * 100)}%</b><span>vs guessing</span></div>
-    </div>
-    <div class="fine">Each dot groups forecasts of a touch on the previous day's high or low, made hour by hour on days the engine hadn't seen. Dots on the line mean it said 30% and it happened 30% of the time.${c.skill < 0 ? ' <span class="warn">On this market the engine is currently doing worse than a flat guess, so treat its odds with extra care.</span>' : ''}</div>`;
-}
-
-// ------------------------------------------------------------ sessions
-function renderSessions(now) {
-  const list = sessionClock(now);
-  const codes = { sydney: 'SYD', tokyo: 'TKY', london: 'LDN', newyork: 'NY' };
-  const hours = Object.fromEntries(SESSIONS.map((s) => [s.id, s.close - s.open]));
-  $('sessions').innerHTML = list.map((s) => {
-    const progress = s.open ? 100 * (1 - s.closesIn / (hours[s.id] * 3600)) : 0;
-    return `<div class="session${s.open ? ' open' : ''}">
-      <span class="code">${codes[s.id]}</span>
-      <div><b>${s.name}</b><small>${s.open ? `Open · closes in ${fmtDuration(s.closesIn)}` : s.opensIn != null ? `Opens in ${fmtDuration(s.opensIn)}` : 'Closed'}</small></div>
-      <time>${new Date((s.open ? s.until : s.at) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
-      ${s.open ? `<span class="prog" style="width:${progress.toFixed(1)}%"></span>` : ''}
-    </div>`;
-  }).join('');
-  const open = list.filter((s) => s.open).map((s) => s.name);
-  $('overlap').hidden = open.length < 2;
-  $('overlap').textContent = open.length > 1 ? `${open.join(' and ')} overlap: usually the busiest hours.` : '';
-  $('localTime').textContent = new Date(now * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-// ------------------------------------------------------------ everything
-function renderMarket() {
-  const d = current();
-  const m = MARKETS[state.symbol];
-  $('quoteName').textContent = `${m.name} · ${state.symbol === 'XAUUSD' ? 'spot' : 'BTC-USD'}`;
-  const now = clock();
-  renderStatus(now);
-  renderEngine(now);
-  if (!d || d.error) {
-    const message = d ? d.message : 'Loading…';
-    $('price').textContent = '—';
-    $('change').textContent = '';
-    $('spark').innerHTML = '';
-    $('updated').innerHTML = `<span class="warn">${message}</span>`;
-    if ($('chartNote')) $('chartNote').textContent = message;
-    if (series) { series.setData([]); for (const s of coneLines) s.setData([]); }
-    $('levels').innerHTML = `<div class="meta">${message}</div>`;
-    levelOrder = '';
-    for (const id of ['state', 'check']) $(id).innerHTML = '';
-    return;
-  }
-  renderPrice();
-  $('updated').innerHTML = (d.stale ? '<span class="warn">Showing the last prices we had · </span>' : '') + `Source: ${d.source}`;
-  renderChart(d);
-  levelOrder = '';
-  renderOdds();
-  renderState(d);
-  renderVolatility(d);
-  renderCheck(d);
-  if (!$('entry').value || $('entry').dataset.live === '1') setLiveEntry();
-}
-
-const inflight = {};
-function loadMarket(symbol) {
-  inflight[symbol] ||= (async () => {
-    try {
-      const d = demo ? demoData(symbol) : await call(`/api/markets?symbol=${symbol}`);
-      state.data[symbol] = d;
-      const streamed = live[symbol];
-      if (streamed && streamed.t > d.updated && dayKey(streamed.t, MARKETS[symbol]) === d.day) {
-        live[symbol] = { ...streamed, high: Math.max(streamed.high, d.dayHigh ?? -Infinity), low: Math.min(streamed.low, d.dayLow ?? Infinity) };
-      } else delete live[symbol];
-      if (d.fx) state.fx = d.fx;
-    } catch (err) {
-      if (!state.data[symbol] || state.data[symbol].error) state.data[symbol] = { error: err.code || 'failed', message: err.message };
-    } finally {
-      delete inflight[symbol];
-    }
-    if (symbol === state.symbol) renderMarket();
-    renderRisk();
-  })();
-  return inflight[symbol];
-}
-
-function selectSymbol(symbol) {
-  state.symbol = symbol;
-  store.set('symbol', symbol);
-  framedFor = null;
-  for (const b of document.querySelectorAll('.segment button')) b.setAttribute('aria-pressed', String(b.dataset.symbol === symbol));
-  streamBitcoin(symbol === 'BTCUSD');
-  levelOrder = '';
-  renderMarket();
-  loadMarket(symbol);
-}
-for (const b of document.querySelectorAll('.segment button')) b.addEventListener('click', () => { haptic(); selectSymbol(b.dataset.symbol); });
-
-// The heartbeat: clocks, countdowns and odds move every second, even between prices.
-let beats = 0;
-function heartbeat() {
-  const now = clock();
-  renderEngine(now);
-  renderStatus(now);
-  renderSessions(now);
-  const left = 900 - (now % 900);
-  $('candleTimer').textContent = `next candle ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-  if (!$('markets').hidden) {
-    renderOdds();
-    if (++beats % 15 === 0) renderCone(now);
-  }
-}
-
-// ------------------------------------------------------------------- risk
-const risk = { symbol: state.symbol };
-const num = (id) => parseFloat(String($(id).value).replace(/,/g, ''));
-$('balance').value = store.get('balance') || '';
-$('currency').value = store.get('currency') || 'USD';
-$('riskPct').value = store.get('riskPct') || '1';
-
-function setLiveEntry() {
-  const d = state.data[risk.symbol];
-  const q = quoteOf(risk.symbol);
-  if (q && Number.isFinite(q.price)) { $('entry').value = q.price.toFixed(d.digits); $('entry').dataset.live = '1'; }
-}
-function selectRiskMarket(symbol) {
-  risk.symbol = symbol;
-  for (const b of document.querySelectorAll('#riskMarket button')) b.setAttribute('aria-pressed', String(b.dataset.symbol === symbol));
-  $('contract').value = store.get('contract.' + symbol) || String(MARKETS[symbol].contract);
-  $('stop').value = '';
-  setLiveEntry();
-  if (!state.data[symbol] && symbol !== state.symbol) loadMarket(symbol);
-  renderRisk();
-}
-
-function renderRisk() {
-  const ccy = $('currency').value;
-  const usdPerUnit = state.fx ? state.fx[ccy] : ccy === 'USD' ? 1 : null;
-  $('fxHint').hidden = ccy === 'USD';
-  $('fxHint').textContent = usdPerUnit ? `1 ${ccy} = ${fmtNum(usdPerUnit, 4)} USD (ECB rate)` : `The ${ccy} exchange rate isn't available right now, so use your USD balance.`;
-  for (const b of document.querySelectorAll('#riskChips button')) b.setAttribute('aria-pressed', String(parseFloat(b.dataset.risk) === num('riskPct')));
-  const d = state.data[risk.symbol];
-  const digits = d && d.digits != null ? d.digits : MARKETS[risk.symbol].digits;
-  const r = usdPerUnit && lotSize({ balance: num('balance'), riskPct: num('riskPct'), entry: num('entry'), stop: num('stop'), contract: num('contract'), usdPerUnit });
-  const show = !!r;
-  $('facts').hidden = !show;
-  $('targets').hidden = !show || r.tooSmall;
-  $('oddsNote').hidden = !show || r.tooSmall;
-  if (!show) {
-    $('lots').textContent = '—';
-    $('lotsLine').textContent = !usdPerUnit ? 'Switch the account to USD for now.' : 'Enter your balance, entry and stop loss.';
-    return;
-  }
-  $('lots').textContent = r.tooSmall ? '0.00' : fmtNum(r.lots, 2);
-  $('lotsLine').innerHTML = r.tooSmall
-    ? '<span class="warn">Below the 0.01 minimum: this stop is too wide for this risk.</span>'
-    : `${r.side === 'long' ? 'Buy' : 'Sell'} ${risk.symbol}, risking ${money(r.actualRisk, ccy)}`;
-  $('facts').innerHTML = [
-    ['Risk budget', `${money(r.riskMoney, ccy)} (${fmtNum(num('riskPct'), 2)}%)`],
-    ['Stop distance', fmtNum(r.distance, digits)],
-    ['Each $1 price move', money(r.perPoint, ccy)],
-    ['Loss per 1.00 lot at stop', money(r.riskPerLot, ccy)],
-  ].map(([k, v]) => `<div>${k}<b>${v}</b></div>`).join('');
-  const hourVar = d && d.engine ? d.engine.profile.reduce((a, b) => a + b, 0) / 24 : 0;
-  const odds = r.targets.map((t) => tradeOdds(num('entry'), num('stop'), t.price, hourVar));
-  $('targets').tBodies[0].innerHTML = r.targets.map((t, i) => `<tr><td>${t.r}R</td><td>${fmtNum(t.price, digits)}</td><td>${pct(odds[i] && odds[i].targetFirst)}</td><td class="up">+${money(t.profit, ccy)}</td></tr>`).join('');
-  const first = odds[0];
-  $('oddsNote').innerHTML = `<b>ODDS</b> are the chance the target comes before the stop if the market moves at random. A 2R trade needs to win more than <b>${pct(1 / 3)}</b> of the time to make money; beating those odds is what an edge means.` +
-    (first && first.hours ? ` At this market's usual volatility, a 1R trade like this one is typically decided in about <b>${fmtDuration(first.hours * 3600)}</b>.` : '');
-}
-
-for (const id of ['balance', 'currency', 'riskPct', 'entry', 'stop', 'contract']) {
-  $(id).addEventListener('input', () => {
-    if (id === 'entry') $('entry').dataset.live = '0';
-    if (['balance', 'currency', 'riskPct'].includes(id)) store.set(id, $(id).value);
-    if (id === 'contract') store.set('contract.' + risk.symbol, $(id).value);
-    renderRisk();
-  });
-}
-$('currency').addEventListener('change', renderRisk);
-for (const b of document.querySelectorAll('#riskChips button')) b.addEventListener('click', () => { $('riskPct').value = b.dataset.risk; store.set('riskPct', b.dataset.risk); haptic(); renderRisk(); });
-for (const b of document.querySelectorAll('#riskMarket button')) b.addEventListener('click', () => { haptic(); selectRiskMarket(b.dataset.symbol); });
-$('useLive').addEventListener('click', () => { setLiveEntry(); renderRisk(); });
-
-// ------------------------------------------------------------------- tabs
-function showTab(tab) {
-  for (const s of document.querySelectorAll('main > section')) s.hidden = s.id !== tab;
-  for (const b of document.querySelectorAll('nav button')) {
-    if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page');
-    else b.removeAttribute('aria-current');
-  }
-  if (tab === 'markets') { levelOrder = ''; renderOdds(); }
-  window.scrollTo(0, 0);
-}
-for (const b of document.querySelectorAll('nav button')) b.addEventListener('click', () => { haptic(); showTab(b.dataset.tab); });
-
-// ------------------------------------------------------------ sign-in gate
-function gate(title, text, cta) {
-  $('gateTitle').textContent = title;
-  $('gateText').textContent = text;
-  const a = $('gateCta');
-  a.hidden = !cta;
-  if (cta) {
-    a.textContent = cta.label;
-    a.href = cta.href;
-    a.onclick = (e) => { if (tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(cta.href); } };
-  }
-}
-
-async function start() {
-  if (!demo) {
-    if (!tg || !tg.initData) {
-      return gate('Open the terminal from Telegram', 'The TCP Quant Terminal opens inside Telegram, for Inner Circle members.', { label: 'OPEN IN TELEGRAM', href: `https://t.me/${BOT}` });
-    }
-    try {
-      const me = await call('/api/me');
-      $('whoName').textContent = me.user.first_name;
-      $('whoInitial').textContent = (me.user.first_name || '?').slice(0, 1).toUpperCase();
-      $('who').hidden = false;
-    } catch (err) {
-      if (err.code === 'not_member') {
-        return gate('Members only', 'The Quant Terminal is part of the TCP Inner Circle. Join, and it unlocks here.', { label: 'JOIN THE INNER CIRCLE', href: `https://t.me/${BOT}?start=terminal` });
-      }
-      return gate("Couldn't sign you in", 'Close the terminal and open it again from the bot.', null);
-    }
-  } else {
-    $('whoName').textContent = 'Demo';
-    $('whoInitial').textContent = 'D';
-    $('who').hidden = false;
-  }
-  $('gate').hidden = true;
-  selectSymbol(state.symbol);
-  selectRiskMarket(state.symbol);
-  heartbeat();
-  setInterval(heartbeat, 1000);
-  setInterval(() => document.visibilityState === 'visible' && !demo && loadMarket(state.symbol), 60e3);
-  if (demo) setInterval(demoTick, 1500);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') { loadMarket(state.symbol); streamBitcoin(state.symbol === 'BTCUSD'); }
-    else streamBitcoin(false);
-  });
-}
-start();
+/*SCRIPT*/
 </script>
 </body>
 </html>

@@ -289,3 +289,41 @@ test('failed Telegram calls are logged without the token', async () => {
   assert.ok(logged.length > 0);
   assert.ok(logged.every((l) => !l.includes(TOKEN)));
 });
+
+// ------------------------------------------------------------ notify me
+const tap = (feature, initData = sam(), env = ENV, body = JSON.stringify({ feature })) =>
+  worker.fetch(new Request('https://terminal.example/api/interest', {
+    method: 'POST', headers: { authorization: `tma ${initData}`, 'content-type': 'application/json' }, body,
+  }), env);
+
+test("Notify me tells the team group who wants a coming-soon feature, once per member and feature", async () => {
+  at(NOW);
+  setup();
+  const sent = [];
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).endsWith('/sendMessage')) { sent.push(JSON.parse(init.body)); return new Response('{"ok":true,"result":{}}'); }
+    return inner(url, init);
+  };
+  assert.equal((await tap('copy')).status, 200);
+  assert.equal((await tap('copy')).status, 200);
+  assert.equal((await tap('ai')).status, 200);
+  assert.equal(sent.length, 2, 'one message per feature');
+  assert.equal(String(sent[0].chat_id), '-1001');
+  assert.equal(sent[0].text, "💡 Wants copy trading\nSam · @samlee\nID: 555\n\n(from the Quant Terminal)");
+  assert.equal(sent[0].parse_mode, undefined, 'plain text: names are never read as HTML');
+  assert.match(sent[1].text, /Wants the AI features/);
+});
+
+test('Notify me needs a member, a sign-in and a known feature', async () => {
+  at(NOW);
+  setup();
+  assert.equal((await tap('teleport')).status, 400);
+  assert.equal((await tap('constructor')).status, 400);
+  assert.equal((await tap(null, sam(), ENV, 'null')).status, 400);
+  assert.equal((await tap(null, sam(), ENV, 'not json')).status, 400);
+  assert.equal((await tap('copy', 'hash=nope')).status, 401);
+  resetCaches();
+  setup({ status: { '-1002': 'left', '-1001': 'left' } });
+  assert.equal((await tap('copy')).status, 403);
+});

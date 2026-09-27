@@ -2,7 +2,9 @@
 // plus src/assets.js for the tests. Run with: cd terminal && npm run build
 //
 //   src/lib.js     the market maths, shared by the Worker and the page
-//   src/app.html   the page; /*LIB*/ marks where lib.js goes
+//   src/app.html   the page's markup; /*CSS*/ and /*SCRIPT*/ mark where the rest goes
+//   src/app.css    the page's styles
+//   src/app.js     the page's script (lib.js goes in front of it)
 //   src/fonts/     brand fonts (Latin subsets of signals/fonts), served by the Worker
 //   src/worker.js  the Worker
 import fs from 'node:fs';
@@ -15,8 +17,8 @@ const read = (f) => fs.readFileSync(path.join(dir, f), 'utf8');
 // ES module syntax -> plain script: the page and the bundle share one scope.
 const lib = read('src/lib.js').replace(/^export (const|function|async function) /gm, '$1 ');
 const html = read('src/app.html');
-if (!html.includes('/*LIB*/')) throw new Error('app.html has no /*LIB*/ marker');
-const page = html.replace('/*LIB*/', () => lib);
+for (const marker of ['/*CSS*/', '/*SCRIPT*/']) if (!html.includes(marker)) throw new Error(`app.html has no ${marker} marker`);
+const page = html.replace('/*CSS*/', () => read('src/app.css')).replace('/*SCRIPT*/', () => `${lib}\n${read('src/app.js')}`);
 
 const fonts = Object.fromEntries(
   fs.readdirSync(path.join(dir, 'src/fonts')).filter((f) => f.endsWith('.woff2')).sort()
