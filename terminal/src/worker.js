@@ -5,18 +5,32 @@
 // whether they're in the Inner Circle (or the team group) before sending
 // any data. Nobody logs in and nothing is stored.
 //
+// Each market's answer carries the probability engine's inputs (see lib.js):
+// the hour-by-hour volatility profile from two months of hourly bars, the time
+// of today's close, the market state, and the out-of-sample model check. The
+// page recomputes the odds from these every second and on every price.
+//
 // Settings live in the Worker's environment, never in this file:
 //   BOT_TOKEN              secret: the onboarding bot's token
 //   INNER_CIRCLE_CHAT_ID   members of this group get in
 //   ADMIN_CHAT_ID          optional: the team group gets in too
 //   TWELVE_DATA_KEY        secret: a free twelvedata.com key, for gold prices
-import { MARKETS, toDays, snapshot, marketStatus } from './lib.js';
+import { MARKETS, toDays, snapshot, marketStatus, volProfile, marketState, calibrate, dayEnd } from './lib.js';
 import { PAGE, FONTS } from './assets.js';
 
 const SIGN_IN_MAX_AGE = 24 * 3600; // Telegram's signature on a Mini App session
 const MEMBER_TTL = 600; // seconds a "yes, member" answer is reused
 const NON_MEMBER_TTL = 60; // so a newly approved member gets in within a minute
-const DATA_TTL = { XAUUSD: 300, BTCUSD: 120, closed: 3600, fx: 6 * 3600 };
+// Refresh rates. Gold's free allowance is 800 requests a day: 15-minute bars every
+// 150 seconds (about 550 a day) plus hourly history once an hour (about 23).
+const TTL = {
+  XAUUSD: { recent: 150, history: 3600 },
+  BTCUSD: { recent: 60, history: 3600 },
+  closed: 6 * 3600, // gold's prices don't move while it's closed
+  check: 6 * 3600, // the model check changes slowly
+  fx: 6 * 3600,
+};
+const HISTORY_BARS = 1500; // hourly: about two months, for the volatility profile and the model check
 const CHART_BARS = 192; // 15-minute bars: two days
 
 const now = () => Math.floor(Date.now() / 1000);
@@ -121,30 +135,54 @@ async function twelveData(env, interval, size) {
     .sort((a, b) => a.t - b.t);
 }
 
-// Coinbase Exchange: [[time, low, high, open, close, volume]], newest first.
-async function coinbase(granularity) {
-  const rows = await getJson(`https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=${granularity}`);
+// Coinbase Exchange: [[time, low, high, open, close, volume]], newest first, 300 at most.
+async function coinbase(granularity, start, end) {
+  const range = start ? `&start=${new Date(start * 1000).toISOString()}&end=${new Date(end * 1000).toISOString()}` : '';
+  const rows = await getJson(`https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=${granularity}${range}`);
   if (!Array.isArray(rows)) throw new Error('Coinbase: no data');
-  return rows.map(([t, l, h, o, c]) => ({ t, o, h, l, c })).sort((a, b) => a.t - b.t);
+  return rows.map(([t, l, h, o, c]) => ({ t, o, h, l, c }));
 }
+
+const tidy = (bars) => [...new Map(bars.map((b) => [b.t, b])).values()].sort((a, b) => a.t - b.t);
+
+// Hourly history: the volatility profile, previous days and weeks, and the model check.
+async function loadHistory(env, symbol, at) {
+  if (symbol === 'XAUUSD') return twelveData(env, '1h', HISTORY_BARS);
+  const hour = Math.floor(at / 3600) * 3600;
+  const windows = [];
+  for (let end = hour + 3600; windows.length < HISTORY_BARS / 300; end -= 300 * 3600) windows.push(coinbase(3600, end - 300 * 3600, end));
+  return tidy((await Promise.all(windows)).flat());
+}
+
+const loadRecent = (env, symbol) => (symbol === 'XAUUSD' ? twelveData(env, '15min', 200) : coinbase(900).then(tidy));
 
 async function loadMarket(env, symbol, at) {
   const market = MARKETS[symbol];
-  let days;
-  let intraday;
-  if (symbol === 'XAUUSD') {
-    const hourly = await twelveData(env, '1h', 720);
-    days = toDays(hourly, market);
-    intraday = await twelveData(env, '15min', 200);
-  } else {
-    days = (await coinbase(86400)).map((b) => ({ ...b, key: new Date(b.t * 1000).toISOString().slice(0, 10) }));
-    intraday = await coinbase(900);
-  }
+  const open = marketStatus(market, at).open;
+  const ttl = TTL[symbol];
+  const [history, recent] = await Promise.all([
+    cached(`${symbol}:1h`, open ? ttl.history : TTL.closed, async () => {
+      const bars = await loadHistory(env, symbol, at);
+      return { bars, profile: volProfile(bars) };
+    }, at),
+    cached(`${symbol}:15m`, open ? ttl.recent : TTL.closed, async () => ({ bars: await loadRecent(env, symbol) }), at),
+  ]);
+  const check = await cached(`${symbol}:check`, TTL.check, async () => ({ result: calibrate(history.bars, market) }), at).catch(() => ({ result: null }));
+  const snap = snapshot(market, toDays(history.bars, market), recent.bars, at);
+  const live = { t: at, o: snap.price, h: snap.price, l: snap.price, c: snap.price };
   return {
-    ...snapshot(market, days, intraday, at),
-    bars: intraday.slice(-CHART_BARS).map((b) => [b.t, b.o, b.h, b.l, b.c]),
+    ...snap,
+    engine: {
+      profile: history.profile,
+      dayEnd: dayEnd(snap.day, market),
+      state: marketState([...history.bars, live], history.profile),
+      check: check.result,
+    },
+    spark: history.bars.slice(-47).map((b) => b.c).concat(snap.price),
+    bars: recent.bars.slice(-CHART_BARS).map((b) => [b.t, b.o, b.h, b.l, b.c]),
     source: symbol === 'XAUUSD' ? 'Twelve Data (XAU/USD spot)' : 'Coinbase (BTC-USD)',
     updated: at,
+    stale: history.stale || recent.stale,
   };
 }
 
@@ -163,7 +201,7 @@ const json = (body, status = 200) =>
 const SECURITY = {
   'content-security-policy':
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; " +
-    "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'",
+    "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' wss://ws-feed.exchange.coinbase.com",
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
 };
@@ -184,12 +222,10 @@ async function api(request, env, path, url) {
       return json({ error: 'no_key', message: 'Gold prices need a free Twelve Data key: see terminal/SETUP.md.' }, 503);
     }
     const at = now();
-    // Gold's prices don't move while it's closed, so its free data allowance is spared then.
-    const ttl = marketStatus(MARKETS[symbol], at).open ? DATA_TTL[symbol] : DATA_TTL.closed;
     try {
       const [market, fx] = await Promise.all([
-        cached(symbol, ttl, () => loadMarket(env, symbol, at), at),
-        cached('fx', DATA_TTL.fx, loadFx, at).catch(() => null),
+        loadMarket(env, symbol, at),
+        cached('fx', TTL.fx, loadFx, at).catch(() => null),
       ]);
       return json({ ...market, fx: fx && fx.usdPerUnit });
     } catch {

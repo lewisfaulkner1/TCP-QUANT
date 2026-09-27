@@ -42,7 +42,7 @@ function setup({ status = { '-1002': 'member', '-1001': 'left' }, twelve = 'ok',
     }
     if (u.hostname === 'api.exchange.coinbase.com') {
       if (coinbase !== 'ok') return reply({ message: 'down' }, 503);
-      return reply(btcRows(Number(u.searchParams.get('granularity'))));
+      return reply(btcRows(Number(u.searchParams.get('granularity')), u.searchParams.get('start'), u.searchParams.get('end')));
     }
     if (u.hostname === 'api.frankfurter.app') {
       return fx === 'ok' ? reply({ base: 'USD', date: '2026-09-23', rates: { GBP: 0.75, EUR: 0.85 } }) : reply({}, 500);
@@ -55,18 +55,23 @@ function setup({ status = { '-1002': 'member', '-1001': 'left' }, twelve = 'ok',
 function goldValues(interval) {
   const step = interval === '1h' ? 3600 : 900;
   const out = [];
-  for (let t = NOW - 30 * 86400; t < NOW; t += step) {
+  let i = 0;
+  for (let t = NOW - (interval === '1h' ? 70 : 3) * 86400; t < NOW; t += step) {
     if (!marketStatus(MARKETS.XAUUSD, t).open) continue;
     const spike = t === Date.UTC(2026, 8, 22, 13) / 1000;
     const d = new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 19);
-    out.push({ datetime: d, open: '2000.00', high: spike ? '2010.00' : '2001.00', low: '1999.00', close: '2000.00' });
+    const close = (i++ % 2 ? 2000.5 : 1999.5).toFixed(2);
+    out.push({ datetime: d, open: '2000.00', high: spike ? '2010.00' : '2001.00', low: '1999.00', close });
   }
   return out.reverse();
 }
-function btcRows(granularity) {
+function btcRows(granularity, start, end) {
+  const to = end ? Date.parse(end) / 1000 : NOW;
+  const from = start ? Date.parse(start) / 1000 : Math.floor(NOW / granularity) * granularity - 299 * granularity;
   const rows = [];
-  for (let t = Math.floor(NOW / granularity) * granularity - 299 * granularity; t <= NOW; t += granularity) {
-    rows.push([t, 64000, t === Date.UTC(2026, 8, 22) / 1000 ? 66000 : 65000, 64500, 64500, 10]);
+  for (let t = Math.ceil(from / granularity) * granularity; t < to && t <= NOW && rows.length < 300; t += granularity) {
+    const spike = t >= Date.UTC(2026, 8, 22) / 1000 && t < Date.UTC(2026, 8, 22, 1) / 1000;
+    rows.push([t, 64000, spike ? 66000 : 65000, 64500, t % (2 * granularity) ? 64510 : 64490, 10]);
   }
   return rows.reverse();
 }
@@ -144,15 +149,25 @@ test('gold: levels, volatility, the chart and exchange rates, from Twelve Data',
   assert.equal(res.status, 200);
   const d = await res.json();
   assert.equal(d.symbol, 'XAUUSD');
-  assert.equal(d.price, 2000);
+  assert.ok(Math.abs(d.price - 2000) <= 0.5);
   assert.equal(d.levels.find((l) => l.id === 'pdh').price, 2010);
   assert.equal(d.levels.find((l) => l.id === 'pdl').price, 1999);
   assert.equal(d.bars.length, 192);
+  assert.equal(d.engine.profile.length, 24);
+  assert.ok(d.engine.profile.every((v) => v > 0));
+  assert.equal(d.engine.dayEnd, Date.UTC(2026, 8, 23, 21) / 1000, 'gold closes at 17:00 New York');
+  assert.ok(d.engine.state && Number.isFinite(d.engine.state.efficiency));
+  // The flat test market gives the model check too few forecasts to score (it returns null);
+  // lib.test.js checks the model on a simulated market.
+  assert.ok('check' in d.engine, 'the model check rides along');
+  assert.equal(d.spark.length, 48);
+  assert.equal(d.dayHigh, 2001);
   assert.deepEqual(Object.keys(d.fx), ['USD', 'GBP', 'EUR']);
   assert.ok(Math.abs(d.fx.GBP - 1 / 0.75) < 1e-9);
   assert.equal(d.stale, false);
   const td = calls.filter((u) => u.hostname === 'api.twelvedata.com');
-  assert.deepEqual(td.map((u) => u.searchParams.get('interval')), ['1h', '15min']);
+  assert.deepEqual(td.map((u) => u.searchParams.get('interval')).sort(), ['15min', '1h']);
+  assert.equal(td.find((u) => u.searchParams.get('interval') === '1h').searchParams.get('outputsize'), '1500');
   assert.ok(td.every((u) => u.searchParams.get('apikey') === 'td-key' && u.searchParams.get('symbol') === 'XAU/USD'));
 });
 
@@ -160,9 +175,12 @@ test('bitcoin: UTC days from Coinbase', async () => {
   setup();
   at(NOW);
   const d = await (await get('/api/markets?symbol=BTCUSD')).json();
-  assert.equal(d.price, 64500);
+  assert.ok([64490, 64510].includes(d.price));
   assert.equal(d.levels.find((l) => l.id === 'pdh').price, 66000);
   assert.match(d.source, /Coinbase/);
+  const hourly = calls.filter((u) => u.searchParams.get('granularity') === '3600');
+  assert.equal(hourly.length, 5, 'two months of hourly history in five windows');
+  assert.equal(d.engine.dayEnd, Date.UTC(2026, 8, 24) / 1000, 'Bitcoin days end at midnight UTC');
 });
 
 test('prices are cached, so the free data allowance lasts; a failed refresh serves the last prices, marked stale', async () => {
@@ -171,16 +189,19 @@ test('prices are cached, so the free data allowance lasts; a failed refresh serv
   await get('/api/markets?symbol=XAUUSD');
   await get('/api/markets?symbol=XAUUSD');
   assert.equal(calls.filter((u) => u.hostname === 'api.twelvedata.com').length, 2, 'one refresh (two requests), then the cache');
+  at(NOW + 151);
+  await get('/api/markets?symbol=XAUUSD');
+  assert.deepEqual(calls.filter((u) => u.hostname === 'api.twelvedata.com').map((u) => u.searchParams.get('interval')).slice(2), ['15min'], 'recent bars refresh, history waits');
 
   setup({ twelve: 'error' });
-  at(NOW + 301);
+  at(NOW + 400);
   const errors = [];
   const original = console.error;
   console.error = (...a) => errors.push(a.join(' '));
   try {
     const d = await (await get('/api/markets?symbol=XAUUSD')).json();
     assert.equal(d.stale, true);
-    assert.equal(d.price, 2000);
+    assert.ok(Math.abs(d.price - 2000) <= 0.5);
   } finally {
     console.error = original;
   }
@@ -219,7 +240,7 @@ test('if exchange rates fail, prices still load (the calculator then asks for US
   } finally {
     console.error = original;
   }
-  assert.equal(d.price, 64500);
+  assert.ok([64490, 64510].includes(d.price));
   assert.equal(d.fx, null);
 });
 
@@ -240,7 +261,7 @@ test('the page, fonts and security headers are served; the bundle for the dashbo
     assert.equal(res.status, 200);
     const csp = res.headers.get('content-security-policy');
     assert.match(csp, /default-src 'self'/);
-    assert.match(csp, /connect-src 'self'/);
+    assert.match(csp, /connect-src 'self' wss:\/\/ws-feed\.exchange\.coinbase\.com/);
     const html = await res.text();
     assert.ok(html.includes('function lotSize('), 'the maths is inlined');
     assert.ok(!html.includes('/*LIB*/'));

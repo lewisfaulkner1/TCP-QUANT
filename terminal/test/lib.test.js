@@ -2,7 +2,10 @@
 // Run with: cd terminal && npm test
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARKETS, dayKey, wallToUtc, toDays, atr, snapshot, sessionClock, marketStatus, lotSize, fmtDuration, fmtNum } from '../src/lib.js';
+import {
+  MARKETS, dayKey, wallToUtc, toDays, atr, snapshot, sessionClock, marketStatus, lotSize, fmtDuration, fmtNum,
+  nyHour, normCdf, volProfile, varianceBetween, dayEnd, touchProb, beyondProb, band, cone, levelOdds, marketState, calibrate, tradeOdds,
+} from '../src/lib.js';
 
 const GOLD = MARKETS.XAUUSD;
 const BTC = MARKETS.BTCUSD;
@@ -158,4 +161,129 @@ test('numbers and durations read naturally', () => {
   assert.equal(fmtDuration(125 * 60), '2h 5m');
   assert.equal(fmtDuration(3 * 86400 + 60), '3d 0h');
   assert.equal(fmtDuration(20 * 60), '20m');
+});
+
+// ------------------------------------------------------- probability engine
+// A seeded random walk on gold's schedule: each hourly bar is built from `steps`
+// smaller moves, with New York's morning three times as volatile as the rest.
+function randomWalk({ days = 90, seed = 42, base = 2000, quiet = 0.0008, busy = 0.0024, trend = 0, steps = 12 } = {}) {
+  let state = seed;
+  const rand = () => ((state = (state * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const normal = () => Math.sqrt(-2 * Math.log(rand() + 1e-12)) * Math.cos(2 * Math.PI * rand());
+  const bars = [];
+  let price = base;
+  const start = utc(2026, 6, 1, 22); // Sunday 18:00 New York
+  for (let t = start; t < start + days * 86400; t += 3600) {
+    if (!marketStatus(GOLD, t).open) continue;
+    const hour = nyHour(t);
+    const sd = (hour >= 8 && hour < 12 ? busy : quiet) / Math.sqrt(steps);
+    const o = price;
+    let h = o;
+    let l = o;
+    for (let k = 0; k < steps; k++) {
+      price *= Math.exp(sd * normal() + trend);
+      h = Math.max(h, price);
+      l = Math.min(l, price);
+    }
+    bars.push({ t, o, h, l, c: price });
+  }
+  return bars;
+}
+
+test('the normal curve and New York hours are right', () => {
+  assert.ok(Math.abs(normCdf(0) - 0.5) < 1e-7);
+  assert.ok(Math.abs(normCdf(1.96) - 0.975) < 1e-4);
+  assert.ok(Math.abs(normCdf(-1) - 0.158655) < 1e-5);
+  assert.equal(nyHour(utc(2026, 9, 23, 13)), 9); // EDT
+  assert.equal(nyHour(utc(2026, 1, 7, 13)), 8); // EST
+  assert.equal(dayEnd('2026-09-23', GOLD), utc(2026, 9, 23, 21));
+  assert.equal(dayEnd('2026-01-07', GOLD), utc(2026, 1, 7, 22));
+  assert.equal(dayEnd('2026-09-27', BTC), utc(2026, 9, 28));
+});
+
+test("the volatility profile finds each hour's own volatility", () => {
+  const profile = volProfile(randomWalk());
+  const busy = (profile[9] + profile[10]) / 2;
+  const quiet = (profile[2] + profile[20]) / 2;
+  assert.ok(busy / quiet > 6 && busy / quiet < 12, `busy/quiet variance ${busy / quiet}`); // truth: 9
+  const flat = new Array(24).fill(1e-6);
+  assert.ok(Math.abs(varianceBetween(flat, utc(2026, 9, 23, 13, 30), utc(2026, 9, 23, 15)) - 1.5e-6) < 1e-15);
+});
+
+test('touch, close and band probabilities follow the reflection principle', () => {
+  const v = 0.0001; // 1% standard deviation to the close
+  const up = 100 * Math.exp(0.01);
+  assert.ok(Math.abs(touchProb(100, up, v) - 0.3173) < 1e-3, 'one standard deviation away');
+  assert.ok(Math.abs(touchProb(100, up, v) - 2 * beyondProb(100, up, v)) < 1e-12, 'touch = 2 x close beyond');
+  assert.ok(Math.abs(touchProb(100, 100 / Math.exp(0.01), v) - touchProb(100, up, v)) < 1e-12, 'symmetric');
+  assert.equal(touchProb(100, 120, 0), 0);
+  const [lo, hi] = band(100, v, 2);
+  assert.ok(Math.abs(hi - 100 * Math.exp(0.02)) < 1e-9 && Math.abs(lo - 100 * Math.exp(-0.02)) < 1e-9);
+  const odds = levelOdds([{ id: 'a', price: 105 }, { id: 'b', price: 99 }, { id: 'c', price: 90 }], 100, 101, 98, v);
+  assert.deepEqual(odds.map((o) => [o.id, o.side, o.touched]), [['a', 'above', false], ['b', 'below', true], ['c', 'below', false]]);
+  assert.equal(odds[1].touch, 1);
+});
+
+test('the cone widens to the close', () => {
+  const flat = new Array(24).fill(1e-6);
+  const from = utc(2026, 9, 23, 13, 5);
+  const points = cone(2000, flat, from, utc(2026, 9, 23, 21));
+  assert.equal(points[0].t, utc(2026, 9, 23, 13, 15));
+  assert.equal(points[points.length - 1].t, utc(2026, 9, 23, 21));
+  for (let i = 1; i < points.length; i++) assert.ok(points[i].u2 > points[i - 1].u2 && points[i].l2 < points[i - 1].l2);
+  const v = (utc(2026, 9, 23, 21) - from) / 3600 * 1e-6;
+  assert.ok(Math.abs(points[points.length - 1].u1 - 2000 * Math.exp(Math.sqrt(v))) < 1e-9);
+});
+
+test('on a market with no edge, the engine is honest: its probabilities come true at the rate it says', () => {
+  // Three simulated histories of 200 days, priced minute by minute (coarser sampling
+  // misses touches between samples and would make any touch model look over-confident).
+  const bins = [0, 1, 2, 3, 4].map(() => ({ said: 0, happened: 0, n: 0 }));
+  let skill = 0;
+  for (const seed of [11, 23, 37]) {
+    const check = calibrate(randomWalk({ days: 200, seed, steps: 60 }), GOLD);
+    assert.ok(check.n > 2000, `${check.n} forecasts`);
+    skill += check.skill / 3;
+    for (const b of check.bins) {
+      const k = Math.round(b.lo * 5);
+      bins[k].said += b.predicted * b.n;
+      bins[k].happened += b.observed * b.n;
+      bins[k].n += b.n;
+    }
+  }
+  assert.ok(skill > 0.3, `skill ${skill}`);
+  for (const [k, b] of bins.entries()) {
+    const said = b.said / b.n;
+    const happened = b.happened / b.n;
+    assert.ok(b.n > 300 && Math.abs(said - happened) < 0.06, `${k * 20}-${k * 20 + 20}%: said ${said.toFixed(3)}, happened ${happened.toFixed(3)} (n ${b.n})`);
+  }
+});
+
+test('the model check fits in a Worker request: two months of hourly bars in a few milliseconds', () => {
+  const bars = randomWalk({ days: 90, seed: 5 }).slice(-1500);
+  calibrate(bars, GOLD); // warm up, as a long-lived Worker would be
+  const t0 = performance.now();
+  assert.ok(calibrate(bars, GOLD).n > 200);
+  const ms = performance.now() - t0;
+  assert.ok(ms < 25, `calibration took ${ms.toFixed(1)} ms`);
+});
+
+test('market state tells a trend from chop', () => {
+  const up = Array.from({ length: 80 }, (_, i) => ({ t: utc(2026, 9, 1) + i * 3600, o: 100 + i, h: 101 + i, l: 99 + i, c: 100 + i }));
+  const chop = Array.from({ length: 80 }, (_, i) => ({ t: utc(2026, 9, 1) + i * 3600, o: 100, h: 101, l: 99, c: i % 2 ? 101 : 99 }));
+  const profile = new Array(24).fill(1e-4);
+  const trend = marketState(up, profile);
+  const flat = marketState(chop, profile);
+  assert.ok(trend.efficiency > 0.99 && flat.efficiency < 0.1);
+  assert.ok(trend.momentum.h24 > 0 && trend.momentum.h1 > 0);
+  assert.equal(marketState(up.slice(0, 20), profile), null, 'needs history');
+});
+
+test("a trade's baseline odds: 1R is a coin toss, 2R wins a third of the time, 3R a quarter", () => {
+  assert.equal(tradeOdds(3740, 3735, 3745, 1e-6).targetFirst, 0.5);
+  assert.ok(Math.abs(tradeOdds(3740, 3735, 3750, 1e-6).targetFirst - 1 / 3) < 1e-12);
+  assert.equal(tradeOdds(3740, 3745, 3725, 1e-6).targetFirst, 0.25);
+  const odds = tradeOdds(100, 99, 101, 1e-4); // 1% per hour, stop and target 1% away
+  assert.ok(Math.abs(odds.hours - 1) < 1e-9, 'expected time = risk x reward / variance');
+  assert.equal(tradeOdds(100, 100, 101, 1e-4), null);
 });

@@ -1,8 +1,12 @@
 # TCP Quant Terminal · setup
 
-About 15 minutes, and free. The terminal opens inside Telegram for Inner Circle members:
-live gold and Bitcoin charts with key levels, volatility, the session clock and a lot-size
-calculator. You need the Cloudflare account the bot runs on, BotFather, and a free Twelve Data account.
+About 15 minutes, and free. The terminal opens inside Telegram for Inner Circle members. It has:
+- live gold and Bitcoin charts with key levels and a probability cone;
+- a probability engine with its own model check;
+- market state, volatility and a session clock;
+- a lot-size calculator with the odds for each target.
+
+You need the Cloudflare account the bot runs on, BotFather, and a free Twelve Data account.
 
 ## 1. Put the terminal online (Cloudflare Workers, free)
 
@@ -25,10 +29,11 @@ calculator. You need the Cloudflare account the bot runs on, BotFather, and a fr
 1. Sign up at **twelvedata.com** (the free Basic plan).
 2. Copy the API key from your dashboard into the `TWELVE_DATA_KEY` secret, and press **Deploy**.
 
-The free plan allows 800 requests a day. The terminal refreshes gold every 5 minutes while gold is open
-and shares each refresh with every member: about 550 requests on a weekday, far fewer at weekends. If
-the allowance ever runs out, members see the last prices, marked as such. Bitcoin comes from Coinbase
-and needs no key.
+The free plan allows 800 requests a day. While gold is open, the terminal refreshes its 15-minute bars
+every 150 seconds and two months of hourly history once an hour. Every member shares each refresh:
+about 575 requests on a weekday, far fewer at weekends. If the allowance ever runs out, members see the
+last prices, marked as such. Bitcoin comes from Coinbase, needs no key, and streams live tick by tick in
+the terminal. Truly live gold will come with the paid MT5 connection later.
 
 ## 3. Open it from Telegram
 
@@ -67,12 +72,32 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
   The algo's own zones join the terminal only after the forward test.
 - **The calculator** rounds down to 0.01 lots. Members can check their broker's contract size in MT5.
 
+## What the quant engine shows
+
+- **Chance of a touch:** for each level not yet reached today, the chance price touches it before today's
+  close (17:00 New York for gold, midnight UTC for Bitcoin). The model is stated plainly on screen:
+  price moves at random, with each market's own volatility for every hour of the day, measured over the
+  last two months. The numbers measure reach, not direction.
+- **68% and 95% close ranges:** where the close should land with those probabilities under the same model.
+  On the chart they're drawn as a cone that widens towards the close.
+- **The odds recompute every second:** with each new price, and as time runs down. Bitcoin's move with
+  every tick.
+- **Model check:** the engine replays about six weeks it hasn't seen, forecasting hour by hour whether
+  the previous day's high and low would be touched. It scores itself against what happened, and shows the
+  result against a flat guess. If it's ever doing worse than a flat guess, the terminal says so.
+- **Market state:** volatility ranked against the last two months, trend efficiency (net move ÷ distance
+  travelled) and momentum in standard deviations. These describe the market; they aren't signals.
+- **Risk odds:** the chance each target (1R, 2R, 3R) comes before the stop on a market with no edge, and
+  the win rate a trade needs to break even. It shows members what an edge has to beat.
+
 ## For developers
 
 - Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/app.html` (the page),
   `src/worker.js` (the Worker), `src/fonts/` (Latin subsets of the brand fonts, SIL Open Font License).
-- `npm run build` writes `dist/worker.js`, the one file for the dashboard. `npm test` builds, then runs
-  22 tests: the maths (trading days across daylight saving, levels, sessions, lot sizes), Telegram sign-in,
-  the members-only gate, caching and the price feeds, plus a check that the built file serves the page and
-  signs members in the same way.
+- `npm run build` writes `dist/worker.js`, the one file for the dashboard. `npm test` builds, then runs 30 tests:
+  - the maths: trading days across daylight saving, levels, sessions and lot sizes;
+  - the probability engine, including a simulated market with no edge on which its forecasts must come
+    true at the rate they claim, and a timing check for the Workers CPU limit;
+  - Telegram sign-in, the members-only gate, caching and the price feeds;
+  - a check that the built file serves the page and signs members in the same way.
 - Add `?demo` to the address to see made-up prices in a browser, for design work. It shows no member data.
