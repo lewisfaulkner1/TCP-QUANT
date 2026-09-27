@@ -57,9 +57,37 @@ From your phone open `https://t.me/YourBotUsername?start=test`, then:
 | X | `https://t.me/YourBotUsername?start=x` |
 | YouTube | `https://t.me/YourBotUsername?start=yt` |
 | Business cards | the QR code on the card (`?start=card`; team cards use `card_<name>`, see `brand/business-cards/`) |
+| A team member | `https://t.me/YourBotUsername?start=<name>`, e.g. `?start=sam` (their card uses `card_sam`) |
 
 The tag after `start=` shows on each lead card as **Source**, so you can see which platform
 brings members in.
+
+## 6. Referral scoreboard (optional, free)
+
+`/stats` in the team group shows each link's people at every step: tapped Start, passed the age
+check, sent an account number, approved. It covers the last 7 days and all time. A team member's
+card and link share one row (`card_laura` counts as `laura`), and whoever brings in the most
+approvals comes first.
+
+1. In Cloudflare, go to **Storage & Databases → D1 SQL Database → Create** and name it `tcp-bot-db`.
+2. Open the `tcp-bot` Worker, then **Settings → Bindings → Add → D1 database**. Variable name: `DB`.
+   Database: `tcp-bot-db`. Press **Deploy**.
+3. If you haven't yet, paste the latest `bot/worker.js` (**Edit code**) and press **Deploy**. The bot
+   creates its table itself.
+4. For a Monday summary in the team group: **Settings → Trigger Events → Add → Cron Triggers**, and
+   enter `0 8 * * 1` (Mondays at 08:00 UTC, which is 09:00 in UK summer time).
+5. Send `/stats` in the team group. If other bots are in the group, send `/stats@YourBotUsername`.
+
+How it counts:
+
+- Each person counts once per step: the first time they reach it, under the link they came through.
+- An approval counts only when the invite reached them.
+- People who tapped Start before the database was added aren't on it.
+
+Privacy: the scoreboard stores each person's Telegram ID, the steps they reached, the link they came
+through and when. No names, messages or account numbers. To remove someone, open the database's
+**Console** in Cloudflare and run `DELETE FROM steps WHERE user_id = 123456789;` with their ID (it's
+on their cards).
 
 ## Daily use
 
@@ -68,6 +96,7 @@ brings members in.
   where they came from (Source). Check the account in your partner portal, then reply `/approve`
   to the card. They get a single-use invite that expires in 7 days.
 - 💬 **Message**: someone wrote to the bot. Reply to the card to answer; your reply is sent from the bot.
+- 🏆 `/stats`: the referral scoreboard (section 6).
 
 Keep your other Inner Circle invite links switched off, so every new member comes through the bot.
 
@@ -87,8 +116,11 @@ Every message is in the `TEXT` block at the top of `worker.js`. Edit it in Cloud
 
 ## Good to know
 
-- **Cost:** Cloudflare's free plan allows 100,000 requests a day, far more than the bot needs.
-- **Privacy:** the bot stores nothing. Leads live in your Telegram team group.
+- **Cost:** Cloudflare's free plan allows 100,000 requests a day, far more than the bot needs, and
+  D1's free allowance is far more than the scoreboard needs.
+- **Privacy:** without the scoreboard the bot stores nothing, and leads live in your Telegram team
+  group. With it, see section 6 for what's stored.
 - **Security:** the token and webhook secret live only in Cloudflare's encrypted secrets. This
   repository is public, so never put them in a file here.
 - **Tests:** `cd bot && npm test` runs the whole conversation end to end without contacting Telegram.
+  The scoreboard tests use Node's built-in SQLite in place of D1 (Node 22.13 or later).

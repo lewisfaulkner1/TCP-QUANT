@@ -4,6 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker.js';
+import { fakeD1 } from './d1.js';
 
 const ENV = {
   BOT_TOKEN: 'TEST-TOKEN-0000',
@@ -295,4 +296,175 @@ test('failed Telegram calls are logged without the token', async () => {
   }
   assert.ok(logged.length > 0);
   assert.ok(logged.every((line) => !line.includes(ENV.BOT_TOKEN)));
+});
+
+// ------------------------------------------------------------- scoreboard
+const ANA = { id: 601, first_name: 'Ana' };
+const BEN = { id: 602, first_name: 'Ben' };
+const dmFrom = (user, text) => ({ message: { message_id: 10, chat: { id: user.id, type: 'private' }, from: user, text } });
+const pressFrom = (user, data) => ({
+  callback_query: { id: 'cq2', from: user, data, message: { message_id: 20, chat: { id: user.id, type: 'private' } } },
+});
+const tables = (html) => [...html.matchAll(/<pre>([\s\S]*?)<\/pre>/g)].map((m) => m[1].split('\n'));
+const HEADER = '          Start  18+ Acct Appr';
+const withDb = () => ({ ...ENV, DB: fakeD1() });
+const inviteOk = (method) => (method === 'createChatInviteLink' ? { ok: true, result: { invite_link: 'https://t.me/+abc' } } : { ok: true, result: {} });
+
+test('the scoreboard follows a lead from Start to approved, and /stats shows it to the team', async () => {
+  const env = withDb();
+  telegram(inviteOk);
+  await deliver(dm('/start ig'), env);
+  await deliver(press('age:y:ig'), env);
+  await deliver(press('done:pu:n:ig'), env);
+  const ask = sent(555).at(-1).payload;
+  await deliver(dm('12345678', { reply_to_message: { message_id: 21, from: { id: 99, is_bot: true }, text: ask.text } }), env);
+  const card = sent(-1001).at(-1).payload.text.replace(/<[^>]+>/g, ''); // what the team replies to
+  await deliver(teamMsg('/approve', card), env);
+  assert.match(sent(-1001).at(-1).payload.text, /Invite sent/);
+
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const [board] = sent(-1001).map((c) => c.payload);
+  assert.equal(board.parse_mode, 'HTML');
+  assert.equal(board.reply_parameters.message_id, 30);
+  assert.match(board.text, /Referral scoreboard/);
+  const [week, all] = tables(board.text);
+  assert.deepEqual(week, [HEADER, 'ig            1    1    1    1', 'Total         1    1    1    1']);
+  assert.deepEqual(all, week);
+  assert.ok(week.every((line) => line.length <= 30), 'fits a phone screen');
+});
+
+test('each person counts once per step, and a team member\'s card and link share one row', async () => {
+  const env = withDb();
+  telegram();
+  await deliver(dm('/start laura'), env);
+  await deliver(dm('/start laura'), env);
+  await deliver(dmFrom(ANA, '/start card_laura'), env);
+  await deliver(pressFrom(ANA, 'age:y:card_laura'), env);
+  await deliver(dmFrom(BEN, '/start card'), env);
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const [week] = tables(sent(-1001)[0].payload.text);
+  assert.deepEqual(week, [HEADER, 'laura         2    1    0    0', 'card          1    0    0    0', 'Total         3    1    0    0']);
+});
+
+test('the team member who brings in approvals ranks first', async () => {
+  const env = withDb();
+  telegram(inviteOk);
+  await deliver(dmFrom(ANA, '/start molly'), env);
+  await deliver(dmFrom(BEN, '/start tt'), env);
+  await deliver(pressFrom(BEN, 'age:y:tt'), env);
+  await deliver(teamMsg('/approve', '🟢 Ready to verify\nAna\nBroker: Vantage · new account\nSource: card_molly\nID: 601'), env);
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const [week] = tables(sent(-1001)[0].payload.text);
+  assert.deepEqual(week.slice(1, 3), ['molly         1    0    0    1', 'tt            1    1    0    0']);
+});
+
+test('the last 7 days and all time are counted separately', async () => {
+  const env = withDb();
+  telegram();
+  await deliver(dm('/start ig'), env);
+  const eightDaysAgo = Math.floor(Date.now() / 1000) - 8 * 86400;
+  env.DB.sqlite.prepare('INSERT INTO steps (user_id, step, source, at) VALUES (?, ?, ?, ?)').run(777, 'start', 'tt', eightDaysAgo);
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const [week, all] = tables(sent(-1001)[0].payload.text);
+  assert.deepEqual(week.slice(1), ['ig            1    0    0    0', 'Total         1    0    0    0']);
+  assert.deepEqual(all.slice(1), ['ig            1    0    0    0', 'tt            1    0    0    0', 'Total         2    0    0    0']);
+});
+
+test('an invite that never reached the person is not counted as approved', async () => {
+  const env = withDb();
+  telegram((method, payload) => (method === 'createChatInviteLink' ? { ok: true, result: { invite_link: 'https://t.me/+abc' } }
+    : String(payload.chat_id) === '555' ? { ok: false, description: 'Forbidden: bot was blocked by the user' } : { ok: true, result: {} }));
+  await deliver(teamMsg('/approve', '🟢 Ready to verify\nSam Lee\nSource: ig\nID: 555'), env);
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const text = sent(-1001)[0].payload.text;
+  assert.equal(tables(text).length, 0);
+  assert.match(text, /Last 7 days<\/b>\nNobody yet\./);
+});
+
+test('/stats without the database says how to turn it on, and only the team group can see it', async () => {
+  telegram();
+  await deliver(teamMsg('/stats', null));
+  assert.match(sent(-1001)[0].payload.text, /needs its database/);
+
+  const env = withDb();
+  telegram();
+  await deliver(dm('/start ig'), env);
+  telegram();
+  await deliver({ message: { ...teamMsg('/stats', null).message, chat: { id: -9999, type: 'supergroup' } } }, env);
+  await deliver(dm('/stats'), env);
+  assert.ok(calls.every((c) => !JSON.stringify(c.payload).includes('scoreboard')), 'no scoreboard outside the team group');
+});
+
+test('the Monday Cron Trigger posts the weekly scoreboard to the team group', async () => {
+  const env = withDb();
+  telegram();
+  await deliver(dm('/start yt'), env);
+  telegram();
+  await worker.scheduled({ cron: '0 8 * * 1', scheduledTime: Date.now() }, env, { waitUntil() {} });
+  const [post] = sent(-1001).map((c) => c.payload);
+  assert.match(post.text, /Weekly referral scoreboard/);
+  assert.equal(tables(post.text)[0][1], 'yt            1    0    0    0');
+
+  telegram();
+  await worker.scheduled({ cron: '0 8 * * 1', scheduledTime: Date.now() }, ENV, { waitUntil() {} });
+  assert.equal(calls.length, 0, 'no database, no post');
+});
+
+test('a database failure never stops the conversation', async () => {
+  const broken = {
+    prepare() { throw new Error('D1_ERROR: database unavailable'); },
+    async batch() { throw new Error('D1_ERROR: database unavailable'); },
+  };
+  const logged = [];
+  const original = console.error;
+  console.error = (...args) => logged.push(args.join(' '));
+  try {
+    telegram(inviteOk);
+    await deliver(dm('/start ig'), { ...ENV, DB: broken });
+    assert.equal(sent(555).length, 2, 'the greeting and the 18+ question still go out');
+    telegram(inviteOk);
+    await deliver(teamMsg('/approve', '🟢 Ready to verify\nSam Lee\nSource: ig\nID: 555'), { ...ENV, DB: broken });
+    assert.match(sent(-1001).at(-1).payload.text, /Invite sent/);
+    telegram();
+    await deliver(teamMsg('/stats', null), { ...ENV, DB: broken });
+    assert.match(sent(-1001)[0].payload.text, /couldn't load/);
+  } finally {
+    console.error = original;
+  }
+  assert.ok(logged.some((line) => line.includes('D1_ERROR')));
+  assert.ok(logged.every((line) => !line.includes(ENV.BOT_TOKEN)));
+});
+
+test('coming back later is not a new start: a person counts from the first time they reached each step', async () => {
+  const env = withDb();
+  telegram();
+  await deliver(dmFrom(BEN, '/start ig'), env);
+  const eightDaysAgo = Math.floor(Date.now() / 1000) - 8 * 86400;
+  env.DB.sqlite.prepare('INSERT INTO steps (user_id, step, source, at) VALUES (?, ?, ?, ?)').run(555, 'start', 'tt', eightDaysAgo);
+  await deliver(dm('/start ig'), env);
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const [week, all] = tables(sent(-1001)[0].payload.text);
+  assert.deepEqual(week.slice(1), ['ig            1    0    0    0', 'Total         1    0    0    0']);
+  assert.deepEqual(all.slice(1), ['ig            1    0    0    0', 'tt            1    0    0    0', 'Total         2    0    0    0']);
+});
+
+test('with many links, the top 14 get a row each and the rest share one', async () => {
+  const env = withDb();
+  telegram();
+  for (let i = 1; i <= 20; i++) await deliver(dmFrom({ id: 700 + i, first_name: 'P' }, `/start src${String(i).padStart(2, '0')}`), env);
+  telegram();
+  await deliver(teamMsg('/stats', null), env);
+  const text = sent(-1001)[0].payload.text;
+  const [week] = tables(text);
+  assert.equal(week.length, 17, 'heading, 14 links, others, total');
+  assert.equal(week[14], 'src14         1    0    0    0');
+  assert.equal(week[15], 'others        6    0    0    0');
+  assert.equal(week[16], 'Total        20    0    0    0');
+  assert.ok(text.length < 4096);
 });

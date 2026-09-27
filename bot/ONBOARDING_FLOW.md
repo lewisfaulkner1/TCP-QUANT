@@ -51,3 +51,9 @@ In the team group:
 - Reply to any card to message that person through the bot.
 - Reply `/approve` to send a single-use Inner Circle invite (expires in 7 days).
 - Anything else people send the bot arrives as a 💬 **Message** card.
+
+## 6. Referral scoreboard
+
+With the optional database, `/stats` in the team group counts each link's people through Start →
+18+ → account number → approved, for the last 7 days and all time, with an optional Monday post.
+A team member's card and link count together. Setup: `bot/SETUP.md`, section 6.

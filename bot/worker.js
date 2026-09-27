@@ -6,7 +6,9 @@
 // talk, or replies /approve to send a single-use Inner Circle invite.
 //
 // Stateless: each step travels in the button data or in the message being
-// replied to, so the bot keeps no database. Leads live in the team group.
+// replied to, so the conversation needs no database. Leads live in the team group.
+// The optional referral scoreboard (/stats in the team group, and a Monday post)
+// keeps one small table in Cloudflare D1: who reached which step, through which link.
 //
 // Settings live in the Worker's environment, never in this file:
 //   BOT_TOKEN, WEBHOOK_SECRET        secrets
@@ -14,6 +16,7 @@
 //   INNER_CIRCLE_CHAT_ID             the Inner Circle group (bot is admin)
 //   PUPRIME_LINK, VANTAGE_LINK       partner sign-up links
 //   PUPRIME_CODE, VANTAGE_CODE       partner codes for account transfers
+//   DB                               optional D1 database binding: the scoreboard
 
 // ------------------------------------------------------------------ wording
 // Edit any message here, then Deploy. Keep the ({broker} · {kind} · ref {source})
@@ -69,6 +72,16 @@ const TEXT = {
     "You're in 👑\n\nWelcome to the TCP Inner Circle. Here's your private invite link. " +
     `It works once, so keep it to yourself:\n${link}\n\nStart with the pinned welcome message and the rules.`,
   help: 'Tap /start to get set up, or send a message here and the team will reply.',
+  scoreboardTitle: '🏆 <b>Referral scoreboard</b>',
+  weeklyTitle: '📅 <b>Weekly referral scoreboard</b>',
+  scoreboardWeek: 'Last 7 days',
+  scoreboardAll: 'All time',
+  scoreboardNobody: 'Nobody yet.',
+  scoreboardKey:
+    'Start: tapped Start · 18+: passed the age check · Acct: sent an account number · Appr: approved by the team. ' +
+    'Each person counts once per step, under the link they came through. card_laura counts as laura.',
+  scoreboardSetup: 'The scoreboard needs its database first: see "Referral scoreboard" in bot/SETUP.md.',
+  scoreboardFailed: "The scoreboard couldn't load. The Worker's Logs in Cloudflare show why.",
   shortDescription: 'TCP — The Crypto Playbook 👑 Get set up for the TCP Inner Circle in a few taps.',
   description:
     'Welcome to TCP — The Crypto Playbook 👑\n\n' +
@@ -81,11 +94,17 @@ const BROKERS = { pu: 'PU Prime', va: 'Vantage' };
 const KINDS = { n: 'new account', t: 'transfer' };
 const ACCOUNT_TAG = /\((PU Prime|Vantage) · (new account|transfer)(?: · ref ([\w-]{1,32}))?\)/;
 const LEAD_ID = /\bID: (\d+)/;
+const SOURCE_LINE = /^Source: ([\w-]{1,32})$/m;
+// Scoreboard steps, in funnel order, with their column headings.
+const STEPS = ['start', 'adult', 'account', 'approved'];
+const HEADINGS = ['Start', '18+', 'Acct', 'Appr'];
 
 // ------------------------------------------------------------ pure logic
 // handleUpdate turns one Telegram update into a list of Bot API calls:
 // { method, payload }, or { method: 'approve', ... } which needs a result
-// from Telegram (the invite link) before its next step.
+// from Telegram (the invite link) before its next step. Two more are for the
+// scoreboard: { method: 'track', ... } records a step, { method: 'stats', ... }
+// posts the scoreboard; both do nothing harmful when there's no database.
 
 function configFrom(env) {
   return {
@@ -116,6 +135,7 @@ const react = (chatId, messageId) => ({
 const tagOf = (s) => (/^[\w-]{1,32}$/.test(s || '') ? s : '');
 const withTag = (data, source) => (source ? `${data}:${source}` : data);
 const command = (text) => (/^\/([a-z_]+)(?:@\w+)?(?:\s+(.*))?$/i.exec(text.trim()) || []).slice(1);
+const track = (userId, step, source) => ({ method: 'track', userId, step, source });
 
 function who(user) {
   const name = esc([user.first_name, user.last_name].filter(Boolean).join(' ') || 'Unknown');
@@ -136,6 +156,7 @@ function onPrivate(msg, cfg) {
     return [
       send(chat, TEXT.greeting),
       send(chat, TEXT.ageQuestion, buttons([[btn(TEXT.ageYesButton, `age:y:${source}`)], [btn(TEXT.ageNoButton, 'age:n')]])),
+      track(msg.from.id, 'start', source),
     ];
   }
   if (cmd === 'help') return [send(chat, TEXT.help)];
@@ -151,6 +172,7 @@ function onPrivate(msg, cfg) {
       ...toTeam(cfg, `🟢 <b>Ready to verify</b>\n${who(msg.from)}\nBroker: ${broker}\nSource: ${esc(source)}\n` +
         `Account: <code>${esc(text.trim().slice(0, 64))}</code>\nID: ${msg.from.id}\n\n` +
         'Reply /approve to send their Inner Circle invite, or reply with a message to answer them.'),
+      track(msg.from.id, 'account', source),
     ];
   }
 
@@ -181,6 +203,7 @@ function onButton(cq, cfg) {
         [btn(TEXT.notYetButton, withTag('brk:none', source))],
       ])),
       ...toTeam(cfg, `🟡 <b>New lead · 18+</b>\n${who(cq.from)}\nSource: ${esc(source)}\nID: ${cq.from.id}`),
+      track(cq.from.id, 'adult', source),
     ];
   }
   if (step === 'age' && a === 'n') return [...done, send(chat, TEXT.underage)];
@@ -210,19 +233,84 @@ function onGroup(msg, cfg) {
   const [cmd] = command(text);
   if (cmd === 'id') return [send(msg.chat.id, `Chat ID: ${msg.chat.id}`)];
   if (!cfg.adminChatId || String(msg.chat.id) !== String(cfg.adminChatId)) return [];
+  if (cmd === 'stats') return [{ method: 'stats', chatId: msg.chat.id, replyTo: msg.message_id }];
 
   // The team replies to one of the bot's cards: the card names the person.
   const card = msg.reply_to_message;
-  const lead = card?.from?.is_bot ? LEAD_ID.exec(card.text || card.caption || '') : null;
+  const cardText = card?.from?.is_bot ? card.text || card.caption || '' : '';
+  const lead = LEAD_ID.exec(cardText);
   if (!lead) return [];
   const userId = lead[1];
-  if (cmd === 'approve') return [{ method: 'approve', userId, adminChatId: msg.chat.id, replyTo: msg.message_id }];
+  if (cmd === 'approve') {
+    const source = SOURCE_LINE.exec(cardText)?.[1] || 'not stated';
+    return [{ method: 'approve', userId, source, adminChatId: msg.chat.id, replyTo: msg.message_id }];
+  }
   if (text && !text.startsWith('/')) return [send(userId, text), react(msg.chat.id, msg.message_id)];
   if (!text) {
     return [{ method: 'copyMessage', payload: { chat_id: userId, from_chat_id: msg.chat.id, message_id: msg.message_id } },
       react(msg.chat.id, msg.message_id)];
   }
   return [];
+}
+
+// --------------------------------------------------------------- scoreboard
+// rows: [{ source, step, n }] from the database. A team member's card and link
+// share one row (card_laura counts as laura); the best converters come first.
+const personOf = (source) => String(source).replace(/^card_(?=.)/, '');
+
+function scoreTable(rows) {
+  const people = new Map();
+  for (const { source, step, n } of rows) {
+    const i = STEPS.indexOf(step);
+    if (i < 0) continue;
+    const name = personOf(source);
+    if (!people.has(name)) people.set(name, [0, 0, 0, 0]);
+    people.get(name)[i] += Number(n);
+  }
+  if (!people.size) return TEXT.scoreboardNobody;
+  const ranked = [...people].sort(([a, x], [b, y]) =>
+    y[3] - x[3] || y[2] - x[2] || y[1] - x[1] || y[0] - x[0] || a.localeCompare(b));
+  const add = (rows) => rows.reduce((sum, [, c]) => sum.map((v, i) => v + c[i]), [0, 0, 0, 0]);
+  // The top 14 get their own row and the rest share one, so the message stays within Telegram's limit.
+  const shown = ranked.length > 15 ? [...ranked.slice(0, 14), ['others', add(ranked.slice(14))]] : ranked;
+  // 30 characters wide, so the table fits a phone screen without wrapping.
+  const line = (name, cells) => name.slice(0, 10).padEnd(10) + cells.map((v) => String(v).padStart(5)).join('');
+  const lines = [line('', HEADINGS), ...shown.map(([name, c]) => line(name, c)), line('Total', add(ranked))];
+  return `<pre>${esc(lines.join('\n'))}</pre>`;
+}
+
+function scoreboardText(title, week, all) {
+  return `${title}\n\n<b>${TEXT.scoreboardWeek}</b>\n${scoreTable(week)}\n\n` +
+    `<b>${TEXT.scoreboardAll}</b>\n${scoreTable(all)}\n\n<i>${esc(TEXT.scoreboardKey)}</i>`;
+}
+
+// ---------------------------------------------------------------- database
+// One row per person per step: the first time they reached it, and the link
+// they came through. The table creates itself on first use.
+const SCHEMA = 'CREATE TABLE IF NOT EXISTS steps (user_id INTEGER NOT NULL, step TEXT NOT NULL, ' +
+  'source TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (user_id, step))';
+const COUNTS = 'SELECT source, step, COUNT(*) AS n FROM steps WHERE at >= ? GROUP BY source, step';
+const now = () => Math.floor(Date.now() / 1000);
+
+async function record(db, { userId, step, source }) {
+  if (!db || !/^\d+$/.test(String(userId)) || !STEPS.includes(step)) return;
+  await db.batch([
+    db.prepare(SCHEMA),
+    db.prepare('INSERT OR IGNORE INTO steps (user_id, step, source, at) VALUES (?, ?, ?, ?)')
+      .bind(Number(userId), step, tagOf(source) || 'not stated', now()),
+  ]);
+}
+
+async function postScoreboard(db, chatId, call, title, extra = {}) {
+  if (!db) return call('sendMessage', { chat_id: chatId, text: TEXT.scoreboardSetup, ...extra });
+  let week, all;
+  try {
+    [, week, all] = await db.batch([db.prepare(SCHEMA), db.prepare(COUNTS).bind(now() - 7 * 86400), db.prepare(COUNTS).bind(0)]);
+  } catch (err) {
+    console.error(`scoreboard failed: ${err.message}`);
+    return call('sendMessage', { chat_id: chatId, text: TEXT.scoreboardFailed, ...extra });
+  }
+  return call('sendMessage', { chat_id: chatId, text: scoreboardText(title, week.results, all.results), parse_mode: 'HTML', ...extra });
 }
 
 // ------------------------------------------------------------- Telegram I/O
@@ -238,7 +326,7 @@ async function telegram(env, method, payload) {
   return data;
 }
 
-async function approve(action, cfg, call) {
+async function approve(action, cfg, call, db) {
   const reply = { reply_parameters: { message_id: action.replyTo } };
   if (!cfg.innerCircleChatId) {
     return call('sendMessage', { chat_id: action.adminChatId, text: 'Set INNER_CIRCLE_CHAT_ID in the Worker settings first.', ...reply });
@@ -253,6 +341,8 @@ async function approve(action, cfg, call) {
     return call('sendMessage', { chat_id: action.adminChatId, text: `Couldn't create the invite: ${link.description}`, ...reply });
   }
   const sent = await call('sendMessage', { chat_id: action.userId, text: TEXT.invite(link.result.invite_link) });
+  // Only an invite that reached them counts as approved on the scoreboard.
+  if (sent.ok) await record(db, { userId: action.userId, step: 'approved', source: action.source }).catch((err) => console.error(`track failed: ${err.message}`));
   return call('sendMessage', {
     chat_id: action.adminChatId,
     text: sent.ok ? '✅ Invite sent (single use, expires in 7 days).' : `Couldn't message them: ${sent.description}`,
@@ -260,11 +350,14 @@ async function approve(action, cfg, call) {
   });
 }
 
-async function run(actions, cfg, call) {
+async function run(actions, cfg, call, db) {
   for (const action of actions) {
     try {
-      if (action.method === 'approve') await approve(action, cfg, call);
-      else await call(action.method, action.payload);
+      if (action.method === 'approve') await approve(action, cfg, call, db);
+      else if (action.method === 'track') await record(db, action);
+      else if (action.method === 'stats') {
+        await postScoreboard(db, action.chatId, call, TEXT.scoreboardTitle, { reply_parameters: { message_id: action.replyTo } });
+      } else await call(action.method, action.payload);
     } catch (err) {
       console.error(`${action.method} failed: ${err.message}`);
     }
@@ -290,7 +383,7 @@ export default {
         return new Response('bad request', { status: 400 });
       }
       const cfg = configFrom(env);
-      await run(handleUpdate(update, cfg), cfg, call);
+      await run(handleUpdate(update, cfg), cfg, call, env.DB);
       return new Response('ok');
     }
 
@@ -328,5 +421,13 @@ export default {
     }
 
     return new Response('TCP onboarding bot is running.');
+  },
+
+  // The Monday post: a Cron Trigger on this Worker (0 8 * * 1) sends the
+  // scoreboard to the team group. Nothing happens without the database.
+  async scheduled(controller, env) {
+    const cfg = configFrom(env);
+    if (!env.DB || !cfg.adminChatId) return;
+    await postScoreboard(env.DB, cfg.adminChatId, (method, payload) => telegram(env, method, payload), TEXT.weeklyTitle);
   },
 };
