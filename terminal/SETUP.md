@@ -139,4 +139,5 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
     turn, and gold's closed-hours bars) and Notify me;
   - a check that the built file serves the page and signs members in the same way.
 - Add `?demo` to the address to see made-up prices in a browser, for design work. It shows no member data,
-  and Notify me there tells nobody.
+  and Notify me there tells nobody. Add `&gold=4286&btc=84460` to move the made-up prices to today's level
+  (for promo footage).

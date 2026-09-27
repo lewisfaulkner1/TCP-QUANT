@@ -64,6 +64,12 @@ function demoData(symbol) {
     for (let k = 0; k < 3; k++) { price *= Math.exp(sd * normal()); h = Math.max(h, price); l = Math.min(l, price); }
     bars.push({ t, o, h, l, c: price });
   }
+  // ?demo&gold=4286&btc=84460 moves the made-up prices to today's level, for promo footage.
+  const target = parseFloat(new URLSearchParams(location.search).get(symbol === 'XAUUSD' ? 'gold' : 'btc'));
+  if (target > 0) {
+    const k = target / price;
+    for (const b of bars) { b.o *= k; b.h *= k; b.l *= k; b.c *= k; }
+  }
   const hourly = groupBars(bars, (b) => Math.floor(b.t / 3600)).map((b) => ({ t: Math.floor(b.t / 3600) * 3600, o: b.o, h: b.h, l: b.l, c: b.c }));
   const snap = snapshot(m, toDays(hourly, m), bars.slice(-400), now);
   const profile = volProfile(hourly);

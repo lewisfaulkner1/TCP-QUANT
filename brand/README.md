@@ -34,6 +34,20 @@ In `video/`, H.264 MP4 at 30 fps with no sound, so you can add music in the app:
 | `tcp-outro-9x16.mp4` | 4.5 s end card: logo, "Trade the playbook.", "Request access — link in bio", risk line |
 | `tcp-outro-16x9.mp4` | The same end card for YouTube |
 
+Launch film for the Quant Terminal, 45 s, 1080 × 1920:
+
+| File | Use |
+|---|---|
+| `tcp-quant-terminal-launch-9x16.mp4` | With its own music (synthesised, nothing licensed): Reels, TikTok, Shorts, Telegram |
+| `tcp-quant-terminal-launch-9x16-nomusic.mp4` | The same without sound, to add a track in the app |
+| `tcp-quant-terminal-launch-cover.jpg` | Cover frame for the post |
+
+Gold dots flow like the terminal's probability swarm and gather into the crown; then the real
+app, inside Telegram on a phone, feature by feature, with cards lifted out of the screen; a dive
+into the swarm; a montage; and the end card: "Get access to the Quant Terminal app & indicator.
+Join the TCP Inner Circle. Link in bio", with the risk line, the partner disclosure and "Interface
+shown with demo prices". Captions for the post are in `CAPTIONS.md`; the source is in `source/film/`.
+
 In the intro, three gold candles rise, the crown forms around them and turns
 them into its cut-outs, TCP rises in, the tagline appears and a gold shine
 passes over the logo.

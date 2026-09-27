@@ -52,6 +52,37 @@ with the partner disclosure and the risk line — keep both.
 > through it. CFDs and crypto are high-risk and you can lose money fast.
 > Not financial advice. 18+.
 
+## Quant Terminal launch film
+
+For `tcp-quant-terminal-launch` (9:16, 45 s). Post the version with music, or the silent one and add
+a sound in the app.
+
+> Every price has a probability.
+>
+> Introducing the TCP Quant Terminal: a real quant engine, inside Telegram.
+>
+> → Live gold and Bitcoin
+> → Every key level, mapped
+> → The odds of each level before the close
+> → The probability swarm: watch the odds come alive
+> → A model check that tells you when it's wrong
+> → Sessions, volatility and your lot size in seconds
+> → Algo signals once proven. AI coming soon.
+>
+> Get access to the Quant Terminal app and indicator: join the TCP Inner Circle. Link in bio.
+>
+> Partner link: I may earn a commission from PU Prime or Vantage on accounts opened through it.
+> CFDs and crypto are high-risk and you can lose money fast. The terminal shows probabilities, not
+> predictions. Not financial advice. 18+. Interface shown with demo prices.
+>
+> #XAUUSD #gold #bitcoin #trading #quanttrading #daytrading #TCPInnerCircle
+
+Short version (TikTok, X):
+
+> Every price has a probability. The TCP Quant Terminal puts the odds of every level in your pocket,
+> inside Telegram. Join the TCP Inner Circle: link in bio.
+> Partner link, I may earn commission. High risk, not financial advice. 18+.
+
 ## Story
 
 Use the story graphic with a link sticker pointing to your PU Prime link.
