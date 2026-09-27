@@ -66,6 +66,18 @@ export function nyOffset(ts) {
 const DAY = 86400;
 export const nyHour = (ts) => Math.floor(((((ts + nyOffset(ts)) % DAY) + DAY) % DAY) / 3600);
 
+// The same yes/no as marketStatus(market, ts).open, fast enough for thousands of bars:
+// gold shuts from Friday 17:00 to Sunday 18:00 New York, and from 17:00 to 18:00 each day.
+export function marketOpen(ts, market) {
+  if (market.day === 'utc') return true;
+  const local = ts + nyOffset(ts);
+  const days = Math.floor(local / DAY);
+  const hour = (local - days * DAY) / 3600;
+  const weekday = (((days + 4) % 7) + 7) % 7; // 0 is Sunday: 1 January 1970 was a Thursday
+  if (hour >= 17 && hour < 18) return false;
+  return !(weekday === 6 || (weekday === 0 && hour < 18) || (weekday === 5 && hour >= 17));
+}
+
 // A trading day as a whole number of days since 1970 (fast; dayKey gives the same day as text).
 function dayIndex(ts, market) {
   if (market.day === 'utc') return Math.floor(ts / DAY);

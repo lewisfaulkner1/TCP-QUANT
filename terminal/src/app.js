@@ -56,7 +56,7 @@ function demoData(symbol) {
   const bars = [];
   let price = symbol === 'XAUUSD' ? 3712 : 64250;
   for (let t = Math.floor((now - 90 * 86400) / 900) * 900; t <= now - 900; t += 900) {
-    if (m.day !== 'utc' && !marketStatus(m, t).open) continue;
+    if (!marketOpen(t, m)) continue;
     const sd = hourSd(nyHour(t)) / 2 / Math.sqrt(3);
     const o = price;
     let h = o;
@@ -132,34 +132,82 @@ function queueBriefing() {
   if (!briefTimer) briefTimer = setTimeout(() => { briefTimer = 0; renderBriefing(); }, 1000);
 }
 
-// Bitcoin streams from Coinbase tick by tick; the stream reconnects on its own.
+// Bitcoin streams tick by tick, first from the exchange the Worker's prices came from.
+// A stream that won't connect or goes quiet hands over to the next exchange.
+const STREAMS = {
+  coinbase: {
+    name: 'Coinbase', url: 'wss://ws-feed.exchange.coinbase.com',
+    hello: { type: 'subscribe', product_ids: ['BTC-USD'], channels: ['ticker'] },
+    tick: (m) => (m.type === 'ticker' && m.product_id === 'BTC-USD' ? [+m.price, Date.parse(m.time) / 1000] : null),
+  },
+  bitstamp: {
+    name: 'Bitstamp', url: 'wss://ws.bitstamp.net',
+    hello: { event: 'bts:subscribe', data: { channel: 'live_trades_btcusd' } },
+    tick: (m) => (m.event === 'trade' && m.data ? [+m.data.price, +m.data.timestamp] : null),
+  },
+  kraken: {
+    name: 'Kraken', url: 'wss://ws.kraken.com/v2',
+    hello: { method: 'subscribe', params: { channel: 'ticker', symbol: ['BTC/USD'] } },
+    tick: (m) => (m.channel === 'ticker' && Array.isArray(m.data) && m.data[0] ? [+m.data[0].last, 0] : null),
+  },
+  binance: {
+    name: 'Binance', url: 'wss://data-stream.binance.vision/ws/btcusdt@miniTicker',
+    hello: null,
+    tick: (m) => (m.e === '24hrMiniTicker' ? [+m.c, m.E / 1000] : null),
+  },
+};
 let ws = null;
 let wsTimer = null;
-let wsRetry = 0;
+let wsQuiet = null;
+const wsFailed = new Set(); // exchanges that gave no price since the last one that did
+let wsRounds = 0; // full rounds of exchanges with no price, for the back-off
 function streamBitcoin(on) {
   if (demo) return;
   clearTimeout(wsTimer);
   if (!on) {
     if (ws) { ws.onclose = null; ws.close(); ws = null; }
+    clearTimeout(wsQuiet);
     state.streaming = false;
     return;
   }
   if (ws) return;
-  try { ws = new WebSocket('wss://ws-feed.exchange.coinbase.com'); } catch { return; }
-  ws.onopen = () => { wsRetry = 0; ws.send(JSON.stringify({ type: 'subscribe', product_ids: ['BTC-USD'], channels: ['ticker'] })); };
-  ws.onmessage = (e) => {
+  const d = state.data.BTCUSD;
+  const first = d && STREAMS[d.feed] ? d.feed : 'coinbase';
+  const order = [first, ...Object.keys(STREAMS).filter((k) => k !== first)];
+  if (order.every((k) => wsFailed.has(k))) { wsFailed.clear(); wsRounds++; }
+  const key = order.find((k) => !wsFailed.has(k));
+  const feed = STREAMS[key];
+  let heard = false;
+  let sock;
+  const retry = () => {
+    // The next exchange straight away; after a whole round with no price, wait longer each time.
+    const wait = wsFailed.size < order.length ? 1000 : Math.min(60e3, 5000 * 2 ** wsRounds);
+    if (state.symbol === 'BTCUSD' && document.visibilityState === 'visible') wsTimer = setTimeout(() => streamBitcoin(true), wait);
+  };
+  try { sock = ws = new WebSocket(feed.url); } catch { ws = null; wsFailed.add(key); retry(); return; }
+  // Nothing for 10 seconds (30 once prices have been flowing): close it and try again.
+  const watch = () => { clearTimeout(wsQuiet); wsQuiet = setTimeout(() => sock.close(), heard ? 30e3 : 10e3); };
+  watch();
+  sock.onopen = () => { if (feed.hello) sock.send(JSON.stringify(feed.hello)); };
+  sock.onmessage = (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
-    if (msg.type !== 'ticker' || msg.product_id !== 'BTC-USD') return;
-    state.streaming = true;
-    onTick('BTCUSD', parseFloat(msg.price), Date.parse(msg.time) / 1000 || clock());
+    const tick = feed.tick(msg);
+    if (!tick || !(tick[0] > 0)) return;
+    if (!heard) { heard = true; wsFailed.clear(); wsRounds = 0; }
+    watch();
+    state.streaming = key;
+    onTick('BTCUSD', tick[0], tick[1] > 0 ? tick[1] : clock());
   };
-  ws.onclose = () => {
+  sock.onclose = () => {
+    if (ws !== sock) return;
     ws = null;
+    clearTimeout(wsQuiet);
     state.streaming = false;
-    if (state.symbol === 'BTCUSD') wsTimer = setTimeout(() => streamBitcoin(true), Math.min(60e3, 2000 * 2 ** wsRetry++));
+    if (!heard) wsFailed.add(key); // a stream that gave prices and dropped reconnects to the same exchange
+    retry();
   };
-  ws.onerror = () => ws && ws.close();
+  sock.onerror = () => sock.close();
 }
 
 // Demo ticks: the same random walk, second by second, so previews move like the real thing.
@@ -184,7 +232,7 @@ function renderEngine(now) {
     if (demo) text = 'demo prices · ticking';
     else if (!open) { mode = 'closed'; const s = marketStatus(m, now); text = `opens in ${fmtDuration(s.opensAt - now)}`; }
     else if (d.stale) { mode = 'delayed'; text = `last prices ${ago(d.updated)}`; }
-    else if (state.symbol === 'BTCUSD' && state.streaming) text = 'streaming ticks';
+    else if (state.symbol === 'BTCUSD' && state.streaming) text = `${STREAMS[state.streaming].name} ticks`;
     else text = `synced ${ago(d.updated)}`;
   }
   el.className = `engine ${mode}`;
@@ -998,7 +1046,9 @@ function heartbeat() {
   renderStatus(now);
   renderSessions(now);
   const left = 900 - (now % 900);
-  $('candleTimer').textContent = `next candle ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  $('candleTimer').textContent = marketOpen(now, MARKETS[state.symbol])
+    ? `next candle ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`
+    : 'market closed';
   if (!$('markets').hidden) {
     renderOdds();
     renderTesting();

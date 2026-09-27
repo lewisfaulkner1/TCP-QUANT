@@ -35,8 +35,13 @@ You need the Cloudflare account the bot runs on, BotFather, and a free Twelve Da
 The free plan allows 800 requests a day. While gold is open, the terminal refreshes its 15-minute bars
 every 150 seconds and two months of hourly history once an hour. Every member shares each refresh:
 about 575 requests on a weekday, far fewer at weekends. If the allowance ever runs out, members see the
-last prices, marked as such. Bitcoin comes from Coinbase, needs no key, and streams live tick by tick in
-the terminal. Truly live gold will come with the paid MT5 connection later.
+last prices, marked as such. Gold's feed can send flat prices while gold is shut (weekends and the
+daily break); the terminal drops those, so at the weekend the chart ends at Friday's close.
+
+Bitcoin needs no key. It comes from Coinbase, with Bitstamp, Kraken and Binance as back-ups: some exchanges
+turn away requests from Cloudflare, so the terminal tries the next one and remembers which answered. In the
+app, Bitcoin streams live tick by tick from whichever exchange connects, and the status bar names it. Truly
+live gold will come with the paid MT5 connection later.
 
 ## 3. Open it from Telegram
 
@@ -70,8 +75,9 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
 - **Nothing is stored** and nobody logs in. The bot token stays in Cloudflare's secrets and never reaches the page.
   The only thing the terminal sends anywhere is a Notify me tap: the member's name, @username and Telegram ID,
   posted to the team group.
-- **The data:** gold is XAU/USD spot from Twelve Data, Bitcoin is BTC-USD from Coinbase, and exchange rates
-  for GBP and EUR accounts are the European Central Bank's. Brokers' prices differ slightly.
+- **The data:** gold is XAU/USD spot from Twelve Data; Bitcoin is BTC-USD from Coinbase, Bitstamp or Kraken
+  (or BTC/USDT from Binance as a last resort), named under the price; exchange rates for GBP and EUR
+  accounts are the European Central Bank's. Brokers' prices differ slightly.
 - **The levels** are standard reference levels: previous day and week, today's opens, session highs and lows,
   and round numbers. Gold's day ends at 17:00 New York, as on broker charts; Bitcoin uses UTC days.
   The algo's own zones join the terminal only after the forward test.
@@ -125,11 +131,12 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
 - Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/app.html`, `src/app.css` and
   `src/app.js` (the page's markup, styles and script), `src/worker.js` (the Worker), `src/fonts/` (Latin
   subsets of the brand fonts, SIL Open Font License).
-- `npm run build` writes `dist/worker.js`, the one file for the dashboard. `npm test` builds, then runs 32 tests:
+- `npm run build` writes `dist/worker.js`, the one file for the dashboard. `npm test` builds, then runs 37 tests:
   - the maths: trading days across daylight saving, levels, sessions and lot sizes;
   - the probability engine, including a simulated market with no edge on which its forecasts must come
     true at the rate they claim, and a timing check for the Workers CPU limit;
-  - Telegram sign-in, the members-only gate, caching, the price feeds and Notify me;
+  - Telegram sign-in, the members-only gate, caching, the price feeds (each Bitcoin exchange failing in
+    turn, and gold's closed-hours bars) and Notify me;
   - a check that the built file serves the page and signs members in the same way.
 - Add `?demo` to the address to see made-up prices in a browser, for design work. It shows no member data,
   and Notify me there tells nobody.

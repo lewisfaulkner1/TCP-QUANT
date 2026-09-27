@@ -15,7 +15,7 @@
 //   INNER_CIRCLE_CHAT_ID   members of this group get in
 //   ADMIN_CHAT_ID          optional: the team group gets in too
 //   TWELVE_DATA_KEY        secret: a free twelvedata.com key, for gold prices
-import { MARKETS, toDays, snapshot, marketStatus, volProfile, marketState, calibrate, dayEnd } from './lib.js';
+import { MARKETS, toDays, snapshot, marketStatus, marketOpen, volProfile, marketState, calibrate, dayEnd } from './lib.js';
 import { PAGE, FONTS } from './assets.js';
 
 const SIGN_IN_MAX_AGE = 24 * 3600; // Telegram's signature on a Mini App session
@@ -32,6 +32,10 @@ const TTL = {
 };
 const HISTORY_BARS = 1500; // hourly: about two months, for the volatility profile and the model check
 const CHART_BARS = 192; // 15-minute bars: two days
+// Gold's feed can include flat bars from hours when gold is shut. Those are dropped, so gold asks
+// for more (the same one credit a request): 400 quarter-hours still hold two days of trading after
+// the longest shut, the weekend's 49 hours.
+const GOLD_BARS = { '1h': 1800, '15min': 400 };
 
 const now = () => Math.floor(Date.now() / 1000);
 const enc = (s) => new TextEncoder().encode(s);
@@ -123,10 +127,16 @@ async function cached(key, ttl, load, at = now()) {
 }
 
 async function getJson(url, headers = {}) {
-  const res = await fetch(url, { headers: { 'user-agent': 'TCP-Quant-Terminal/1.0', ...headers } });
+  const res = await fetch(url, {
+    headers: { 'user-agent': 'TCP-Quant-Terminal/1.0', accept: 'application/json', ...headers },
+    signal: AbortSignal.timeout(8000),
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+// '2026-09-23 14:00:00' (UTC) in seconds; quicker than Date.parse over thousands of bars.
+const utcSeconds = (s) => Date.UTC(+s.slice(0, 4), s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16), +s.slice(17, 19)) / 1000;
 
 // Twelve Data: [{ datetime: '2026-09-23 14:00:00', open, high, low, close }], newest first.
 async function twelveData(env, interval, size) {
@@ -134,30 +144,112 @@ async function twelveData(env, interval, size) {
   const data = await getJson(url);
   if (data.status !== 'ok' || !Array.isArray(data.values)) throw new Error(`Twelve Data: ${data.message || 'no data'}`);
   return data.values
-    .map((v) => ({ t: Date.parse(v.datetime.replace(' ', 'T') + 'Z') / 1000, o: +v.open, h: +v.high, l: +v.low, c: +v.close }))
+    .map((v) => ({ t: utcSeconds(v.datetime), o: +v.open, h: +v.high, l: +v.low, c: +v.close }))
     .sort((a, b) => a.t - b.t);
 }
 
-// Coinbase Exchange: [[time, low, high, open, close, volume]], newest first, 300 at most.
-async function coinbase(granularity, start, end) {
-  const range = start ? `&start=${new Date(start * 1000).toISOString()}&end=${new Date(end * 1000).toISOString()}` : '';
-  const rows = await getJson(`https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=${granularity}${range}`);
-  if (!Array.isArray(rows)) throw new Error('Coinbase: no data');
-  return rows.map(([t, l, h, o, c]) => ({ t, o, h, l, c }));
+const tidy = (bars) => [...new Map(bars.map((b) => [b.t, b])).values()].sort((a, b) => a.t - b.t);
+const valid = (b) => Number.isInteger(b.t) && b.o > 0 && b.h > 0 && b.l > 0 && b.c > 0 && b.h >= b.l;
+const isoTime = (t) => new Date(t * 1000).toISOString();
+const goldBars = (bars) => bars.filter((b) => marketOpen(b.t, MARKETS.XAUUSD));
+
+// Bitcoin: free public exchange feeds, tried in turn. If an exchange blocks or rate-limits
+// Cloudflare, the next one takes over, and whichever answered goes first next time.
+// Each page is up to `limit` bars ending at `end`, oldest first.
+const FEEDS = {
+  coinbase: {
+    name: 'Coinbase (BTC-USD)', max: 300, paged: true,
+    // [[time, low, high, open, close, volume]], newest first.
+    async page(step, limit, end) {
+      const rows = await getJson(`https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=${step}&start=${isoTime(end - limit * step)}&end=${isoTime(end)}`);
+      if (!Array.isArray(rows)) throw new Error('no data');
+      return rows.map(([t, l, h, o, c]) => ({ t, o: +o, h: +h, l: +l, c: +c })).reverse();
+    },
+  },
+  bitstamp: {
+    name: 'Bitstamp (BTC/USD)', max: 1000, paged: true,
+    // { data: { ohlc: [{ timestamp, open, high, low, close, volume }] } }
+    async page(step, limit, end) {
+      const data = await getJson(`https://www.bitstamp.net/api/v2/ohlc/btcusd/?step=${step}&limit=${limit}&end=${end}`);
+      const rows = data && data.data && data.data.ohlc;
+      if (!Array.isArray(rows)) throw new Error('no data');
+      return rows.map((r) => ({ t: +r.timestamp, o: +r.open, h: +r.high, l: +r.low, c: +r.close }));
+    },
+  },
+  kraken: {
+    name: 'Kraken (BTC/USD)', max: 720, paged: false,
+    // { error: [], result: { XXBTZUSD: [[time, open, high, low, close, vwap, volume, count]], last } }:
+    // only the latest 720 bars, so a shorter history (a month of hours).
+    async page(step) {
+      const data = await getJson(`https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=${step / 60}`);
+      if (data && Array.isArray(data.error) && data.error.length) throw new Error(data.error.join(', '));
+      const rows = data && data.result && Object.entries(data.result).find(([key]) => key !== 'last');
+      if (!rows || !Array.isArray(rows[1])) throw new Error('no data');
+      return rows[1].map(([t, o, h, l, c]) => ({ t: +t, o: +o, h: +h, l: +l, c: +c }));
+    },
+  },
+  binance: {
+    name: 'Binance (BTC/USDT)', max: 1000, paged: true,
+    // [[open time in ms, open, high, low, close, ...]], from Binance's public market-data host.
+    async page(step, limit, end) {
+      const interval = step === 900 ? '15m' : '1h';
+      const rows = await getJson(`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}&endTime=${end * 1000}`);
+      if (!Array.isArray(rows)) throw new Error('no data');
+      return rows.map(([t, o, h, l, c]) => ({ t: Math.round(t / 1000), o: +o, h: +h, l: +l, c: +c }));
+    },
+  },
+};
+let btcOrder = Object.keys(FEEDS);
+
+// `count` bars from one feed, page by page back in time. A page failing late is fine if
+// there's already enough (`min`) to work with.
+async function feedBars(feed, step, count, at, min) {
+  let bars = [];
+  let end = at;
+  while (bars.length < count) {
+    let page;
+    try {
+      page = (await feed.page(step, Math.min(feed.max, count - bars.length), end)).filter(valid);
+    } catch (err) {
+      if (bars.length >= min) break;
+      throw err;
+    }
+    const older = tidy(bars.length ? page.filter((b) => b.t < bars[0].t) : page);
+    if (!older.length) break;
+    bars = older.concat(bars);
+    if (!feed.paged) break;
+    end = bars[0].t - 1;
+  }
+  if (bars.length < min) throw new Error(`only ${bars.length} bars`);
+  return bars.slice(-count);
 }
 
-const tidy = (bars) => [...new Map(bars.map((b) => [b.t, b])).values()].sort((a, b) => a.t - b.t);
+async function bitcoinBars(step, count, at, min) {
+  const failed = [];
+  for (const key of btcOrder) {
+    try {
+      const bars = await feedBars(FEEDS[key], step, count, at, min);
+      btcOrder = [key, ...btcOrder.filter((k) => k !== key)];
+      if (failed.length) console.error(`Bitcoin from ${FEEDS[key].name}; failed first: ${failed.join('; ')}`);
+      return { bars, feed: key };
+    } catch (err) {
+      failed.push(`${FEEDS[key].name}: ${err.message}`);
+    }
+  }
+  throw new Error(`no Bitcoin feed answered (${failed.join('; ')})`);
+}
 
 // Hourly history: the volatility profile, previous days and weeks, and the model check.
 async function loadHistory(env, symbol, at) {
-  if (symbol === 'XAUUSD') return twelveData(env, '1h', HISTORY_BARS);
-  const hour = Math.floor(at / 3600) * 3600;
-  const windows = [];
-  for (let end = hour + 3600; windows.length < HISTORY_BARS / 300; end -= 300 * 3600) windows.push(coinbase(3600, end - 300 * 3600, end));
-  return tidy((await Promise.all(windows)).flat());
+  if (symbol === 'XAUUSD') return { bars: goldBars(await twelveData(env, '1h', GOLD_BARS['1h'])).slice(-HISTORY_BARS), feed: 'twelvedata' };
+  return bitcoinBars(3600, HISTORY_BARS, at, 480);
 }
 
-const loadRecent = (env, symbol) => (symbol === 'XAUUSD' ? twelveData(env, '15min', 200) : coinbase(900).then(tidy));
+// 15-minute bars: the chart, today's range and the live price.
+async function loadRecent(env, symbol, at) {
+  if (symbol === 'XAUUSD') return { bars: goldBars(await twelveData(env, '15min', GOLD_BARS['15min'])), feed: 'twelvedata' };
+  return bitcoinBars(900, 200, at, 96);
+}
 
 async function loadMarket(env, symbol, at) {
   const market = MARKETS[symbol];
@@ -165,10 +257,10 @@ async function loadMarket(env, symbol, at) {
   const ttl = TTL[symbol];
   const [history, recent] = await Promise.all([
     cached(`${symbol}:1h`, open ? ttl.history : TTL.closed, async () => {
-      const bars = await loadHistory(env, symbol, at);
-      return { bars, profile: volProfile(bars) };
+      const { bars, feed } = await loadHistory(env, symbol, at);
+      return { bars, feed, profile: volProfile(bars) };
     }, at),
-    cached(`${symbol}:15m`, open ? ttl.recent : TTL.closed, async () => ({ bars: await loadRecent(env, symbol) }), at),
+    cached(`${symbol}:15m`, open ? ttl.recent : TTL.closed, () => loadRecent(env, symbol, at), at),
   ]);
   const check = await cached(`${symbol}:check`, TTL.check, async () => ({ result: calibrate(history.bars, market) }), at).catch(() => ({ result: null }));
   const snap = snapshot(market, toDays(history.bars, market), recent.bars, at);
@@ -183,7 +275,8 @@ async function loadMarket(env, symbol, at) {
     },
     spark: history.bars.slice(-47).map((b) => b.c).concat(snap.price),
     bars: recent.bars.slice(-CHART_BARS).map((b) => [b.t, b.o, b.h, b.l, b.c]),
-    source: symbol === 'XAUUSD' ? 'Twelve Data (XAU/USD spot)' : 'Coinbase (BTC-USD)',
+    source: recent.feed === 'twelvedata' ? 'Twelve Data (XAU/USD spot)' : FEEDS[recent.feed].name,
+    feed: recent.feed,
     updated: at,
     stale: history.stale || recent.stale,
   };
@@ -204,7 +297,8 @@ const json = (body, status = 200) =>
 const SECURITY = {
   'content-security-policy':
     "default-src 'self'; script-src 'self' 'unsafe-inline' https://telegram.org https://cdn.jsdelivr.net; " +
-    "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' wss://ws-feed.exchange.coinbase.com",
+    "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; " +
+    "connect-src 'self' wss://ws-feed.exchange.coinbase.com wss://ws.bitstamp.net wss://ws.kraken.com wss://data-stream.binance.vision",
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
 };
@@ -277,4 +371,5 @@ export function resetCaches() {
   members.clear();
   cache.clear();
   interested.clear();
+  btcOrder = Object.keys(FEEDS);
 }

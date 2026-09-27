@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MARKETS, dayKey, wallToUtc, toDays, atr, snapshot, sessionClock, marketStatus, lotSize, fmtDuration, fmtNum,
+  MARKETS, dayKey, wallToUtc, toDays, atr, snapshot, sessionClock, marketStatus, marketOpen, lotSize, fmtDuration, fmtNum,
   nyHour, normCdf, volProfile, varianceBetween, dayEnd, touchProb, beyondProb, band, cone, levelOdds, marketState, calibrate, tradeOdds,
 } from '../src/lib.js';
 
@@ -129,6 +129,17 @@ test('gold is closed at the weekend and in the daily break; Bitcoin never closes
   assert.deepEqual(marketStatus(GOLD, utc(2026, 9, 26, 12)), { open: false, reason: 'weekend', opensAt: utc(2026, 9, 27, 22) });
   assert.equal(marketStatus(GOLD, utc(2026, 1, 7, 22, 30)).reason, 'daily break'); // 17:30 EST
   assert.deepEqual(marketStatus(BTC, utc(2026, 9, 26, 12)), { open: true });
+});
+
+test('the fast open-or-shut check agrees with the market clock every 5 minutes for two years', () => {
+  let shut = 0;
+  for (let t = utc(2025, 12, 28); t < utc(2027, 12, 28); t += 300) {
+    const open = marketStatus(GOLD, t).open;
+    assert.equal(marketOpen(t, GOLD), open, new Date(t * 1000).toISOString());
+    if (!open) shut++;
+    if (t % 3600 === 0) assert.equal(marketOpen(t, BTC), true);
+  }
+  assert.ok(shut > 0.3 * 2 * 105120 * 0.5, 'weekends and breaks were checked');
 });
 
 test('lot size: risk ÷ (stop distance × contract size), rounded down to 0.01', () => {
