@@ -1,6 +1,6 @@
 # TCP reels · batch 1
 
-Twelve reels for TikTok and Instagram, and the welcome video for new members. Each reel comes with
+Fourteen reels for TikTok and Instagram, and the welcome video for new members. Each reel comes with
 sound and without, and has a cover:
 
 - `-voice.mp4`: the voiceover, subtitles and an original music bed. Post as it is.
@@ -179,6 +179,34 @@ In TCP, every setup is logged before the result: entry, stop and target, time-st
 Education, not financial advice. Trading carries risk. Demo data shown.
 ```
 
+### 13. Same trader, same edge (Prop challenge maths 01) · 30 s
+`tcp-prop-risk-voice.mp4` / `-sound.mp4`. Made with the terminal's new prop challenge simulator.
+
+```
+Same trader. Same edge. Only the risk changed.
+
+Simulated: 45% wins at 1.5R, 0.05R of costs, 2 trades a day, on a standard phase 1 (10% target, 5% daily limit, 10% max loss).
+Risking 1% a trade → about 2 in 3 pass
+Risking 3% → less than 1 in 3
+
+At 3%, 2 losing trades in 1 day break the daily limit. Do the maths before you pay for a challenge.
+#propfirm #fundedtrader #propchallenge #riskmanagement #xauusd
+Education, not financial advice. Trading carries risk. Simulated results.
+```
+
+### 14. POV: you checked your pass chance · 10 s
+`tcp-pov-prop-sound.mp4` / `-music.mp4`
+
+```
+POV: you checked your pass chance before paying for the challenge 📉
+
+Same numbers at 1% and 3% a trade: 65% pass, then 31%.
+#propfirm #fundedtrader #propchallenge #tradingtips #forex
+Education, not financial advice. Trading carries risk. Simulated results.
+```
+
+Never name a prop firm in these: the presets are typical rules, not any one firm's.
+
 ## The first two weeks
 
 A new account grows on consistency: post every day at the same times. UK times that suit traders are
@@ -192,8 +220,9 @@ A new account grows on consistency: post every day at the same times. UK times t
 | 4 | 7. POV: the odds | 8. 10% a month (maths 04) |
 | 5 | 9. Do you know the odds? | 10. The leaderboard |
 | 6 | 11. Lot size | 12. They post the wins |
-| 7 | Your best reel so far, with a new caption and a trending sound | |
-| 8–14 | Batch 2 (more maths, the session brief, the swarm), and repost the week's winners with new hooks | |
+| 7 | 13. Same trader, same edge | 14. POV: pass chance |
+| 8 | Your best reel so far, with a new caption and a trending sound | |
+| 9–14 | Batch 2 (more prop maths, the session brief, the swarm), and repost the week's winners with new hooks | |
 
 - **Pin** three to the profile: 1 (who we are), 5 (what we won't do) and 9 (what members get).
 - **Reply** to comments with a video when you can: TikTok pushes replies.

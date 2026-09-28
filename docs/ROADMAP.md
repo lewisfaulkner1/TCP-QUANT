@@ -8,8 +8,8 @@ What's built, what comes next, and the decisions behind it. Updated as work land
   tracked QR code, captions.
 - **Reels** (`brand/source/reels`): a studio that turns a short script into a finished vertical video,
   with an AI voice, word-by-word subtitles, graphics, footage of the terminal and original music. Batch 1
-  is 12 reels for TikTok and Instagram (the Trading maths series, the terminal, the Playbook, the
-  leaderboard, the brand sting) and the welcome video, with captions and a two-week plan
+  is 14 reels for TikTok and Instagram (the Trading maths series, the terminal, the Playbook, the
+  leaderboard, prop challenge maths, the brand sting) and the welcome video, with captions and a two-week plan
   (`brand/video/reels/POSTS.md`) and the profile setup (`community/SOCIAL.md`).
 - **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner), and
   the pinned posts for Start here (`community/PINNED.md`).

@@ -146,6 +146,19 @@ const SHOTS = {
     await app.run(100);
     return record(app, 'measured', 6, { 80: () => glide(page, 260, 1800) });
   },
+  // The prop challenge simulator: the answer at 1% a trade drawing in, the risk changed to 3% (typed
+  // below the fold, so the answer stays in view), then down to the pass chance at each risk.
+  async prop(app) {
+    const { page } = app;
+    await page.click('nav button[data-tab="risk"]');
+    await app.run(600);
+    const setRisk = (v) => page.evaluate((v) => { const el = document.getElementById('simRisk'); el.value = v; el.dispatchEvent(new Event('input')); }, v);
+    return record(app, 'prop', 12, {
+      9: () => page.click('#riskMode button[data-mode="sim"]'),
+      180: () => setRisk('3'),
+      255: () => glide(page, 1500, 2200),
+    });
+  },
   async brief(app) {
     const { page } = app;
     await page.click('nav button[data-tab="ai"]');
