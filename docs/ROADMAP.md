@@ -19,7 +19,9 @@ What's built, what comes next, and the decisions behind it. Updated as work land
 - **Quant Terminal** (Telegram Mini App):
   - markets: live gold and Bitcoin, levels, the probability engine and its model check, the probability
     swarm, market state, volatility by hour, sessions;
-  - risk: lot sizes for USD, GBP and EUR accounts, with each target's no-edge odds;
+  - risk: lot sizes for USD, GBP and EUR accounts, with each target's no-edge odds; and the prop challenge
+    simulator: a member's numbers through a challenge 4,000 times on their phone, the pass chance against
+    a trader with no edge, allowing for how sure their win rate is, and the pass chance at each risk level;
   - the Playbook: Lewis's setups logged before the result, followed to the end, in a hash-chained record
     measured against no edge;
   - session briefs: Lewis's charts before each session, a draft from TCP AI (when it has a key), his
@@ -58,8 +60,8 @@ What's built, what comes next, and the decisions behind it. Updated as work land
    of a touch passes a line. Runs on the existing 5-minute check.
 3. **Economic calendar and news risk:** this week's high-impact events (NFP, CPI, FOMC) on the Markets
    tab, with a warning before them and the engine's widened range around them.
-4. **Edge simulator:** a member enters their win rate and average R; a thousand simulated futures show
-   the drawdowns and losing streaks those numbers imply. Pure maths, in the Risk tab.
+4. **The simulator for a funded or personal account:** the drawdowns and losing streaks a win rate and R
+   imply over a year, beside the prop challenge. Pure maths, in the Risk tab.
 5. **Macro card:** real yields and the dollar against gold (FRED, free key), and positioning from the
    CFTC's weekly Commitments of Traders.
 6. **Session statistics:** how gold usually moves in each session and on each weekday, from its own

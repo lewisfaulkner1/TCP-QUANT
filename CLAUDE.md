@@ -28,7 +28,7 @@ can't pay for services yet: prefer free tiers, and ask before anything that cost
 | Folder | What | Tests |
 |---|---|---|
 | `bot/` | Onboarding bot (Cloudflare Worker): link in bio → 18+ → broker → verified → Inner Circle invite; referral scoreboard (D1) | `cd bot && npm test` |
-| `terminal/` | Quant Terminal, a Telegram Mini App on one Worker: markets and the probability engine, risk calculator, the Playbook, session briefs (TCP AI), MT5 connection and the leaderboard | `cd terminal && npm install && npm test` |
+| `terminal/` | Quant Terminal, a Telegram Mini App on one Worker: markets and the probability engine, risk calculator and prop challenge simulator, the Playbook, session briefs (TCP AI), MT5 connection and the leaderboard | `cd terminal && npm install && npm test` |
 | `bridge/` | TCP bridge for a Windows PC with MT5: reads connected members' accounts read-only and sends the Worker percentages only | `cd bridge && python3.12 -m unittest -v` |
 | `signals/` | Signal publisher for the VPS: the algo's signals and results as branded cards | `cd signals && npm install && npm test` |
 | `tools/card-studio/` | Card Studio (a private Claude artifact) for signal and results images | — |

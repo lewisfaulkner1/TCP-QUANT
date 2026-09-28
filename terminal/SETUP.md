@@ -196,6 +196,12 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
   travelled) and momentum in standard deviations. These describe the market; they aren't signals.
 - **Risk odds:** the chance each target (1R, 2R, 3R) comes before the stop on a market with no edge, and
   the win rate a trade needs to break even. It shows members what an edge has to beat.
+- **Prop challenge** (the Risk tab's second view): a member's win rate, reward to risk, costs, risk per
+  trade and trades a day, played through a prop firm's challenge (target, daily limit, max loss static or
+  trailing, days allowed) 4,000 times on their phone. It shows the pass chance and how the rest end, 40 of
+  the paths, the same challenge with no edge (the line to beat), the days a pass takes, and the pass
+  chance at each risk level from the same trades. A win rate measured over few trades is a rough guess,
+  so each simulated trader draws their true rate from what those trades allow. Nothing is sent anywhere.
 - **Probability swarm:** a couple of hundred dots, each one possible path from the live price to the close,
   drawn with the same hour-by-hour volatility. A dot lights up when it touches a level; the share of dots
   that do settles on the engine's odds, and at the close they stack into the spread of where price could
@@ -319,13 +325,14 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
 
 - Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/playbook-lib.js`,
   `src/brief-lib.js` and `src/ranks-lib.js` (the Playbook's, the briefs' and the leaderboard's maths,
-  shared too), `src/app.html`, `src/app.css`, `src/playbook-page.js`, `src/brief-page.js`,
-  `src/rank-page.js` and `src/app.js` (the page), `src/playbook.js`, `src/briefs.js`, `src/mt5.js` and
+  shared too), `src/sim-lib.js` (the prop challenge simulator's maths, for the page), `src/app.html`,
+  `src/app.css`, `src/playbook-page.js`, `src/brief-page.js`, `src/rank-page.js`, `src/sim-page.js` and
+  `src/app.js` (the page), `src/playbook.js`, `src/briefs.js`, `src/mt5.js` and
   `src/worker.js` (the Worker), `src/fonts/` (Latin subsets of the brand fonts, SIL Open Font License).
   The TCP bridge is in `bridge/`, with its own tests (`cd bridge && python3 -m unittest -v`).
 - `npm install` once (the Anthropic SDK, bundled into the Worker, and esbuild, which bundles it; both pinned).
   `npm run build` writes `dist/worker.js`, the one file for the dashboard, with the SDK's licence in it.
-  `npm test` builds, then runs 143 tests:
+  `npm test` builds, then runs 153 tests:
   - the maths: trading days across daylight saving, levels, sessions and lot sizes;
   - the probability engine, including a simulated market with no edge on which its forecasts must come
     true at the rate they claim, and a timing check for the Workers CPU limit;
@@ -350,7 +357,11 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
   - MT5 connections end to end, with real RSA-OAEP encryption: the password sealed as the phone does and
     only ciphertext stored, every check on what members send, the bridge's token, reports and failures
     (the ciphertext wiped, the member told once), reconnecting, hiding, disconnecting, the database's
-    tables against the maths on random data, two members taking one account at once, and the built file.
+    tables against the maths on random data, two members taking one account at once, and the built file;
+  - the prop challenge simulator: its random numbers, the doubt in a win rate (against the beta
+    distribution's known spread), one challenge trade by trade (a pass, the daily limit, the loss limit, a
+    trailing limit, time), the gambler's-ruin answers it must match, the sweep's shared trades, the form's
+    checks, and its speed.
 - Add `?demo` to the address to see made-up prices in a browser, for design work. It shows no member data,
   and Notify me there tells nobody. Add `&gold=4286&btc=84460` to move the made-up prices to today's level
   (for promo footage). The demo Playbook's results sit near the no-edge odds on purpose, so a screenshot

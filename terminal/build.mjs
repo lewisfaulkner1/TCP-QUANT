@@ -5,11 +5,13 @@
 //   src/playbook-lib.js   the Playbook's maths, shared by the Worker and the page
 //   src/brief-lib.js      the session briefs' maths, shared by the Worker and the page
 //   src/ranks-lib.js      the leaderboard's maths, shared by the Worker and the page
+//   src/sim-lib.js        the prop challenge simulator's maths, for the page only
 //   src/app.html          the page's markup; /*CSS*/ and /*SCRIPT*/ mark where the rest goes
 //   src/app.css           the page's styles
 //   src/playbook-page.js  the page's Playbook (the shared maths go in front of it)
 //   src/brief-page.js     the page's session briefs
 //   src/rank-page.js      the page's leaderboard and MT5 connection
+//   src/sim-page.js       the page's prop challenge simulator (the Risk tab)
 //   src/app.js            the rest of the page's script
 //   src/fonts/            brand fonts (Latin subsets of signals/fonts), served by the Worker
 //   src/playbook.js       the Worker's Playbook: storage, posts and the 5-minute check
@@ -34,7 +36,8 @@ const shared = [lib, plain('src/playbook-lib.js'), plain('src/brief-lib.js'), pl
 const html = read('src/app.html');
 for (const marker of ['/*CSS*/', '/*SCRIPT*/']) if (!html.includes(marker)) throw new Error(`app.html has no ${marker} marker`);
 const page = html.replace('/*CSS*/', () => read('src/app.css'))
-  .replace('/*SCRIPT*/', () => [shared, read('src/playbook-page.js'), read('src/brief-page.js'), read('src/rank-page.js'), read('src/app.js')].join('\n'));
+  .replace('/*SCRIPT*/', () => [shared, plain('src/sim-lib.js'), read('src/playbook-page.js'), read('src/brief-page.js'), read('src/rank-page.js'),
+    read('src/sim-page.js'), read('src/app.js')].join('\n'));
 
 const fonts = Object.fromEntries(
   fs.readdirSync(path.join(dir, 'src/fonts')).filter((f) => f.endsWith('.woff2')).sort()

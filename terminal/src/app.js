@@ -1056,13 +1056,13 @@ function selectSymbol(symbol) {
   state.symbol = symbol;
   store.set('symbol', symbol);
   framedFor = null;
-  for (const b of document.querySelectorAll('.segment button')) b.setAttribute('aria-pressed', String(b.dataset.symbol === symbol));
+  for (const b of document.querySelectorAll('#markets .segment button')) b.setAttribute('aria-pressed', String(b.dataset.symbol === symbol));
   streamBitcoin(symbol === 'BTCUSD');
   levelOrder = '';
   renderMarket();
   loadMarket(symbol);
 }
-for (const b of document.querySelectorAll('.segment button')) b.addEventListener('click', () => { haptic(); selectSymbol(b.dataset.symbol); });
+for (const b of document.querySelectorAll('#markets .segment button')) b.addEventListener('click', () => { haptic(); selectSymbol(b.dataset.symbol); });
 
 // The heartbeat: clocks, countdowns and odds move every second, even between prices.
 let beats = 0;
@@ -1181,6 +1181,7 @@ function showTab(tab) {
   if (tab === 'signals') { pbRender(); pbLoad(); pbPrices(); }
   if (tab === 'ranks') { rkRender(); rkLoad(); rkMineLoad(); }
   if (tab === 'account') { rkAccount(); rkMineLoad(); rkLoad(); }
+  if (tab === 'risk') simShow();
   pbFab();
   brFab();
   window.scrollTo(0, 0);
@@ -1229,6 +1230,7 @@ async function start() {
   pbInit();
   brInit();
   rkInit();
+  simInit();
   selectSymbol(state.symbol);
   selectRiskMarket(state.symbol);
   heartbeat();

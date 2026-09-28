@@ -119,46 +119,108 @@
 
   <!-- ============================================================== Risk -->
   <section id="risk" hidden>
-    <div class="card">
-      <h2 class="label">Position size</h2>
-      <div class="field">
-        <label for="balance">Account balance</label>
-        <div class="inputs"><input id="balance" inputmode="decimal" placeholder="10000" autocomplete="off"><select id="currency" aria-label="Account currency"><option>USD</option><option>GBP</option><option>EUR</option></select></div>
-        <div class="hint" id="fxHint" hidden></div>
+    <div class="segment" id="riskMode" role="group" aria-label="Risk tools">
+      <button data-mode="size" aria-pressed="true"><b>LOT SIZE</b><span>Your next trade</span></button>
+      <button data-mode="sim" aria-pressed="false"><b>PROP CHALLENGE</b><span>Your odds of passing</span></button>
+    </div>
+    <div id="sizeView">
+      <div class="card">
+        <h2 class="label">Position size</h2>
+        <div class="field">
+          <label for="balance">Account balance</label>
+          <div class="inputs"><input id="balance" inputmode="decimal" placeholder="10000" autocomplete="off"><select id="currency" aria-label="Account currency"><option>USD</option><option>GBP</option><option>EUR</option></select></div>
+          <div class="hint" id="fxHint" hidden></div>
+        </div>
+        <div class="field">
+          <label for="riskPct">Risk per trade (%)</label>
+          <div class="inputs"><input id="riskPct" inputmode="decimal" value="1" autocomplete="off">
+            <div class="chips" id="riskChips"><button data-risk="0.5">0.5</button><button data-risk="1">1</button><button data-risk="2">2</button></div></div>
+        </div>
+        <div class="field">
+          <label>Market</label>
+          <div class="chips" id="riskMarket"><button data-symbol="XAUUSD">XAUUSD</button><button data-symbol="BTCUSD">BTCUSD</button></div>
+        </div>
+        <div class="field">
+          <div class="row spread"><label for="entry">Entry</label><button class="link" id="useLive" type="button">Use live price</button></div>
+          <input id="entry" inputmode="decimal" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="stop">Stop loss</label>
+          <input id="stop" inputmode="decimal" autocomplete="off" placeholder="Your stop price">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="contract">Contract size (per 1.00 lot)</label>
+          <input id="contract" inputmode="decimal" autocomplete="off">
+          <div class="hint">Gold is usually 100 oz and Bitcoin 1 BTC. Check yours in MT5: tap the symbol, then Specification.</div>
+        </div>
       </div>
-      <div class="field">
-        <label for="riskPct">Risk per trade (%)</label>
-        <div class="inputs"><input id="riskPct" inputmode="decimal" value="1" autocomplete="off">
-          <div class="chips" id="riskChips"><button data-risk="0.5">0.5</button><button data-risk="1">1</button><button data-risk="2">2</button></div></div>
+
+      <div class="card result" id="result">
+        <div class="label">Lot size</div>
+        <div class="lots" id="lots">—</div>
+        <div class="sub" id="lotsLine">Enter your balance and stop loss.</div>
+        <div class="facts" id="facts" hidden></div>
+        <table id="targets" hidden><thead><tr><th>TARGET</th><th>PRICE</th><th>ODDS</th><th>PROFIT</th></tr></thead><tbody></tbody></table>
+        <div class="odds-note" id="oddsNote" hidden></div>
       </div>
-      <div class="field">
-        <label>Market</label>
-        <div class="chips" id="riskMarket"><button data-symbol="XAUUSD">XAUUSD</button><button data-symbol="BTCUSD">BTCUSD</button></div>
-      </div>
-      <div class="field">
-        <div class="row spread"><label for="entry">Entry</label><button class="link" id="useLive" type="button">Use live price</button></div>
-        <input id="entry" inputmode="decimal" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="stop">Stop loss</label>
-        <input id="stop" inputmode="decimal" autocomplete="off" placeholder="Your stop price">
-      </div>
-      <div class="field" style="margin-bottom:0">
-        <label for="contract">Contract size (per 1.00 lot)</label>
-        <input id="contract" inputmode="decimal" autocomplete="off">
-        <div class="hint">Gold is usually 100 oz and Bitcoin 1 BTC. Check yours in MT5: tap the symbol, then Specification.</div>
-      </div>
+      <p class="note">A calculator, not advice. Check the numbers in MT5 before you place a trade.</p>
     </div>
 
-    <div class="card result" id="result">
-      <div class="label">Lot size</div>
-      <div class="lots" id="lots">—</div>
-      <div class="sub" id="lotsLine">Enter your balance and stop loss.</div>
-      <div class="facts" id="facts" hidden></div>
-      <table id="targets" hidden><thead><tr><th>TARGET</th><th>PRICE</th><th>ODDS</th><th>PROFIT</th></tr></thead><tbody></tbody></table>
-      <div class="odds-note" id="oddsNote" hidden></div>
+    <div id="simView" hidden>
+      <div class="card result">
+        <div class="label">Pass chance</div>
+        <div class="lots" id="simPass">—</div>
+        <div class="sub" id="simLine">Enter your numbers below.</div>
+        <div id="simBody" hidden>
+          <div class="sim-bar" id="simBar"></div>
+          <div class="sim-legend" id="simLegend"></div>
+          <canvas id="simChart" role="img" aria-label="40 of the simulated challenges, from the start to where each ended"></canvas>
+          <div class="facts" id="simFacts"></div>
+          <div class="odds-note" id="simNote"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row spread"><h2 class="label">Your trading</h2><span class="tag">your numbers</span></div>
+        <div class="sim-grid">
+          <div class="field"><label for="simRate">Win rate (%)</label><input id="simRate" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simRr">Reward to risk</label><input id="simRr" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simRisk">Risk a trade (%)</label><input id="simRisk" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simPerDay">Trades a day</label><input id="simPerDay" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <div class="field">
+          <label>Win rate measured over (trades)</label>
+          <div class="chips wrap" id="simN"><button data-n="20">20</button><button data-n="50">50</button><button data-n="100">100</button><button data-n="300">300</button><button data-n="0">Exact</button></div>
+          <div class="hint">The fewer trades behind a win rate, the less sure it is. The pass chance allows for that.</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="simCost">Costs a trade (R)</label>
+          <input id="simCost" inputmode="decimal" autocomplete="off">
+          <div class="hint">Spread and commission as a share of your risk: a 30-cent spread on a $6 gold stop is 0.05R.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row spread"><h2 class="label">The challenge</h2><span class="tag">check your firm's rules</span></div>
+        <div class="chips wrap sim-presets" id="simPreset"></div>
+        <div class="sim-grid">
+          <div class="field"><label for="simTarget">Target (%)</label><input id="simTarget" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simDaily">Daily limit (%)</label><input id="simDaily" inputmode="decimal" autocomplete="off" placeholder="None"></div>
+          <div class="field"><label for="simMax">Max loss (%)</label><input id="simMax" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simDays">Days allowed</label><input id="simDays" inputmode="numeric" autocomplete="off" placeholder="No limit"></div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Max loss is</label>
+          <div class="chips" id="simTrail"><button data-trail="0">Static</button><button data-trail="1">Trailing</button></div>
+          <div class="hint">Static counts from your starting balance. Trailing follows your highest balance up, and stops at your starting balance. Days are trading days: 30 calendar days is about 21.</div>
+          <div class="hint warn" id="simErr" hidden></div>
+        </div>
+      </div>
+      <div class="card" id="simSweepCard" hidden>
+        <div class="row spread"><h2 class="label">Pass chance by risk</h2><span class="tag">same trades</span></div>
+        <div class="sim-sweep" id="simSweep"></div>
+        <div class="odds-note" id="simSweepNote"></div>
+      </div>
+      <p class="note">A simulation, not a forecast, and not advice. Each trade closes at its stop or its target, one at a time, and doesn't depend on the last. Minimum trading days, consistency rules and news rules aren't included. Nothing here is sent anywhere.</p>
     </div>
-    <p class="note">A calculator, not advice. Check the numbers in MT5 before you place a trade.</p>
   </section>
 
   <!-- =========================================================== Signals -->
