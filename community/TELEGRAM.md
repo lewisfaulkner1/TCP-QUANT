@@ -63,6 +63,8 @@ Trading CFDs and crypto carries a high risk of losing money. Past performance is
 
 ## Rules (pin under the welcome)
 
+The latest rules, with the MT5 password rule added, are in `PINNED.md`: post those instead.
+
 ```
 📜 INNER CIRCLE RULES
 

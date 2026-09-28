@@ -32,7 +32,8 @@ can't pay for services yet: prefer free tiers, and ask before anything that cost
 | `bridge/` | TCP bridge for a Windows PC with MT5: reads connected members' accounts read-only and sends the Worker percentages only | `cd bridge && python3.12 -m unittest -v` |
 | `signals/` | Signal publisher for the VPS: the algo's signals and results as branded cards | `cd signals && npm install && npm test` |
 | `tools/card-studio/` | Card Studio (a private Claude artifact) for signal and results images | — |
-| `brand/`, `community/` | Logo pack, videos, captions, business cards; the Inner Circle kit | — |
+| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music | see its README |
+| `brand/`, `community/` | Logo pack, videos and reels (`brand/video/reels/POSTS.md`), captions, business cards; the Inner Circle kit, pinned posts and socials setup | — |
 
 The terminal builds into one file, `terminal/dist/worker.js`, which Lewis pastes into the Cloudflare
 dashboard. Always run `npm test` (it builds first) and commit the rebuilt `dist/worker.js`.
@@ -55,6 +56,10 @@ dashboard. Always run `npm test` (it builds first) and commit the rebuilt `dist/
   `json_each` statement, and tables are added up in SQL.
 - In the cloud container, run the bridge's tests with `python3.12`: the default `python3` (3.11) has
   a broken system `cryptography`.
+- The cloud container reaches PyPI and npm but not GitHub releases or Hugging Face: the reels' voice
+  model comes from an npm package (see `brand/source/reels/README.md`). Models aren't committed.
+- Reels teach and never ask viewers to open an account (a UK financial promotion); the link in bio and
+  the bot do that, with the disclosures. Label AI voices and demo data.
 
 ## Where things stand
 

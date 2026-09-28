@@ -6,7 +6,13 @@ What's built, what comes next, and the decisions behind it. Updated as work land
 
 - **Brand:** logo pack, intro and outro videos, the Quant Terminal launch film, business cards with a
   tracked QR code, captions.
-- **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner).
+- **Reels** (`brand/source/reels`): a studio that turns a short script into a finished vertical video,
+  with an AI voice, word-by-word subtitles, graphics, footage of the terminal and original music. Batch 1
+  is 12 reels for TikTok and Instagram (the Trading maths series, the terminal, the Playbook, the
+  leaderboard, the brand sting) and the welcome video, with captions and a two-week plan
+  (`brand/video/reels/POSTS.md`) and the profile setup (`community/SOCIAL.md`).
+- **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner), and
+  the pinned posts for Start here (`community/PINNED.md`).
 - **Onboarding bot:** link in bio → 18+ check → broker → verification → single-use invite, with the
   lead's source on every card and a referral scoreboard.
 - **Signal publisher:** the algo's signals, updates and weekly results as branded cards, test mode first.
@@ -38,6 +44,11 @@ What's built, what comes next, and the decisions behind it. Updated as work land
   daily percentages; no balance leaves the bridge. Opt-in, with a nickname. It shows how many traders
   were green and red, and the worst day beside each week's and month's gain, because a table of top gains
   alone rewards gambling. No prizes for the biggest daily gain.
+
+- **The reels teach; the bot sells.** No reel asks viewers to open an account: in the UK, inviting people
+  to open a CFD account is a financial promotion. The link in bio leads to the bot, which shows the
+  partner disclosure and risk warning first. AI voices are labelled, demo data is labelled, and every
+  figure in a reel is worked out.
 
 ## Next, free
 
