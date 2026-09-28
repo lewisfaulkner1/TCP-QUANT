@@ -4,8 +4,10 @@
 // initData, checked here with the bot token), and the Worker asks Telegram
 // whether they're in the Inner Circle (or the team group) before sending
 // any data. Nobody logs in. The only things stored are the Playbook (see
-// playbook.js), Lewis's setups and what became of them, and the session briefs
-// (briefs.js): his charts, TCP AI's reads of them, and what price did at each zone.
+// playbook.js), Lewis's setups and what became of them; the session briefs
+// (briefs.js): his charts, TCP AI's reads of them, and what price did at each zone;
+// and the MT5 links (mt5.js): members' encrypted investor passwords, which only the
+// TCP bridge can read, and the daily percentages it sends back for the leaderboard.
 //
 // Each market's answer carries the probability engine's inputs (see lib.js):
 // the hour-by-hour volatility profile from two months of hourly bars, the time
@@ -19,9 +21,11 @@
 //   TWELVE_DATA_KEY        secret: a free twelvedata.com key, for gold prices
 //   DB, POSTER_IDS, PLAYBOOK_MODE, PLAYBOOK_THREAD_ID, PLAYBOOK_TAGS: the Playbook (playbook.js)
 //   ANTHROPIC_API_KEY, BRIEF_MODEL, BRIEF_MODE, BRIEF_THREAD_ID, TERMINAL_URL: session briefs (briefs.js)
+//   BRIDGE_PUBLIC_KEY, BRIDGE_TOKEN: MT5 connections and the leaderboard (mt5.js)
 import { MARKETS, toDays, snapshot, marketStatus, marketOpen, volProfile, marketState, calibrate, dayEnd } from './lib.js';
 import { createPlaybook } from './playbook.js';
 import { createBriefs } from './briefs.js';
+import { createMt5 } from './mt5.js';
 import { PAGE, FONTS } from './assets.js';
 
 const SIGN_IN_MAX_AGE = 24 * 3600; // Telegram's signature on a Mini App session
@@ -354,6 +358,7 @@ const SECURITY = {
 
 const playbook = createPlaybook({ telegram, upload: telegramUpload, loadMarket, minuteBars });
 const briefs = createBriefs({ telegram, sendFiles: telegramFiles, loadMarket, minuteBars });
+const mt5 = createMt5({ telegram });
 
 async function api(request, env, path, url, ctx) {
   const initData = (request.headers.get('authorization') || '').replace(/^tma /, '');
@@ -366,6 +371,7 @@ async function api(request, env, path, url, ctx) {
 
   if (path === '/api/playbook' || path.startsWith('/api/playbook/')) return playbook.api(request, env, path, user, now());
   if (path === '/api/briefs' || path.startsWith('/api/briefs/')) return briefs.api(request, env, path, user, now(), ctx);
+  if (/^\/api\/(mt5|ranks)(\/|$)/.test(path)) return mt5.api(request, env, path, user, now());
 
   if (path === '/api/interest' && request.method === 'POST') {
     const body = await request.json().catch(() => null);
@@ -410,6 +416,8 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     if (path.startsWith('/api/')) return api(request, env, path, url, ctx);
+    // The TCP bridge signs in with its own token, not Telegram's.
+    if (path.startsWith('/bridge/')) return mt5.bridge(request, env, path, now());
     if (path.startsWith('/fonts/') && FONTS[path.slice(7)]) {
       const bytes = Uint8Array.from(atob(FONTS[path.slice(7)]), (c) => c.charCodeAt(0));
       return new Response(bytes, { headers: { 'content-type': 'font/woff2', 'cache-control': 'public, max-age=31536000, immutable' } });
@@ -436,6 +444,7 @@ export function resetCaches() {
   btcOrder = Object.keys(FEEDS);
   playbook.reset();
   briefs.reset();
+  mt5.reset();
 }
 
 // For tests: run the Playbook's check at a given moment.

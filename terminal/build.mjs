@@ -4,14 +4,17 @@
 //   src/lib.js            the market maths, shared by the Worker and the page
 //   src/playbook-lib.js   the Playbook's maths, shared by the Worker and the page
 //   src/brief-lib.js      the session briefs' maths, shared by the Worker and the page
+//   src/ranks-lib.js      the leaderboard's maths, shared by the Worker and the page
 //   src/app.html          the page's markup; /*CSS*/ and /*SCRIPT*/ mark where the rest goes
 //   src/app.css           the page's styles
 //   src/playbook-page.js  the page's Playbook (the shared maths go in front of it)
 //   src/brief-page.js     the page's session briefs
+//   src/rank-page.js      the page's leaderboard and MT5 connection
 //   src/app.js            the rest of the page's script
 //   src/fonts/            brand fonts (Latin subsets of signals/fonts), served by the Worker
 //   src/playbook.js       the Worker's Playbook: storage, posts and the 5-minute check
 //   src/briefs.js         the Worker's session briefs: TCP AI's reads, posts, reminders and reviews
+//   src/mt5.js            the Worker's MT5 links and leaderboard, and the TCP bridge's endpoints
 //   src/worker.js         the Worker
 // The Anthropic SDK (for TCP AI) is bundled from node_modules with esbuild, its licence kept.
 import fs from 'node:fs';
@@ -27,11 +30,11 @@ const plain = (file) => read(file)
   .replace(/^import [\s\S]*? from '[^']+';\n/gm, '')
   .replace(/^export (const|function|async function) /gm, '$1 ');
 const lib = plain('src/lib.js');
-const shared = [lib, plain('src/playbook-lib.js'), plain('src/brief-lib.js')].join('\n');
+const shared = [lib, plain('src/playbook-lib.js'), plain('src/brief-lib.js'), plain('src/ranks-lib.js')].join('\n');
 const html = read('src/app.html');
 for (const marker of ['/*CSS*/', '/*SCRIPT*/']) if (!html.includes(marker)) throw new Error(`app.html has no ${marker} marker`);
 const page = html.replace('/*CSS*/', () => read('src/app.css'))
-  .replace('/*SCRIPT*/', () => [shared, read('src/playbook-page.js'), read('src/brief-page.js'), read('src/app.js')].join('\n'));
+  .replace('/*SCRIPT*/', () => [shared, read('src/playbook-page.js'), read('src/brief-page.js'), read('src/rank-page.js'), read('src/app.js')].join('\n'));
 
 const fonts = Object.fromEntries(
   fs.readdirSync(path.join(dir, 'src/fonts')).filter((f) => f.endsWith('.woff2')).sort()
@@ -76,6 +79,7 @@ const bundle = [
   '',
   plain('src/playbook.js'),
   plain('src/briefs.js'),
+  plain('src/mt5.js'),
   plain('src/worker.js'),
 ].join('\n');
 fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });

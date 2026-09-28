@@ -1091,6 +1091,11 @@ function heartbeat() {
     if (now % (reading ? 10 : 60) === 0) brLoad(true);
   }
   brReadingTick();
+  if (!$('ranks').hidden) {
+    if (now % 60 === 0) rkLoad(true);
+    else if (now % 15 === 0) rkSyncLine();
+  }
+  if (!$('account').hidden && now % 30 === 0 && rk.mine && rk.mine.link && rk.mine.link.status === 'pending') rkMineLoad(true);
 }
 
 // ------------------------------------------------------------------- risk
@@ -1174,6 +1179,8 @@ function showTab(tab) {
   if (tab === 'markets') { levelOrder = ''; renderOdds(); resumeSwarm(); }
   if (tab === 'ai') { startOrb(); pbLoad(); brRender(); brLoad(); }
   if (tab === 'signals') { pbRender(); pbLoad(); pbPrices(); }
+  if (tab === 'ranks') { rkRender(); rkLoad(); rkMineLoad(); }
+  if (tab === 'account') { rkAccount(); rkMineLoad(); rkLoad(); }
   pbFab();
   brFab();
   window.scrollTo(0, 0);
@@ -1221,6 +1228,7 @@ async function start() {
   $('gate').hidden = true;
   pbInit();
   brInit();
+  rkInit();
   selectSymbol(state.symbol);
   selectRiskMarket(state.symbol);
   heartbeat();

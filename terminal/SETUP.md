@@ -11,8 +11,12 @@ About 15 minutes, and free. The terminal opens inside Telegram for Inner Circle 
 - **session briefs with TCP AI**: before each session Lewis sends his charts from the app, TCP AI reads
   them with the terminal's numbers and drafts the brief (the zones to watch and a plan), Lewis checks it,
   and it posts to the Inner Circle; after the session every zone is scored (step 5);
-- Signals, AI and Account tabs that show what's coming (signals, copy trading, account connection, more
-  AI), each with a **Notify me** button that tells the team who wants it.
+- **the leaderboard**: members connect MT5 with their investor (read-only) password, encrypted on their
+  phone, and the Ranks tab shows the day, the week and the month in percentages, never balances, with
+  each trader's worst day and open trades beside the gain; each member sees their own trading measured
+  under Account (step 6);
+- Signals, AI and Account tabs that show what's coming (signals, copy trading, more AI), each with a
+  **Notify me** button that tells the team who wants it.
 
 You need the Cloudflare account the bot runs on, BotFather, and a free Twelve Data account. TCP AI also
 needs an Anthropic account with some credit (step 5).
@@ -128,6 +132,30 @@ first.
    `DELETE FROM briefs WHERE test = 1;` (your guide and lessons stay). Then set `BRIEF_MODE` to `live` and
    press **Deploy**.
 
+## 6. MT5 connections and the leaderboard (about 30 minutes, and a Windows PC)
+
+The leaderboard uses the Playbook's database (`DB`), so do step 4 first. Members' accounts are read by
+the **TCP bridge**, a small program on a Windows PC with MT5. `bridge/README.md` has every step. In short:
+
+1. On the PC, install Python 3.12 and MT5 from PU Prime and from Vantage, copy the `bridge` folder there,
+   and run `py -3.12 -m pip install -r requirements.txt`.
+2. Run `py -3.12 make_keys.py`. Choose a passphrase and keep it safe, offline. It writes the bridge's
+   keys and token to `bridge\secrets\`.
+3. In the `tcp-terminal` Worker, **Settings → Variables and Secrets → Add**:
+   - `BRIDGE_PUBLIC_KEY` (Text): everything in `secrets\bridge_public.txt`;
+   - `BRIDGE_TOKEN` (Secret): everything in `secrets\bridge_token.txt`.
+   Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**. **Connect MT5** opens
+   under Account once `BRIDGE_PUBLIC_KEY` is set; until then it shows Coming soon with Notify me.
+4. Fill in the bridge's `config.json` (the terminal's address and where each MT5 is), check it with
+   `py -3.12 tcp_bridge.py --check`, then start it with **start_bridge.bat**. It reads every connected
+   account every 30 minutes while it runs.
+5. **Try it.** In the terminal, go to **Account → Connect MT5** and connect your own account with its
+   investor password. Within half an hour the bot messages you, and you're on the **Ranks** tab.
+
+Posters (`POSTER_IDS`) can take a name off the leaderboard with **hide** beside it on the Ranks tab, and
+put it back from the list below the table. It stays off even if the member disconnects and connects
+again, and the member still sees their own stats.
+
 ## Updating
 
 Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**. Settings stay as they are.
@@ -137,10 +165,12 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
 - **Who gets in:** anyone in the Inner Circle (or the team group). Telegram vouches for who opened it,
   and the terminal asks Telegram whether they're a member, reusing the answer for up to 10 minutes. Someone
   who leaves loses access within 10 minutes; someone just approved gets in within a minute.
-- **Nobody logs in, and nothing about members is stored.** The bot token stays in Cloudflare's secrets and
+- **Nobody logs in, and little about members is stored.** The bot token stays in Cloudflare's secrets and
   never reaches the page. The terminal sends a Notify me tap (the member's name, @username and Telegram ID)
-  to the team group. The only things it stores are the Playbook (the setups, who logged them, their charts'
-  Telegram file IDs, and what happened to them) and the session briefs (see below).
+  to the team group. It stores the Playbook (the setups, who logged them, their charts' Telegram file IDs,
+  and what happened to them), the session briefs (see below), and for members who connect MT5: their
+  Telegram ID, leaderboard name, broker, server and account number, their investor password encrypted so
+  that only the bridge can read it, and each day's percentages. Disconnecting deletes all of it.
 - **The data:** gold is XAU/USD spot from Twelve Data; Bitcoin is BTC-USD from Coinbase, Bitstamp or Kraken
   (or BTC/USDT from Binance as a last resort), named under the price; exchange rates for GBP and EUR
   accounts are the European Central Bank's. Brokers' prices differ slightly.
@@ -247,6 +277,28 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
 - **Cost and limits.** Each read's cost shows on the draft. Reads are capped per poster per day. If the
   app is closed mid-read, the Worker finishes it on its next check and the bot says when the draft is ready.
 
+## How the leaderboard works
+
+- **Read-only, and percentages only.** A member connects with their investor password, which MT5 makes
+  read-only: it can see trades but can't place them or move money. The app encrypts it on their phone to
+  the bridge's key (RSA-OAEP), so the terminal and its database hold only a copy they can't read. The
+  bridge reads the account's own deal history and sends back each day's result as a percentage, and how
+  many trades closed, won and lost. No balance leaves the bridge.
+- **What counts.** Closed trades, commissions, swaps and fees, over the balance at the start of each day
+  plus that day's deposits. Withdrawals aren't taken off, so moving money never makes a day look better,
+  and bonus credit is left out. Days count from the day an account is connected.
+- **The tables.** The day table is the last full trading day (gold's day, ending at 17:00 New York). The
+  week and month tables compound the days so far, and last week's and last month's tables stay up for a
+  look back. Each shows how many traders were green and red, and beside each gain the trader's worst day
+  and what their open trades stand at: a list of gains alone rewards gambling, and closed trades alone can
+  hide losers left open. Only accounts that are working and shown count; a name can be kept private.
+- **Consistency.** The week and month can also be ranked by consistency: the average day over how much the
+  days vary, scaled by the number of days (a t-score). Above 2 over 20 or more days, luck alone gets there
+  about 1 time in 40; each member's own verdict waits for 20 trading days.
+- **Checks.** The bridge refuses a master password before reading anything, and refuses demo accounts and
+  other brokers. It stops trying an account whose password is wrong (a broker can lock an account after
+  repeated tries), and the bot tells the member what to fix. Each member can make 5 connections a day.
+
 ## Coming soon, and Notify me
 
 The Signals, AI and Account tabs show what's planned, each clearly marked:
@@ -254,8 +306,9 @@ The Signals, AI and Account tabs show what's planned, each clearly marked:
   the TCP EA (dry run), then members' own accounts (copy trading, coming soon). Below it, an example
   signal card, stamped EXAMPLE.
 - **AI:** session briefs are live; Snap to log, trade reviews, Ask TCP AI and an AI coach are marked Soon.
-- **Account:** the member's name, account connection (MT5 or wallet, read-only), the stats they'll see
-  after connecting (profit factor, win rate, average R, max drawdown), and price and odds alerts.
+- **Account:** the member's name, their MT5 connection (Coming soon until the bridge is set up in step 6),
+  their trading measured once connected (total, profit factor, win rate, average day, drawdown, worst day,
+  the curve of closed trades and consistency), and price and odds alerts.
 
 A member who taps **Notify me** sees "You're on the list", and the team group gets a message:
 `💡 Wants copy trading`, their name and @username, and `ID: 123456789`. Each member's tap is passed on once
@@ -264,14 +317,15 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
 
 ## For developers
 
-- Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/playbook-lib.js` and
-  `src/brief-lib.js` (the Playbook's and the briefs' maths, shared too), `src/app.html`, `src/app.css`,
-  `src/playbook-page.js`, `src/brief-page.js` and `src/app.js` (the page), `src/playbook.js`,
-  `src/briefs.js` and `src/worker.js` (the Worker), `src/fonts/` (Latin subsets of the brand fonts, SIL
-  Open Font License).
+- Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/playbook-lib.js`,
+  `src/brief-lib.js` and `src/ranks-lib.js` (the Playbook's, the briefs' and the leaderboard's maths,
+  shared too), `src/app.html`, `src/app.css`, `src/playbook-page.js`, `src/brief-page.js`,
+  `src/rank-page.js` and `src/app.js` (the page), `src/playbook.js`, `src/briefs.js`, `src/mt5.js` and
+  `src/worker.js` (the Worker), `src/fonts/` (Latin subsets of the brand fonts, SIL Open Font License).
+  The TCP bridge is in `bridge/`, with its own tests (`cd bridge && python3 -m unittest -v`).
 - `npm install` once (the Anthropic SDK, bundled into the Worker, and esbuild, which bundles it; both pinned).
   `npm run build` writes `dist/worker.js`, the one file for the dashboard, with the SDK's licence in it.
-  `npm test` builds, then runs 118 tests:
+  `npm test` builds, then runs 143 tests:
   - the maths: trading days across daylight saving, levels, sessions and lot sizes;
   - the probability engine, including a simulated market with no edge on which its forecasts must come
     true at the rate they claim, and a timing check for the Workers CPU limit;
@@ -290,9 +344,17 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
   - the briefs end to end, with Anthropic's API stood in for: charts kept and read, the request TCP AI gets
     (model, fallback, structured output, charts by file id, the guide and lessons), failed reads and
     retries, posting once (two taps at once too), test and live runs, reminders, unfinished reads, the
-    review and its wrap (two checks at once too), and the export.
+    review and its wrap (two checks at once too), and the export;
+  - the leaderboard's maths: periods, compounding, the consistency score, the tables and a trader's own
+    stats, and the checks on what the bridge and members send;
+  - MT5 connections end to end, with real RSA-OAEP encryption: the password sealed as the phone does and
+    only ciphertext stored, every check on what members send, the bridge's token, reports and failures
+    (the ciphertext wiped, the member told once), reconnecting, hiding, disconnecting, the database's
+    tables against the maths on random data, two members taking one account at once, and the built file.
 - Add `?demo` to the address to see made-up prices in a browser, for design work. It shows no member data,
   and Notify me there tells nobody. Add `&gold=4286&btc=84460` to move the made-up prices to today's level
   (for promo footage). The demo Playbook's results sit near the no-edge odds on purpose, so a screenshot
   of it can't pass for a winning record; the demo zone record sits at the random walk's line for the same
-  reason. The demo's TCP AI read is made up: nothing is sent anywhere.
+  reason. The demo's TCP AI read is made up: nothing is sent anywhere. The demo leaderboard's traders are
+  made up too, with days that are a random walk with no edge, so about as many are red as green. Add
+  `&mt=none`, `&mt=pending`, `&mt=failed` or `&mt=closed` to see the MT5 connection's other states.

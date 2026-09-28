@@ -318,25 +318,56 @@
   </section>
 
   <!-- ============================================================ Account -->
+  <!-- ============================================================ Ranks -->
+  <section id="ranks" hidden>
+    <div class="card rk-hero">
+      <div class="row spread"><h2 class="label">Leaderboard</h2><span class="state soon-tag" id="rkDemoTag" hidden>Demo</span></div>
+      <div class="chips rk-periods" id="rkPeriod"><button type="button" data-v="day">Day</button><button type="button" data-v="week">Week</button><button type="button" data-v="month">Month</button></div>
+      <div class="rk-sub">
+        <div class="chips rk-small" id="rkWhen"></div>
+        <div class="chips rk-small" id="rkBy"><button type="button" data-v="gain">Gain</button><button type="button" data-v="steady">Consistency</button></div>
+      </div>
+      <div class="rk-split" id="rkSplit"></div>
+      <p class="rk-you" id="rkYou" hidden></p>
+      <p class="meta" id="rkSync"></p>
+    </div>
+    <div class="card rk-board" id="rkBoard"></div>
+    <div class="card rk-join" id="rkJoin" hidden>
+      <h2 class="label">Join the leaderboard</h2>
+      <p>Connect your MT5 account read-only. Only percentages are shared, never your balance, and you choose the name it shows.</p>
+      <button class="cta pb-submit" id="rkJoinGo" type="button">CONNECT MT5</button>
+    </div>
+    <div class="card rk-hidden" id="rkHidden" hidden></div>
+    <div class="card rk-how">
+      <h2 class="label">How it's measured</h2>
+      <ul>
+        <li>Closed trades only, read from each account's own history with its investor (read-only) password.</li>
+        <li>Each day's gain is on the balance at the start of the day. Deposits and withdrawals don't count as gains or losses.</li>
+        <li>Weeks and months compound the days. The day table is the last full trading day, which ends at 17:00 New York.</li>
+        <li>Each trader's worst day and open trades show beside the gain: a list of gains alone rewards gambling, and closed trades alone can hide losers left open.</li>
+        <li>Consistency is the average day over how much the days vary, scaled by how many there were. Above 2 over 20 or more days, luck alone gets there about 1 time in 40.</li>
+      </ul>
+      <p class="fine">No prizes for the biggest gain: size your risk as if nobody is watching. Past results don't predict future returns. Trading carries risk.</p>
+    </div>
+  </section>
+
   <section id="account" hidden>
     <div class="card profile">
       <span class="avatar big-avatar" id="profileInitial">?</span>
       <div><b id="profileName">Member</b><small id="profileRole">TCP Inner Circle</small></div>
     </div>
-    <div class="card soon-card" data-feature="connect">
-      <div class="row spread"><h2 class="label">Connect your account</h2><span class="state soon-tag">Coming soon</span></div>
-      <p>Link your MT5 account or wallet to see your real results here. Read-only: the terminal can see your trades, never move your money.</p>
-      <button class="notify" type="button">Notify me</button>
+    <div class="card mt-card" id="mtCard" data-feature="connect">
+      <div class="row spread"><h2 class="label">MT5 connection</h2><span class="state soon-tag" id="mtState">Loading</span></div>
+      <div id="mtBody"><p class="mt-text">Checking…</p></div>
+      <button class="notify" type="button" id="mtNotify" hidden>Notify me</button>
     </div>
-    <div class="card soon-card">
-      <div class="row spread"><h2 class="label">Your trading, measured</h2><span class="state soon-tag">After connecting</span></div>
-      <div class="stat-preview">
-        <div><span>Profit factor</span><b>—</b></div>
-        <div><span>Win rate</span><b>—</b></div>
-        <div><span>Average R</span><b>—</b></div>
-        <div><span>Max drawdown</span><b>—</b></div>
-      </div>
-      <p style="margin-top:12px">Plus your equity curve, and your best and worst sessions, days and markets.</p>
+    <div class="card mt-measured" id="mtMeasured">
+      <div class="row spread"><h2 class="label">Your trading, measured</h2><span class="state soon-tag" id="mtMeasuredTag">After connecting</span></div>
+      <div class="rk-stats" id="mtStats"></div>
+      <div class="rk-periodline" id="mtPeriods" hidden></div>
+      <canvas class="rk-curve" id="mtCurve" hidden></canvas>
+      <div id="mtVerdict"></div>
+      <p class="fine" id="mtMeasuredNote">From the day you connect: closed trades only, as percentages of your balance. Your equity curve, win rate, profit factor and consistency show here.</p>
     </div>
     <div class="card soon-card" data-feature="alerts">
       <div class="row spread"><h2 class="label">Price and odds alerts</h2><span class="state soon-tag">Coming soon</span></div>
@@ -437,6 +468,30 @@
   </div>
 </div>
 
+<div class="sheet" id="mtSheet" role="dialog" aria-modal="true" aria-labelledby="mtSheetTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="mtSheetTitle">Connect MT5</h2><button class="link" id="mtClose" type="button">Close</button></div>
+    <div class="mt-promise">
+      <p><b>Read-only.</b> TCP uses your investor password, which can see trades but can't place them or move money.</p>
+      <p><b>Encrypted on this phone.</b> Only TCP's bridge can open it. The terminal never sees it.</p>
+      <p><b>Percentages only.</b> Your balance never leaves your account.</p>
+    </div>
+    <details class="mt-help"><summary>Where's my investor password?</summary>
+      <p>In MT5, open your account's settings and choose Change password, then the investor (read-only) one. PU Prime's and Vantage's client areas can set it too. Your master password stays with you: never share it.</p></details>
+    <div class="field"><label for="mtLogin">Account number</label><input id="mtLogin" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="e.g. 12345678"></div>
+    <div class="field"><label for="mtServer">Server</label><input id="mtServer" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" placeholder="e.g. PUPrime-Live 3">
+      <div class="hint">Exactly as MT5 shows it under your account.</div></div>
+    <div class="field"><label for="mtPassword">Investor password</label><input id="mtPassword" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64"></div>
+    <div class="field"><label for="mtNick">Leaderboard name</label><input id="mtNick" autocomplete="off" maxlength="20" placeholder="e.g. Aurum">
+      <div class="hint">2 to 20 letters or numbers. Pick one you don't mind others seeing.</div></div>
+    <div class="field"><label>Show me on the leaderboard</label><div class="chips" id="mtPublic"><button type="button" data-v="on">Yes</button><button type="button" data-v="off">No, just my stats</button></div></div>
+    <label class="mt-consent"><input type="checkbox" id="mtConsent"><span>This is my investor (read-only) password, not my master password.</span></label>
+    <div class="pb-error" id="mtError" role="alert" hidden></div>
+    <button class="cta pb-submit" id="mtSubmit" type="button">ENCRYPT AND CONNECT</button>
+    <p class="fine">Disconnect any time under Account: your link and every day recorded for it are deleted.</p>
+  </div>
+</div>
+
 <div class="viewer" id="pbViewer" hidden><img id="pbViewerImg" alt="The chart for this setup"><button class="link" id="pbViewerClose" type="button">Close</button></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -445,6 +500,7 @@
   <button data-tab="risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>RISK</button>
   <button data-tab="signals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>SIGNALS</button>
   <button data-tab="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg>AI</button>
+  <button data-tab="ranks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 14v4M8.5 21h7M9.5 18h5"/></svg>RANKS</button>
   <button data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>ACCOUNT</button>
 </nav>
 
