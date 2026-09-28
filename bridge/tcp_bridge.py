@@ -171,8 +171,9 @@ def read_link(mt5, key, link, config, now):
     ok = mt5.login(int(link['login']), password=password, server=link['server'], timeout=LOGIN_TIMEOUT_MS)
     del password, sealed
     if not ok:
-        code = (mt5.last_error() or (0, ''))[0]
-        return fail('login' if code in WRONG_DETAILS else 'unreachable')
+        error = mt5.last_error() or (0, '')
+        log.info('%s %s: MT5 says %s', link['id'][:6], masked(link['login']), error)  # its code and words, never a password
+        return fail('login' if error[0] in WRONG_DETAILS else 'unreachable')
     info = mt5.account_info()
     if info is None:
         return fail('unreachable')
@@ -226,7 +227,8 @@ def run_once(mt5, worker, key, config, backoff=None, now=None):
             continue
         path = config['terminals'].get(broker)
         if not path or not mt5.initialize(path, portable=True, timeout=LOGIN_TIMEOUT_MS):
-            log.warning('MT5 for %s didn\'t start (%s): trying again next run', broker, path or 'no terminal set in config.json')
+            reason = f'{path}: MT5 says {mt5.last_error()}' if path else 'no terminal set in config.json'
+            log.warning('MT5 for %s didn\'t start (%s): trying again next run', broker, reason)
             for link in due:
                 outcomes[link['id']] = send(worker, {'id': link['id'], 'ok': False, 'error': 'unreachable'}, link, backoff)
             continue
@@ -315,9 +317,17 @@ def main(argv=None):
                 statuses[l['status']] = statuses.get(l['status'], 0) + 1
             log.info('The terminal\'s key is %s: %s', data.get('keyId'), 'they match' if data.get('keyId') == key.id else 'THEY DON\'T MATCH')
             log.info('Accounts to read: %s', ', '.join(f'{n} {s}' for s, n in statuses.items()) or 'none yet')
-            for broker in ('puprime', 'vantage'):
+            for broker, name in (('puprime', 'PU Prime'), ('vantage', 'Vantage')):
                 path = config['terminals'].get(broker)
-                log.info('MT5 for %s: %s', broker, path if path and os.path.exists(path) else f'not found ({path or "not set"})')
+                if not path:
+                    log.info('MT5 for %s: not set up yet, so %s accounts wait until it is', name, name)
+                else:
+                    log.info('MT5 for %s: %s', name, path if os.path.exists(path) else f'NOT FOUND at {path}')
+            try:
+                import MetaTrader5
+                log.info('MetaTrader5 package: %s', getattr(MetaTrader5, '__version__', 'installed'))
+            except ImportError:
+                log.info('MetaTrader5 package: not installed for this Python. Run: py -m pip install -r requirements.txt')
             return 0
         import MetaTrader5 as mt5  # Windows only; installed from requirements.txt
         backoff = {}

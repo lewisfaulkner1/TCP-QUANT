@@ -3,8 +3,10 @@ what it never does (trade, log a password or a token), and how it talks to the t
 import json
 import os
 import re
+import tempfile
 import threading
 import unittest
+from unittest import mock
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -62,7 +64,7 @@ class Run(unittest.TestCase):
         with self.assertLogs('tcp-bridge', level='INFO') as logs:
             tcp_bridge.log.info('run')
             outcomes = run_once(mt5, worker, KEY, CONFIG, backoff, NOW)
-        text = '\n'.join(logs.output)
+        text = self.log = '\n'.join(logs.output)
         for secret in (INVESTOR, MASTER):
             self.assertNotIn(secret, text, 'a password in the log')
         self.assertNotRegex(text, r'\d{8}', 'a whole account number in the log')
@@ -108,6 +110,8 @@ class Run(unittest.TestCase):
             [link(id='wrong0', password='nope'), link(3333, id='serv00')],
         )
         self.assertEqual(outcomes, {'wrong0': 'login', 'serv00': 'mismatch'})
+        # MT5's own words go in the log, so a wrong server name and a wrong password can be told apart.
+        self.assertIn("wrong0 ****5678: MT5 says (-6, 'Terminal: Authorization failed')", self.log)
 
     def test_a_password_this_bridge_cant_open_isnt_tried(self):
         swapped = link(id='swap00')
@@ -139,6 +143,11 @@ class Run(unittest.TestCase):
             outcomes, _, _ = self.go(accounts, [link()], backoff=backoff)
         self.assertEqual(outcomes['a1b2c3d4'], 'ok')
         self.assertEqual(backoff, {}, 'reading it again clears the wait')
+
+    def test_mt5_that_wont_start_says_why(self):
+        outcomes, _, _ = self.go({12345678: account()}, [link()], mt5=FakeMT5({}, start=False))
+        self.assertEqual(outcomes, {'a1b2c3d4': 'unreachable'})
+        self.assertIn("MT5 for puprime didn't start (C:/TCP/MT5-PUPrime/terminal64.exe: MT5 says (-10003, 'IPC initialize failed'))", self.log)
 
     def test_one_broker_down_doesnt_stop_the_other(self):
         class HalfDown(FakeMT5):
@@ -242,6 +251,27 @@ class Talking(unittest.TestCase):
 
 
 class Setup(unittest.TestCase):
+    def test_the_check_shows_the_keys_the_accounts_each_mt5_and_the_package(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            exe = os.path.join(tmp, 'terminal64.exe')
+            open(exe, 'w').close()
+            path = os.path.join(tmp, 'config.json')
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump({'worker_url': 'https://terminal.example', 'terminals': {'puprime': exe}}, f)
+            links = [link(), link(2222, id='pend00', status='pending')]
+            with mock.patch.object(tcp_bridge, 'setup_logging'), \
+                    mock.patch.object(tcp_bridge, 'Worker', lambda url, token: FakeWorker(KEY.id, links)), \
+                    mock.patch.object(tcp_bridge.BridgeKey, 'load', return_value=KEY), \
+                    mock.patch.dict(os.environ, {'TCP_BRIDGE_TOKEN': 'token', 'TCP_BRIDGE_PASSPHRASE': 'passphrase'}), \
+                    self.assertLogs('tcp-bridge', level='INFO') as logs:
+                self.assertEqual(tcp_bridge.main(['--check', '--config', path]), 0)
+        text = '\n'.join(logs.output)
+        self.assertIn('they match', text)
+        self.assertIn('Accounts to read: 1 active, 1 pending', text)
+        self.assertIn(f'MT5 for PU Prime: {exe}', text)
+        self.assertIn('MT5 for Vantage: not set up yet, so Vantage accounts wait until it is', text)
+        self.assertRegex(text, r'MetaTrader5 package: (\d|installed|not installed for this Python)')
+
     def test_config_needs_an_https_terminal(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:

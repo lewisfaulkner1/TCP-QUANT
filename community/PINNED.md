@@ -71,7 +71,7 @@ See how you trade, and join the leaderboard, by connecting your MT5 read-only.
 
 HOW
 1. Open the terminal → Account → Connect MT5
-2. Enter your account number, server and your INVESTOR password
+2. Enter your account number, server and your INVESTOR password (not sure what it is? Tap "Where's my investor password?" on that screen)
 3. Pick a name for the leaderboard (or keep your stats private)
 
 WHAT'S SHARED

@@ -137,20 +137,23 @@ first.
 The leaderboard uses the Playbook's database (`DB`), so do step 4 first. Members' accounts are read by
 the **TCP bridge**, a small program on a Windows PC with MT5. `bridge/README.md` has every step. In short:
 
-1. On the PC, install Python 3.12 and MT5 from PU Prime and from Vantage, copy the `bridge` folder there,
-   and run `py -3.12 -m pip install -r requirements.txt`.
-2. Run `py -3.12 make_keys.py`. Choose a passphrase and keep it safe, offline. It writes the bridge's
+1. On the PC, you need Python 3.11 or newer and a copy of MT5 per broker, used only by the bridge (PU
+   Prime now, Vantage when members use it; never the MT5 you trade with or an EA runs in). Copy the
+   `bridge` folder there and run `py -m pip install -r requirements.txt`.
+2. Run `py make_keys.py`. Choose a passphrase and keep it safe, offline. It writes the bridge's
    keys and token to `bridge\secrets\`.
 3. In the `tcp-terminal` Worker, **Settings → Variables and Secrets → Add**:
    - `BRIDGE_PUBLIC_KEY` (Text): everything in `secrets\bridge_public.txt`;
    - `BRIDGE_TOKEN` (Secret): everything in `secrets\bridge_token.txt`.
    Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**. **Connect MT5** opens
    under Account once `BRIDGE_PUBLIC_KEY` is set; until then it shows Coming soon with Notify me.
-4. Fill in the bridge's `config.json` (the terminal's address and where each MT5 is), check it with
-   `py -3.12 tcp_bridge.py --check`, then start it with **start_bridge.bat**. It reads every connected
-   account every 30 minutes while it runs.
+4. Fill in the bridge's `config.json` (the terminal's address and where each MT5 is) and check it with
+   `py tcp_bridge.py --check`.
 5. **Try it.** In the terminal, go to **Account → Connect MT5** and connect your own account with its
-   investor password. Within half an hour the bot messages you, and you're on the **Ranks** tab.
+   investor password. Run `py tcp_bridge.py --once` on the PC: the bot messages you, and you're on the
+   **Ranks** tab.
+6. Start the bridge with **start_bridge.bat**. It reads every connected account every 30 minutes while
+   it runs.
 
 Posters (`POSTER_IDS`) can take a name off the leaderboard with **hide** beside it on the Ranks tab, and
 put it back from the list below the table. It stays off even if the member disconnects and connects
