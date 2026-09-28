@@ -62,6 +62,7 @@
         <span><i style="color:#8C7BD1"></i>Asia range</span>
         <span><i style="color:rgba(227,192,109,.9)"></i>68% cone</span>
         <span><i style="color:rgba(166,157,140,.8);border-top-style:dotted"></i>95% cone</span>
+        <span id="zoneKey" hidden><i style="color:rgba(53,166,140,.9);border-top-style:dashed"></i>Brief zones</span>
       </div>
     </div>
 
@@ -261,29 +262,59 @@
     <div class="card ai-hero">
       <canvas id="orb" aria-hidden="true"></canvas>
       <div class="ai-copy">
-        <span class="state soon-tag">Coming soon</span>
+        <span class="state testing" id="brMode" hidden>Test mode</span>
         <h2>TCP AI</h2>
-        <p>Your trading and the markets, explained by AI in plain English, using the numbers behind this terminal.</p>
-        <button class="notify" type="button" data-feature="ai">Notify me</button>
+        <p>Before each session, Lewis sends his charts. TCP AI reads them with the terminal's numbers and drafts the brief, and Lewis checks it before it posts. After the session, every zone is scored.</p>
       </div>
     </div>
+
+    <div class="card br-next" id="brNext" hidden>
+      <div class="row spread"><h2 class="label">Next session</h2><span class="tag" id="brNextTag"></span></div>
+      <div class="br-nextrow"><span class="br-icon" id="brNextIcon" aria-hidden="true"></span><div><b id="brNextName"></b><small id="brNextWhen" data-open=""></small></div></div>
+      <p class="br-ask" id="brAsk" hidden></p>
+    </div>
+
+    <div id="brList"></div>
+
+    <div class="card" id="brRecordCard" hidden>
+      <div class="row spread"><h2 class="label">Zone record</h2><span class="tag">vs a random walk</span></div>
+      <div class="pb-stats">
+        <div><span>Briefs</span><b id="brBriefs">—</b></div>
+        <div><span>Zones</span><b id="brZoneCount">—</b></div>
+        <div><span>Reached</span><b id="brReached">—</b></div>
+        <div><span>Avg turn</span><b id="brTurn">—</b></div>
+      </div>
+      <div class="pb-verdict" id="brVerdict"></div>
+      <p class="pb-first" id="brReach"></p>
+      <div id="brReads" hidden></div>
+      <p class="fine">A zone counts as reached when price trades into it after the brief goes out. The turn is how far price then went back the way it came, less how far it went on through, before the session closed, in average daily ranges (ATR). Moving at random, price reaches each zone as often as its odds say and goes back as far as it goes through, so zero is the line to beat.</p>
+    </div>
+
+    <div class="card" id="brHistoryCard" hidden>
+      <div class="row spread"><h2 class="label">Earlier briefs</h2><span class="tag" id="brCount"></span></div>
+      <div id="brHistory"></div>
+    </div>
+
     <div class="card ai-memory" id="aiMemory">
-      <div class="row spread"><h2 class="label">What TCP AI will learn from</h2><span class="state testing">Building now</span></div>
+      <div class="row spread"><h2 class="label">What TCP AI has learned</h2><span class="state testing">Growing</span></div>
       <div class="mem-grid">
-        <div><b id="memSetups">0</b><span>setups logged</span></div>
-        <div><b id="memResults">0</b><span>results</span></div>
-        <div><b id="memReasons">0</b><span>reasons</span></div>
+        <div><b id="memCharts">0</b><span>charts read</span></div>
+        <div><b id="memLessons">0</b><span>lessons from Lewis</span></div>
+        <div><b id="memZones">0</b><span>zones scored</span></div>
       </div>
-      <p>Every Playbook setup is kept with Lewis's reasons, his chart, the engine's read of the market at that moment, and what happened next. That record is what TCP AI will learn from: which reasons and conditions hold up, and which don't.</p>
+      <p>Before every brief, TCP AI reads Lewis's guide to his charts, what he changed in its earlier drafts, and how the zones have done since. <span id="memPlaybook"></span></p>
+      <div class="pb-buttons"><button type="button" class="gold" id="brTeach" hidden>TEACH TCP AI</button><button type="button" id="brExport" hidden>SEND ME THE DATA</button></div>
     </div>
-    <div class="card feature-list">
+
+    <div class="card feature-list" data-feature="ai">
+      <div class="feature"><b>Session briefs</b><p>Lewis's charts, read by TCP AI before each session: the zones to watch, the plan, and every zone scored afterwards.</p><span class="state live">Live</span></div>
       <div class="feature"><b>Snap to log</b><p>Send a screenshot of your chart and TCP AI reads the indicator's panel to fill in the setup: zone, fib, confirmations.</p><span class="state soon-tag">Soon</span></div>
       <div class="feature"><b>AI trade reviews</b><p>After every trade: what went to plan, what didn't, and what to change.</p><span class="state soon-tag">Soon</span></div>
-      <div class="feature"><b>AI market briefings</b><p>A morning note on gold and Bitcoin in your Telegram before London opens.</p><span class="state soon-tag">Soon</span></div>
       <div class="feature"><b>Ask TCP AI</b><p>Ask about a level, a setup or your risk, and get answers built on the engine's numbers.</p><span class="state soon-tag">Soon</span></div>
       <div class="feature"><b>Your AI coach</b><p>A weekly look at your habits: best sessions, overtrading, and how well you keep to your stops.</p><span class="state soon-tag">Soon</span></div>
+      <button class="notify" type="button">Notify me</button>
     </div>
-    <p class="note">AI features follow account connection. The engine briefing on Markets is written from the numbers, not by AI.</p>
+    <p class="note">TCP AI reads the charts Lewis sends; it doesn't place trades. The odds on each zone come from the terminal's engine, not from AI. The engine briefing on Markets is written from the numbers.</p>
   </section>
 
   <!-- ============================================================ Account -->
@@ -316,6 +347,7 @@
 </main>
 
 <button class="pb-fab" id="pbNew" type="button" hidden>+ LOG A SETUP</button>
+<button class="pb-fab" id="brNew" type="button" hidden>+ SEND CHARTS</button>
 
 <div class="sheet" id="pbSheet" role="dialog" aria-modal="true" aria-labelledby="pbSheetTitle" hidden>
   <div class="sheet-body">
@@ -338,6 +370,70 @@
     <div class="pb-error" id="pbError" role="alert" hidden></div>
     <button class="cta pb-submit" id="pbSubmit" type="button">LOG AND POST</button>
     <p class="fine" id="pbSubmitNote"></p>
+  </div>
+</div>
+
+<div class="sheet" id="brSheet" role="dialog" aria-modal="true" aria-labelledby="brSheetTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="brSheetTitle">Session brief</h2><button class="link" id="brClose" type="button">Close</button></div>
+
+    <div id="brStep_charts">
+      <div class="field"><label>Session</label><div class="chips" id="brSession"></div></div>
+      <div class="field"><label>Market</label><div class="chips" id="brSymbol"><button type="button" data-v="XAUUSD">Gold</button><button type="button" data-v="BTCUSD">Bitcoin</button></div></div>
+      <div class="field"><label>Charts</label>
+        <p class="br-askline" id="brAskLine"></p>
+        <div class="br-thumbs" id="brThumbs"></div>
+        <label class="pb-photo"><input type="file" id="brFiles" accept="image/*" multiple hidden><span id="brPickText">Add your chart screenshots</span></label></div>
+      <div class="field"><label for="brNote">Your read (optional)</label><textarea id="brNote" rows="2" maxlength="600" placeholder="Anything TCP AI should know: your bias, news, what you're waiting for."></textarea></div>
+      <div class="pb-error" id="brError" role="alert" hidden></div>
+      <button class="cta pb-submit" id="brRead" type="button" disabled>READ MY CHARTS</button>
+      <p class="fine" id="brReadNote"></p>
+    </div>
+
+    <div id="brStep_reading" hidden>
+      <div class="br-reading" aria-live="polite">
+        <div class="br-scan" aria-hidden="true"><i></i></div>
+        <b id="brReadingWhat">TCP AI is reading your charts</b>
+        <span class="br-elapsed" id="brElapsed">0:00</span>
+        <p class="fine">It reads each chart and the panel, checks them against the terminal's numbers, and drafts the brief. Usually under a minute. You can close the app: the bot tells you when the draft is ready.</p>
+      </div>
+    </div>
+
+    <div id="brStep_draft" hidden>
+      <div class="br-failed" id="brFailed" hidden>
+        <p id="brFailedText"></p>
+        <div class="pb-buttons"><button type="button" class="gold" id="brRetry">TRY AGAIN</button><button type="button" id="brManual">WRITE IT MYSELF</button></div>
+      </div>
+      <div class="br-warnings" id="brWarnings" hidden></div>
+      <details class="br-readcard" id="brReadCard" hidden><summary>What TCP AI read</summary><div id="brReadBody"></div></details>
+      <div class="field"><label for="brHeadline">Headline</label><input id="brHeadline" maxlength="120" autocomplete="off" placeholder="One line for the Inner Circle"></div>
+      <div class="field"><label>Bias</label><div class="chips" id="brBias"><button type="button" data-v="long">Long</button><button type="button" data-v="short">Short</button><button type="button" data-v="neutral">Neutral</button></div>
+        <input id="brReason" maxlength="240" autocomplete="off" placeholder="Why, in a sentence"></div>
+      <div class="field"><label>Zones to watch</label><div id="brZones"></div><button type="button" class="pb-more" id="brAddZone">+ ADD A ZONE</button></div>
+      <div class="field"><label for="brPlan">Plan · one line each</label><textarea id="brPlan" rows="4" maxlength="900" placeholder="If … then …"></textarea></div>
+      <div class="field" id="brChartField"><label>Chart to post with it</label><div class="br-chartpick" id="brChartPick"></div></div>
+      <div class="field"><label for="brLesson">What it got wrong (optional)</label><textarea id="brLesson" rows="2" maxlength="400" placeholder="e.g. The Asia high only matters once it has been swept."></textarea>
+        <div class="hint">TCP AI reads this, and what you changed above, before its next brief.</div></div>
+      <button class="cta pb-submit" id="brPost" type="button">POST</button>
+      <p class="fine" id="brPostNote"></p>
+      <button type="button" class="link br-drop" id="brDrop">Drop this draft</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="brTeachSheet" role="dialog" aria-modal="true" aria-labelledby="brTeachTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="brTeachTitle">Teach TCP AI</h2><button class="link" id="brTeachClose" type="button">Close</button></div>
+    <div class="field"><label for="brGuide">How to read your charts</label>
+      <textarea id="brGuide" rows="9" maxlength="6000" placeholder="What your indicator's panel shows and what each row means, the colours, which zones you trust, what you never trade…"></textarea>
+      <div class="hint">TCP AI reads this before every brief. It stays in the terminal's database, not in any public file.</div></div>
+    <div class="field"><label>Reminders before each session</label>
+      <div class="chips" id="brRemind"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+      <div class="chips" id="brRemindSessions"></div>
+      <div class="chips" id="brLead"><button type="button" data-v="30">30 min before</button><button type="button" data-v="45">45 min</button><button type="button" data-v="60">1 hour</button></div></div>
+    <div class="field"><label for="brNewLesson">Add a lesson</label><input id="brNewLesson" maxlength="400" autocomplete="off" placeholder="Something TCP AI should always remember"></div>
+    <button class="cta pb-submit" id="brTeachSave" type="button">SAVE</button>
+    <div class="field" style="margin-top:18px"><label>What it has learned from you</label><div id="brLessons"></div></div>
   </div>
 </div>
 

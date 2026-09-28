@@ -233,7 +233,7 @@ export function t975(df) {
 }
 
 // The 95% band for a true average, from `n` results with this mean and sum of squared deviations.
-function meanBand(n, mean, ss) {
+export function meanBand(n, mean, ss) {
   if (n < 3) return null;
   const half = t975(n - 1) * Math.sqrt(ss / (n - 1) / n);
   return [mean - half, mean + half];

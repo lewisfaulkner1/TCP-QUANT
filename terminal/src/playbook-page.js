@@ -64,7 +64,7 @@ function pbFab() {
   const show = poster && !$('signals').hidden;
   $('pbNew').hidden = !show;
   $('pbExport').hidden = !poster;
-  document.body.classList.toggle('with-fab', show);
+  document.body.classList.toggle('with-fab', show || !$('brNew').hidden);
 }
 
 // Posters: the bot sends the whole record as a file (JSON lines, the chain checked).
@@ -446,13 +446,14 @@ function pbReads() {
   }).join('');
 }
 
-// The AI tab's card: the size of the record TCP AI will learn from.
+// The AI tab's memory card: the Playbook, the record TCP AI will also learn from.
 function pbMemory() {
   const d = pb.data;
   const record = d && d.setups ? d.setups.filter((s) => !s.test) : [];
-  $('memSetups').textContent = record.length;
-  $('memResults').textContent = record.filter(isResult).length;
-  $('memReasons').textContent = record.reduce((a, s) => a + s.tags.length, 0);
+  const results = record.filter(isResult).length;
+  $('memPlaybook').textContent = record.length
+    ? `It will also learn from the Playbook: ${record.length} setup${record.length === 1 ? '' : 's'} with Lewis's reasons, ${results} with a result.`
+    : '';
 }
 
 // ----------------------------------------------------------------- the form

@@ -8,10 +8,14 @@ About 15 minutes, and free. The terminal opens inside Telegram for Inner Circle 
 - **the Playbook**: Lewis's setups, logged before the result with his reasons and chart, followed to the
   end automatically, posted to the Inner Circle, and scored in a record that shows whether they beat
   the no-edge odds (step 4);
-- Signals, AI and Account tabs that show what's coming (signals, copy trading, account connection, AI),
-  each with a **Notify me** button that tells the team who wants it.
+- **session briefs with TCP AI**: before each session Lewis sends his charts from the app, TCP AI reads
+  them with the terminal's numbers and drafts the brief (the zones to watch and a plan), Lewis checks it,
+  and it posts to the Inner Circle; after the session every zone is scored (step 5);
+- Signals, AI and Account tabs that show what's coming (signals, copy trading, account connection, more
+  AI), each with a **Notify me** button that tells the team who wants it.
 
-You need the Cloudflare account the bot runs on, BotFather, and a free Twelve Data account.
+You need the Cloudflare account the bot runs on, BotFather, and a free Twelve Data account. TCP AI also
+needs an Anthropic account with some credit (step 5).
 
 ## 1. Put the terminal online (Cloudflare Workers, free)
 
@@ -94,6 +98,36 @@ The Playbook needs a small database and a timer. Both are free.
    the record's chain would show the gap. Then set `PLAYBOOK_MODE` to `live` and press **Deploy**.
    From then on, setups post to the Inner Circle and count in the record.
 
+## 5. Session briefs with TCP AI (about 10 minutes)
+
+Session briefs use the Playbook's database (`DB`), its posters (`POSTER_IDS`) and its timer, so do step 4
+first.
+
+1. **TCP AI's key.** At **console.anthropic.com**, create an account, add some credit under **Billing**,
+   and create a key under **API keys**. Each brief reads five or six charts with Claude Opus 5: about
+   $0.20 to $0.30 a brief, so three a day on weekdays is about $15 to $20 a month. The app shows what each
+   read cost. In the `tcp-terminal` Worker, **Settings → Variables and Secrets → Add**, choose **Secret**,
+   name it `ANTHROPIC_API_KEY`, paste the key and press **Deploy**. Without it, everything else works and
+   posters write their briefs themselves.
+2. **Where briefs go.** Leave `BRIEF_MODE` unset at first: that's test mode, where briefs go to the team
+   group only and stay out of the zone record. Optionally add `BRIEF_THREAD_ID` (Text): the Inner Circle
+   topic for briefs and their wraps, found the same way as the Playbook's.
+3. **Optional settings.** `BRIEF_MODEL` (Text) picks the Claude model that reads the charts: the default is
+   `claude-opus-5`; `claude-sonnet-5` costs about 40% as much, and reads less well. `BRIEF_DAILY_READS`
+   (Text) caps reads per poster per day (12 by default). `TERMINAL_URL` (Text) is the terminal's address,
+   for the button on the reminders; without it, the terminal learns it when a poster first opens the app.
+4. Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
+5. **Teach it your charts.** Open the terminal from Telegram, go to **AI**, and tap **Teach TCP AI**. Paste
+   your guide to reading your indicator (what the panel's rows mean, the colours, which zones you trust)
+   and save. It stays in the terminal's database, not in this repository. Here you also choose the
+   reminders: which sessions, and how long before the open.
+6. **Try it.** Tap **+ SEND CHARTS**, pick the session, add your screenshots (all at once is fine: TCP AI
+   works out each one's timeframe) and tap **Read my charts**. In under a minute the draft is back: check
+   the zones, the bias and the plan, change what's wrong, and post it to the team group.
+7. **Go live.** Clear the test briefs first if you like: in the D1 database's **Console**, run
+   `DELETE FROM briefs WHERE test = 1;` (your guide and lessons stay). Then set `BRIEF_MODE` to `live` and
+   press **Deploy**.
+
 ## Updating
 
 Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**. Settings stay as they are.
@@ -105,8 +139,8 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
   who leaves loses access within 10 minutes; someone just approved gets in within a minute.
 - **Nobody logs in, and nothing about members is stored.** The bot token stays in Cloudflare's secrets and
   never reaches the page. The terminal sends a Notify me tap (the member's name, @username and Telegram ID)
-  to the team group. The only thing it stores is the Playbook: the setups, who logged them, their charts'
-  Telegram file IDs, and what happened to them.
+  to the team group. The only things it stores are the Playbook (the setups, who logged them, their charts'
+  Telegram file IDs, and what happened to them) and the session briefs (see below).
 - **The data:** gold is XAU/USD spot from Twelve Data; Bitcoin is BTC-USD from Coinbase, Bitstamp or Kraken
   (or BTC/USDT from Binance as a last resort), named under the price; exchange rates for GBP and EUR
   accounts are the European Central Bank's. Brokers' prices differ slightly.
@@ -177,13 +211,49 @@ Paste the new `terminal/dist/worker.js` into **Edit code** and press **Deploy**.
   momentum, sessions and nearby levels), and the result. (The bot has to have been started by the poster,
   which it has if you've ever pressed Start.)
 
+## How session briefs work
+
+- **Asked for at the right time.** Before each session opens (Asia at 09:00 Tokyo, London at 08:00 London,
+  New York at 08:00 New York, Monday to Friday), the bot messages each poster who wants reminders: which
+  charts to send (5M, 15M, 30M, 1H and 4H, plus the daily before Monday's Asia open), with a button
+  straight into the app.
+- **Read by TCP AI.** The charts go to the Worker, which keeps them in the poster's chat with the bot, as
+  files, as the record of what TCP AI saw. It sends them to Claude (Anthropic's model), with the
+  terminal's own numbers (price, today's range, the average day, the reference levels, volatility, trend
+  and momentum), the poster's guide to reading their charts, what they corrected in earlier briefs, and
+  how the zones in earlier briefs have done. Claude reads each chart and the indicator's panel, and drafts
+  the brief. Pictures are kept at Anthropic for a week, so a failed read can be retried without sending
+  them again. The draft is checked before anyone sees it: zones far from the price or too wide are left
+  out and listed, and the app flags charts whose price doesn't match the feed (yesterday's screenshots),
+  and timeframes that weren't sent.
+- **Checked by the poster.** Nothing posts until the poster has looked at the draft, changed what's wrong
+  and pressed Post. Every zone shows the engine's odds that price reaches it before the session closes if it
+  moves at random, updated as it's edited. Those odds come from the terminal's model, not from AI.
+- **Learning.** What the poster changed (zones moved, added or dropped, the bias, the plan) and anything they
+  type under "what it got wrong" are kept as lessons. TCP AI reads the newest 15, and the guide, before
+  every brief. Posters can see every lesson and forget any of them under Teach TCP AI. This is how it
+  learns your reading: from your corrections, kept in the terminal, not by retraining a model.
+- **Scored.** After the session closes, the check reads one-minute bars from the post to the close. For each
+  zone: was it reached, and from the close of the bar that reached it, how far did price go back the way
+  it came and how far on through? The wrap is posted as a reply to the brief. Moving at random, price
+  reaches each zone as often as its odds say and goes back as far as it goes through; the zone record
+  compares every live brief's zones with that line, and gives a verdict only after 20 zones have been
+  reached. Zones price was already inside when the brief went out are left out. Scoring a gold brief
+  takes one Twelve Data request, well inside the free allowance.
+- **The data.** Posters can have everything sent to them as a file (**Send me the data** under What TCP AI
+  has learned): each brief with the terminal's numbers, TCP AI's read and draft, the posted brief, the
+  review, the charts' file IDs, and the lessons. With the Playbook's export, it's the record a model
+  could later be trained on.
+- **Cost and limits.** Each read's cost shows on the draft. Reads are capped per poster per day. If the
+  app is closed mid-read, the Worker finishes it on its next check and the bot says when the draft is ready.
+
 ## Coming soon, and Notify me
 
 The Signals, AI and Account tabs show what's planned, each clearly marked:
 - **Signals:** how a signal will travel: the algo (in forward test), the Inner Circle and the terminal,
   the TCP EA (dry run), then members' own accounts (copy trading, coming soon). Below it, an example
   signal card, stamped EXAMPLE.
-- **AI:** trade reviews, market briefings, Ask TCP AI and an AI coach, all marked Soon.
+- **AI:** session briefs are live; Snap to log, trade reviews, Ask TCP AI and an AI coach are marked Soon.
 - **Account:** the member's name, account connection (MT5 or wallet, read-only), the stats they'll see
   after connecting (profit factor, win rate, average R, max drawdown), and price and odds alerts.
 
@@ -194,11 +264,14 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
 
 ## For developers
 
-- Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/playbook-lib.js` (the
-  Playbook's maths, shared too), `src/app.html`, `src/app.css`, `src/playbook-page.js` and `src/app.js`
-  (the page), `src/playbook.js` and `src/worker.js` (the Worker), `src/fonts/` (Latin subsets of the brand
-  fonts, SIL Open Font License).
-- `npm run build` writes `dist/worker.js`, the one file for the dashboard. `npm test` builds, then runs 86 tests:
+- Source: `src/lib.js` (the maths, shared by the page and the Worker), `src/playbook-lib.js` and
+  `src/brief-lib.js` (the Playbook's and the briefs' maths, shared too), `src/app.html`, `src/app.css`,
+  `src/playbook-page.js`, `src/brief-page.js` and `src/app.js` (the page), `src/playbook.js`,
+  `src/briefs.js` and `src/worker.js` (the Worker), `src/fonts/` (Latin subsets of the brand fonts, SIL
+  Open Font License).
+- `npm install` once (the Anthropic SDK, bundled into the Worker, and esbuild, which bundles it; both pinned).
+  `npm run build` writes `dist/worker.js`, the one file for the dashboard, with the SDK's licence in it.
+  `npm test` builds, then runs 118 tests:
   - the maths: trading days across daylight saving, levels, sessions and lot sizes;
   - the probability engine, including a simulated market with no edge on which its forecasts must come
     true at the rate they claim, and a timing check for the Workers CPU limit;
@@ -210,8 +283,16 @@ messages are the list. Reply to one, as with the bot's lead cards, and the bot p
     with a known edge (whose band must hold the truth about 95% of the time);
   - the Playbook end to end, with D1 on Node's built-in SQLite: logging, checks against the live price,
     posts and photos, the 5-minute check (gold's 15-minute pace, closed hours, Bitcoin's exchanges), the
-    buttons, two writers at once, test and live runs, and the export with a tampered entry.
+    buttons, two writers at once, test and live runs, and the export with a tampered entry;
+  - the briefs' maths: session times through daylight saving, reminders, checking zones, and the review,
+    with simulated random-walk sessions on which zones must be reached as often as the engine's odds say
+    and must rarely look like they turn price (and, with a real push, usually do);
+  - the briefs end to end, with Anthropic's API stood in for: charts kept and read, the request TCP AI gets
+    (model, fallback, structured output, charts by file id, the guide and lessons), failed reads and
+    retries, posting once (two taps at once too), test and live runs, reminders, unfinished reads, the
+    review and its wrap (two checks at once too), and the export.
 - Add `?demo` to the address to see made-up prices in a browser, for design work. It shows no member data,
   and Notify me there tells nobody. Add `&gold=4286&btc=84460` to move the made-up prices to today's level
   (for promo footage). The demo Playbook's results sit near the no-edge odds on purpose, so a screenshot
-  of it can't pass for a winning record.
+  of it can't pass for a winning record; the demo zone record sits at the random walk's line for the same
+  reason. The demo's TCP AI read is made up: nothing is sent anywhere.

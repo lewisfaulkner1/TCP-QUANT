@@ -3,8 +3,9 @@
 // Members open it from the bot. Telegram signs who they are (the Mini App's
 // initData, checked here with the bot token), and the Worker asks Telegram
 // whether they're in the Inner Circle (or the team group) before sending
-// any data. Nobody logs in. The only thing stored is the Playbook (see
-// playbook.js): Lewis's setups and what became of them.
+// any data. Nobody logs in. The only things stored are the Playbook (see
+// playbook.js), Lewis's setups and what became of them, and the session briefs
+// (briefs.js): his charts, TCP AI's reads of them, and what price did at each zone.
 //
 // Each market's answer carries the probability engine's inputs (see lib.js):
 // the hour-by-hour volatility profile from two months of hourly bars, the time
@@ -17,8 +18,10 @@
 //   ADMIN_CHAT_ID          optional: the team group gets in too
 //   TWELVE_DATA_KEY        secret: a free twelvedata.com key, for gold prices
 //   DB, POSTER_IDS, PLAYBOOK_MODE, PLAYBOOK_THREAD_ID, PLAYBOOK_TAGS: the Playbook (playbook.js)
+//   ANTHROPIC_API_KEY, BRIEF_MODEL, BRIEF_MODE, BRIEF_THREAD_ID, TERMINAL_URL: session briefs (briefs.js)
 import { MARKETS, toDays, snapshot, marketStatus, marketOpen, volProfile, marketState, calibrate, dayEnd } from './lib.js';
 import { createPlaybook } from './playbook.js';
+import { createBriefs } from './briefs.js';
 import { PAGE, FONTS } from './assets.js';
 
 const SIGN_IN_MAX_AGE = 24 * 3600; // Telegram's signature on a Mini App session
@@ -89,16 +92,18 @@ async function telegram(env, method, payload) {
   return data;
 }
 
-// The same with a file attached (a photo or a document), as multipart form data.
-async function telegramUpload(env, method, fields, field, blob, filename) {
+// The same with files attached (photos, documents, an album), as multipart form data:
+// files are [{ field, blob, name }].
+async function telegramFiles(env, method, fields, files) {
   const form = new FormData();
   for (const [key, value] of Object.entries(fields)) form.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
-  form.append(field, blob, filename);
+  for (const { field, blob, name } of files) form.append(field, blob, name);
   const res = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`, { method: 'POST', body: form });
   const data = await res.json().catch(() => ({ ok: false, description: `HTTP ${res.status}` }));
   if (!data.ok) console.error(`telegram ${method} failed: ${data.description}`);
   return data;
 }
+const telegramUpload = (env, method, fields, field, blob, name) => telegramFiles(env, method, fields, [{ field, blob, name }]);
 
 const members = new Map(); // user id -> { role, until }
 // Coming-soon features a member can ask to hear about; the team group is told once.
@@ -348,8 +353,9 @@ const SECURITY = {
 };
 
 const playbook = createPlaybook({ telegram, upload: telegramUpload, loadMarket, minuteBars });
+const briefs = createBriefs({ telegram, sendFiles: telegramFiles, loadMarket, minuteBars });
 
-async function api(request, env, path, url) {
+async function api(request, env, path, url, ctx) {
   const initData = (request.headers.get('authorization') || '').replace(/^tma /, '');
   const user = await verifyInitData(initData, env.BOT_TOKEN);
   if (!user) return json({ error: 'signed_out', message: 'Open the terminal from Telegram.' }, 401);
@@ -359,6 +365,7 @@ async function api(request, env, path, url) {
   if (path === '/api/me') return json({ user: { id: user.id, first_name: user.first_name || '', username: user.username || '' }, role });
 
   if (path === '/api/playbook' || path.startsWith('/api/playbook/')) return playbook.api(request, env, path, user, now());
+  if (path === '/api/briefs' || path.startsWith('/api/briefs/')) return briefs.api(request, env, path, user, now(), ctx);
 
   if (path === '/api/interest' && request.method === 'POST') {
     const body = await request.json().catch(() => null);
@@ -399,10 +406,10 @@ async function api(request, env, path, url) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
-    if (path.startsWith('/api/')) return api(request, env, path, url);
+    if (path.startsWith('/api/')) return api(request, env, path, url, ctx);
     if (path.startsWith('/fonts/') && FONTS[path.slice(7)]) {
       const bytes = Uint8Array.from(atob(FONTS[path.slice(7)]), (c) => c.charCodeAt(0));
       return new Response(bytes, { headers: { 'content-type': 'font/woff2', 'cache-control': 'public, max-age=31536000, immutable' } });
@@ -412,9 +419,12 @@ export default {
     }
     return new Response('Not found', { status: 404 });
   },
-  // The Cron Trigger (every 5 minutes): the Playbook's fills, targets and stops.
+  // The Cron Trigger (every 5 minutes): the Playbook's fills, targets and stops; the briefs'
+  // reminders, unfinished reads and session reviews.
   async scheduled(controller, env, ctx) {
-    ctx.waitUntil(playbook.scheduled(env, now()).catch((err) => console.error(`playbook check failed: ${err.message}`)));
+    const at = now();
+    ctx.waitUntil(playbook.scheduled(env, at).catch((err) => console.error(`playbook check failed: ${err.message}`)));
+    ctx.waitUntil(briefs.scheduled(env, at).catch((err) => console.error(`briefs check failed: ${err.message}`)));
   },
 };
 
@@ -425,9 +435,15 @@ export function resetCaches() {
   interested.clear();
   btcOrder = Object.keys(FEEDS);
   playbook.reset();
+  briefs.reset();
 }
 
 // For tests: run the Playbook's check at a given moment.
 export function checkPlaybook(env, at) {
   return playbook.scheduled(env, at);
+}
+
+// For tests: run the briefs' check at a given moment.
+export function checkBriefs(env, at) {
+  return briefs.scheduled(env, at);
 }

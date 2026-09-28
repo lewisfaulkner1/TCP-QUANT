@@ -333,10 +333,30 @@ function renderChart(d) {
     const [title, color, lineStyle] = LINE_STYLE[l.id];
     return series.createPriceLine({ price: l.price, color, lineWidth: 1, lineStyle, axisLabelVisible: true, title });
   });
+  renderChartZones();
   const points = renderCone(clock());
   if (framedFor !== state.symbol) {
     framedFor = state.symbol;
     chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, d.bars.length - 88), to: d.bars.length + Math.min(points, 40) + 1 });
+  }
+}
+
+// The zones of posted session briefs, while their session is to come or running.
+let zoneLines = [];
+const ZONE_COLOR = { demand: 'rgba(53,166,140,.85)', supply: 'rgba(224,97,63,.85)', liquidity: 'rgba(227,192,109,.85)', level: 'rgba(166,157,140,.85)' };
+function renderChartZones() {
+  if (!series) return;
+  for (const l of zoneLines) series.removePriceLine(l);
+  zoneLines = [];
+  const briefs = brActive(state.symbol);
+  $('zoneKey').hidden = !briefs.length;
+  for (const b of briefs) {
+    for (const z of b.final.zones) {
+      const edges = z.low === z.high ? [z.low] : [z.high, z.low];
+      edges.forEach((price, i) => zoneLines.push(series.createPriceLine({
+        price, color: ZONE_COLOR[z.kind], lineWidth: 1, lineStyle: 3, axisLabelVisible: i === 0, title: i === 0 ? brZoneName(z) : '',
+      })));
+    }
   }
 }
 
@@ -1065,6 +1085,12 @@ function heartbeat() {
     pbLive();
     if (now % 45 === 0) { pbLoad(true); pbPrices(); }
   }
+  if (!$('ai').hidden) {
+    brLive();
+    const reading = br.data && br.data.briefs && br.data.briefs.some((b) => b.status === 'reading');
+    if (now % (reading ? 10 : 60) === 0) brLoad(true);
+  }
+  brReadingTick();
 }
 
 // ------------------------------------------------------------------- risk
@@ -1146,9 +1172,10 @@ function showTab(tab) {
     else b.removeAttribute('aria-current');
   }
   if (tab === 'markets') { levelOrder = ''; renderOdds(); resumeSwarm(); }
-  if (tab === 'ai') { startOrb(); pbLoad(); }
+  if (tab === 'ai') { startOrb(); pbLoad(); brRender(); brLoad(); }
   if (tab === 'signals') { pbRender(); pbLoad(); pbPrices(); }
   pbFab();
+  brFab();
   window.scrollTo(0, 0);
 }
 for (const b of document.querySelectorAll('nav button')) b.addEventListener('click', () => { haptic(); showTab(b.dataset.tab); });
@@ -1193,6 +1220,7 @@ async function start() {
   }
   $('gate').hidden = true;
   pbInit();
+  brInit();
   selectSymbol(state.symbol);
   selectRiskMarket(state.symbol);
   heartbeat();
