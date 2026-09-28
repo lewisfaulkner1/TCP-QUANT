@@ -267,7 +267,7 @@ def send(worker, report, link, backoff):
 def load_config(path):
     if not os.path.exists(path):
         raise SetupError(f'No {os.path.basename(path)}: copy config.example.json to config.json and fill it in.')
-    with open(path, encoding='utf-8') as f:
+    with open(path, encoding='utf-8-sig') as f:  # Notepad may save a byte-order mark
         config = json.load(f)
     if not str(config.get('worker_url', '')).startswith('https://'):
         raise SetupError('worker_url in config.json must be the terminal\'s https:// address.')

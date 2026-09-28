@@ -272,6 +272,15 @@ class Setup(unittest.TestCase):
         self.assertIn('MT5 for Vantage: not set up yet, so Vantage accounts wait until it is', text)
         self.assertRegex(text, r'MetaTrader5 package: (\d|installed|not installed for this Python)')
 
+    def test_config_saved_by_notepad_with_a_byte_order_mark_still_loads(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'config.json')
+            with open(path, 'w', encoding='utf-8-sig') as f:
+                json.dump({'worker_url': 'https://terminal.example', 'terminals': {'puprime': 'C:/TCP/MT5-PUPrime/terminal64.exe'}}, f)
+            config = tcp_bridge.load_config(path)
+        self.assertEqual(config['terminals'], {'puprime': 'C:/TCP/MT5-PUPrime/terminal64.exe'})
+        self.assertEqual(config['every_minutes'], 30)
+
     def test_config_needs_an_https_terminal(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmp:
