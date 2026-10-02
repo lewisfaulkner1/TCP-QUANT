@@ -72,8 +72,9 @@ const SPEC = {
     // 1 · the hook: his eyes on the screen, then the desk; one more breakout
     shot('desk', 0, 1.0, [{ t: 0, s: 2.0, x: 420, y: 930 }, { t: 1.0, s: 2.1, x: 425, y: 925, ease: 'linear' }], { dof: { bg: 7 } }),
     shot('desk', 1.0, 2.0, [{ t: 1.0, s: 1.0, x: 540, y: 960 }, { t: 2.0, s: 1.06, x: 530, y: 940, ease: 'linear' }]),
-    { id: 'kicker', kind: 'kicker', from: 0, to: 2.0, y: 250, text: 'Every trader has done this', fi: 0.01 },
-    { id: 'hook', kind: 'caption', from: 0, to: 2.0, y: 300, text: 'just one more\nbreakout…', sfx: false, fi: 0.01 },
+    // the hook is on screen from the very first frame (what a scrolling viewer sees)
+    { id: 'kicker', kind: 'kicker', from: -0.5, to: 2.0, y: 250, text: 'Every trader has done this', fi: 0.01 },
+    { id: 'hook', kind: 'caption', from: -0.5, to: 2.0, y: 300, text: 'just one more\nbreakout…', sfx: false, fi: 0.01 },
     // 2 · the breakout, the click, the buy, the slam
     shot('ots', 2.0, 3.0, [{ t: 2.0, s: 1.04, x: 540, y: 900 }, { t: 3.0, s: 1.1, x: 560, y: 890, ease: 'linear' }]),
     shot('mouse', 3.0, 3.4, [{ t: 3.0, s: 1.0, x: 560, y: 1080 }, { t: 3.4, s: 1.06, x: 580, y: 1080 }]),
