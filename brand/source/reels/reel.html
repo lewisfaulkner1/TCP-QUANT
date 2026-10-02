@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TCP reels</title>
+<style>
+@font-face { font-family: "Archivo"; src: url(fonts/archivo-400.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: "TCP Display"; src: url(fonts/archivo-expanded-800.woff2) format("woff2"); font-weight: 800; }
+@font-face { font-family: "JB Mono"; src: url(fonts/jetbrains-mono-500.woff2) format("woff2"); font-weight: 500; }
+@font-face { font-family: "JB Mono"; src: url(fonts/jetbrains-mono-600.woff2) format("woff2"); font-weight: 600; }
+@font-face { font-family: "Serif"; src: url(fonts/instrument-serif-italic.woff2) format("woff2"); font-style: italic; }
+:root { --ink:#0E0D0B; --deep:#060504; --panel:#16140F; --line:#2E2A22; --gold:#D8AD4E; --gold-hi:#F6E3A3; --gold-lo:#B0812F;
+  --ivory:#F2ECDF; --stone:#A69D8C; --muted:#8A8274; --up:#35A68C; --down:#E0613F; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: var(--deep); }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+canvas.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+.layer { position: absolute; inset: 0; }
+.foil { background: linear-gradient(180deg, #F6E3A3 0%, #E3C06D 30%, #D8AD4E 52%, #B0812F 76%, #E3C06D 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.w { display: inline-block; white-space: pre; will-change: transform, opacity, filter; }
+
+/* brand bug, top left, under TikTok's and Instagram's own top bar */
+#bug { position: absolute; left: 64px; top: 150px; display: flex; align-items: center; gap: 16px; }
+#bug svg { width: 62px; height: 50.5px; }
+#bug b { font: 800 40px/1 "TCP Display"; letter-spacing: .01em; }
+#bug span { display: block; margin-top: 7px; font: 600 15px/1 "JB Mono"; letter-spacing: .3em; color: var(--gold); }
+
+/* the series label and the big statement */
+.kicker { position: absolute; left: 60px; right: 60px; text-align: center; font: 600 27px/1 "JB Mono"; letter-spacing: .3em; color: var(--gold); text-transform: uppercase; }
+.kicker i { display: inline-block; width: 46px; height: 2px; vertical-align: middle; margin: 0 18px 6px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.kicker i:last-child { background: linear-gradient(90deg, var(--gold), transparent); }
+.head { position: absolute; left: 70px; right: 70px; text-align: center; color: var(--ivory); }
+.head .l1 { font: 800 92px/1.02 "TCP Display"; letter-spacing: -0.03em; }
+.head .l2 { margin-top: 10px; font: italic 118px/1 "Serif"; }
+.head .l3 { margin-top: 26px; font: 400 38px/1.35 "Archivo"; color: rgba(242,236,223,.78); }
+.head.small .l1 { font-size: 74px; }
+.head.big .l1 { font-size: 118px; line-height: 1; }
+.head.big .l2 { font-size: 150px; margin-top: 18px; }
+.note { position: absolute; left: 80px; right: 80px; text-align: center; font: 400 28px/1.4 "Archivo"; color: rgba(166,157,140,.95); }
+
+/* subtitles for the voice, TikTok style: a few words at a time, the spoken word in gold */
+#subs { position: absolute; left: 70px; width: 860px; top: 1318px; text-align: center; font: 800 58px/1.16 "TCP Display"; letter-spacing: -0.015em;
+  color: var(--ivory); text-shadow: 0 4px 0 rgba(0,0,0,.55), 0 0 28px rgba(0,0,0,.8); }
+#subs .w { margin: 0 .12em; }
+#subs .on { color: var(--gold-hi); }
+
+/* trade tiles */
+.tiles { position: absolute; left: 90px; right: 90px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px; }
+.tile { height: 150px; border-radius: 26px; display: grid; place-items: center; font: 600 44px/1 "JB Mono"; border: 2px solid var(--line); background: var(--panel); color: var(--muted); }
+.tile.win { border-color: rgba(53,166,140,.8); background: rgba(53,166,140,.14); color: #7FE0C6; }
+.tile.loss { border-color: rgba(224,97,63,.85); background: rgba(224,97,63,.14); color: #FFB39E; }
+.total { position: absolute; left: 0; right: 0; text-align: center; font: 600 34px/1 "JB Mono"; letter-spacing: .2em; color: var(--stone); }
+.total b { display: block; margin-top: 18px; font: 800 150px/1 "TCP Display"; letter-spacing: -0.04em; }
+
+/* a table of rows */
+.table { position: absolute; left: 110px; right: 110px; }
+.row { display: flex; justify-content: space-between; align-items: center; padding: 30px 38px; margin-bottom: 20px; border-radius: 28px; border: 2px solid var(--line); background: var(--panel);
+  font: 600 50px/1 "JB Mono"; color: var(--ivory); }
+.row small { display: block; margin-top: 10px; font: 400 26px/1 "Archivo"; color: var(--stone); letter-spacing: 0; }
+.row b { font: 800 76px/1 "TCP Display"; letter-spacing: -0.03em; }
+.row.hot { border-color: rgba(216,173,78,.9); background: linear-gradient(180deg, rgba(216,173,78,.16), rgba(216,173,78,.04)); box-shadow: 0 0 60px rgba(216,173,78,.18); }
+
+/* a stamp: one big number */
+.stamp { position: absolute; left: 0; right: 0; text-align: center; }
+.stamp b { display: block; font: 800 250px/1 "TCP Display"; letter-spacing: -0.05em; }
+.stamp.m b { font-size: 170px; }
+.stamp span { display: block; margin-top: 18px; font: 600 34px/1.3 "JB Mono"; letter-spacing: .16em; color: var(--stone); text-transform: uppercase; }
+
+/* ticks and crosses */
+.list { position: absolute; left: 90px; right: 90px; }
+.item { display: flex; align-items: center; gap: 30px; padding: 30px 34px; margin-bottom: 22px; border-radius: 28px; border: 2px solid var(--line); background: var(--panel);
+  font: 800 46px/1.12 "TCP Display"; letter-spacing: -0.02em; color: var(--ivory); }
+.item i { flex: none; width: 74px; height: 74px; border-radius: 22px; display: grid; place-items: center; font: 800 44px/1 "TCP Display"; font-style: normal; }
+.item.no i { background: rgba(224,97,63,.16); color: var(--down); border: 2px solid rgba(224,97,63,.6); }
+.item.no span { color: rgba(242,236,223,.62); text-decoration: line-through; text-decoration-color: rgba(224,97,63,.8); text-decoration-thickness: 5px; }
+.item.yes { border-color: rgba(216,173,78,.9); background: linear-gradient(180deg, rgba(216,173,78,.16), rgba(216,173,78,.04)); }
+.item.yes i { background: var(--gold); color: var(--ink); }
+
+/* the phone, for the real app */
+.phone { position: absolute; left: 0; top: 0; width: 604px; height: 1260px; transform-origin: 302px 630px; }
+.phone .shell { position: absolute; inset: 0; border-radius: 92px;
+  background: linear-gradient(135deg, #5b544a 0%, #2a2621 18%, #16130f 40%, #3b352d 62%, #15120e 80%, #6a6154 100%);
+  box-shadow: 0 60px 120px rgba(0,0,0,.75), 0 0 0 1.5px rgba(246,227,163,.18) inset, 0 0 0 5px #0b0a08 inset; }
+.phone .shell::after { content: ""; position: absolute; inset: 7px; border-radius: 86px; background: #050404; }
+.phone .box { position: absolute; left: 20px; top: 20px; width: 564px; height: 1220px; border-radius: 72px; overflow: hidden; background: #0E0D0B; }
+.phone canvas { position: absolute; left: 0; top: 0; width: 564px; height: 1220px; }
+.phone .island { position: absolute; left: 234px; top: 42px; width: 136px; height: 38px; border-radius: 20px; background: #000; }
+.phone .glare { position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.07) 42%, rgba(255,255,255,0) 54%); mix-blend-mode: screen; }
+.demo-tag { position: absolute; padding: 10px 18px; border-radius: 999px; background: rgba(6,5,4,.8); border: 1.5px solid rgba(166,157,140,.5); font: 600 20px/1 "JB Mono"; letter-spacing: .18em; color: var(--stone); white-space: nowrap; }
+
+/* the chain of records */
+.chain { position: absolute; left: 110px; right: 110px; }
+.block { position: relative; padding: 26px 30px; margin-bottom: 64px; border-radius: 26px; border: 2px solid rgba(216,173,78,.55); background: var(--panel); }
+.block b { display: block; font: 800 40px/1.1 "TCP Display"; color: var(--ivory); letter-spacing: -0.02em; }
+.block span { display: block; margin-top: 12px; font: 500 24px/1.3 "JB Mono"; color: var(--stone); }
+.block em { position: absolute; right: 26px; top: 26px; font: 600 22px/1 "JB Mono"; font-style: normal; color: var(--gold); letter-spacing: .1em; }
+.link { position: absolute; left: 50%; width: 6px; margin-left: -3px; height: 64px; background: linear-gradient(180deg, var(--gold), rgba(216,173,78,.3)); }
+
+/* versus: two cards side by side */
+.vs { position: absolute; left: 70px; right: 70px; display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.vs .card { padding: 40px 30px; border-radius: 30px; border: 2px solid var(--line); background: var(--panel); text-align: center; }
+.vs .card small { display: block; font: 600 24px/1 "JB Mono"; letter-spacing: .2em; color: var(--stone); }
+.vs .card b { display: block; margin: 24px 0 14px; font: 800 96px/1 "TCP Display"; letter-spacing: -0.04em; color: var(--ivory); }
+.vs .card span { display: block; font: 400 30px/1.3 "Archivo"; color: var(--stone); }
+.vs .card i { display: block; margin-top: 26px; font: 800 60px/1 "TCP Display"; font-style: normal; }
+.vs .card.bad { border-color: rgba(224,97,63,.7); } .vs .card.bad i { color: var(--down); }
+.vs .card.good { border-color: rgba(216,173,78,.9); background: linear-gradient(180deg, rgba(216,173,78,.16), rgba(216,173,78,.04)); } .vs .card.good i { color: var(--gold-hi); }
+.vs .card.hold { border-color: #3A3429; background: var(--panel); }
+
+/* the end card */
+.end { position: absolute; inset: 0; }
+.end svg { position: absolute; left: 450px; top: 470px; width: 180px; height: 146.6px; }
+.end .tcp { position: absolute; left: 0; right: 0; top: 650px; text-align: center; font: 800 150px/1 "TCP Display"; letter-spacing: -0.02em; }
+.end .what { position: absolute; left: 0; right: 0; top: 820px; text-align: center; font: 600 28px/1 "JB Mono"; letter-spacing: .32em; color: var(--ivory); }
+.end .cta { position: absolute; left: 150px; width: 780px; top: 930px; height: 116px; border-radius: 58px; background: linear-gradient(180deg, #F6E3A3, #D8AD4E 55%, #C29640);
+  box-shadow: 0 20px 60px rgba(216,173,78,.35), 0 0 0 1px rgba(255,255,255,.35) inset; display: flex; align-items: center; justify-content: center; gap: 20px;
+  font: 800 40px/1 "TCP Display"; letter-spacing: -0.01em; color: #0E0D0B; }
+.end .sub { position: absolute; left: 90px; right: 90px; top: 1086px; text-align: center; font: italic 60px/1.1 "Serif"; color: var(--ivory); }
+.end .risk { position: absolute; left: 90px; right: 90px; top: 1480px; text-align: center; font: 400 24px/1.5 "Archivo"; color: rgba(166,157,140,.95); }
+
+#vignette { position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); pointer-events: none; }
+#grain { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; mix-blend-mode: overlay; opacity: .08; image-rendering: pixelated; pointer-events: none; }
+#flash { position: absolute; inset: 0; background: radial-gradient(60% 40% at 50% 44%, rgba(255,247,222,1) 0%, rgba(246,227,163,.7) 30%, rgba(216,173,78,.2) 60%, rgba(216,173,78,0) 100%); mix-blend-mode: screen; opacity: 0; pointer-events: none; }
+#safe { position: absolute; inset: 0; pointer-events: none; display: none; }
+#safe.on { display: block; background:
+  linear-gradient(rgba(255,0,0,.18), rgba(255,0,0,.18)) 0 0 / 1080px 130px no-repeat,
+  linear-gradient(rgba(255,0,0,.18), rgba(255,0,0,.18)) 0 1540px / 1080px 380px no-repeat,
+  linear-gradient(rgba(255,0,0,.18), rgba(255,0,0,.18)) 944px 760px / 136px 780px no-repeat; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" class="full" width="1080" height="1920"></canvas>
+  <canvas id="fx" class="full" width="1080" height="1920"></canvas>
+  <div id="scenes" class="layer"></div>
+  <div id="bug"><svg viewBox="-19.2 -19.53 238.4 194.2"></svg><div><b class="foil">TCP</b><span>THE CRYPTO PLAYBOOK</span></div></div>
+  <div id="subs"></div>
+  <div id="flash"></div>
+  <div id="vignette"></div>
+  <canvas id="grain" width="540" height="960"></canvas>
+  <div id="safe"></div>
+</div>
+<script src="spec.js"></script>
+<script src="reel.js"></script>
+</body>
+</html>

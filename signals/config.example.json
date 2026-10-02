@@ -1,0 +1,29 @@
+{
+  "mode": "test",
+  "outbox": "outbox",
+  "data_dir": "data",
+  "display_tz": "Europe/London",
+  "card_size": "portrait",
+  "update_cards": true,
+  "chats": {
+    "test": null,
+    "test_thread": null,
+    "signals": null,
+    "signals_thread": null,
+    "results": null,
+    "results_thread": null,
+    "alerts": null
+  },
+  "strategies": {
+    "QT1": { "label": "TCP Quant Terminal", "live": false }
+  },
+  "weekly": { "enabled": true, "day": "sat", "time": "09:00" },
+  "instruments": {
+    "XAUUSD": { "decimals": 2 },
+    "BTCUSD": { "decimals": 2 },
+    "GC": { "decimals": 1 },
+    "MGC": { "decimals": 1 }
+  },
+  "max_attempts": 12,
+  "orphan_minutes": 30
+}

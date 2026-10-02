@@ -1,0 +1,9 @@
+{
+  "name": "tcp-onboarding-bot",
+  "private": true,
+  "type": "module",
+  "description": "TCP Inner Circle onboarding bot (Cloudflare Worker, no dependencies)",
+  "scripts": {
+    "test": "node --test"
+  }
+}
