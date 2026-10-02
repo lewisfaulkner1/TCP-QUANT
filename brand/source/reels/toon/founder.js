@@ -135,7 +135,7 @@
   // the lid, one highlight. The near eye's outer corner is on the left; the far eye, beyond the bridge
   // of the nose, is narrower and partly hidden by it.
   function eye(near, p, id) {
-    const A = near ? [1, 1] : [70, -1.5], B = near ? [44, 2.5] : [91, -3];
+    const A = near ? [1, 1] : [67, -1.5], B = near ? [44, 2.5] : [86, -3];
     const at = (k, dy = 0) => [lerp(A[0], B[0], k), lerp(A[1], B[1], k) + dy];
     const open = Math.max(0, Math.min(1.3, 1 - Math.max(p.lid, p.blink) * 1.05 + p.wide * 0.45));
     const rise = (near ? 10.5 : 8.5) * open;
@@ -192,20 +192,22 @@
   }
 
   // ------------------------------------------------------------ nose, mouth, ear
-  // A straight nose, its bridge along the far edge of the face and its tip out past the cheek, as in
-  // the first sheet.
+  // A straight nose: from the dip below the brow its bridge is the edge of the face, down to the tip
+  // and under it to the lip, as in the first sheet. It's filled with the face's own skin, so it
+  // sits in the face rather than on it.
   function nose(p, id) {
-    const shape = [[89, -9], [95, 2], [103, 14], [110.5, 24], [113, 31], [109, 38.5], [101, 41], [93, 41.5], [87, 39], [84, 33], [85.5, 24], [87.5, 10]];
+    const shape = [[96, -12], [99, -3], [104, 8], [109.5, 19], [113.5, 29], [111, 37], [103, 41.5], [94, 42], [87, 39.5], [84, 33.5], [85.5, 24], [87.5, 10], [89, -4], [92, -12]];
     return `
       <path d="${smooth(shape, true)}" fill="url(#${id}skin)"/>
-      ${blob([[86, -4], [90, 10], [92, 24], [90, 34], [84, 35], [81.5, 25], [82.5, 8]], C.skinShade, 0.45, ` filter="url(#${id}soft)"`)}
+      ${blob([[88, -6], [91, 8], [92, 22], [90, 32], [85, 34], [82.5, 25], [84, 10]], C.skinShade, 0.45, ` filter="url(#${id}soft)"`)}
       ${blob([[80, 42], [92, 43], [101, 45], [93, 50], [82, 48.5]], C.skinShade, 0.4, ` filter="url(#${id}soft)"`)}
-      ${ink([[93, -2], [100, 8], [107, 18]], 2.4, C.skinHi, [0.3, 0.3], 0.65)}
-      ${ink([[91.5, -7], [99, 5], [106.5, 16.5], [112.5, 27.5]], 2.2, C.line, [0.6, 0.05], 0.85)}
-      ${ink([[113, 28], [112, 35], [106.5, 39.8], [99, 41.4]], 2.4, C.line, [0.1, 0.4])}
+      ${ink([[96, -4], [101, 6], [107, 17]], 2.4, C.skinHi, [0.3, 0.3], 0.6)}
+      ${ink([[96, -12], [99, -3], [104, 8], [109.5, 19], [113.5, 29]], 2, C.line, [0.05, 0.05])}
+      ${ink([[113.5, 29], [111.5, 36], [105, 40.5], [100.5, 43]], 2.3, C.line, [0.05, 0.3])}
+      ${ink([[95.5, -7], [99.5, 2], [104.5, 12.5], [109.5, 22]], 2, p.light.tint, [0.3, 0.3], 0.4 * p.light.rim)}
       ${blob([[94, 36.5], [99, 37.5], [104, 39.5], [100.5, 41.3], [95, 40.8]], C.skinOcc, 0.85)}
       ${ink([[87.5, 27], [84, 33], [86, 39], [92, 41.3]], 2, C.line, [0.45, 0.25], 0.85)}
-      <ellipse cx="107.5" cy="25.5" rx="3" ry="2.1" fill="#fff" opacity="0.45"/>`;
+      <ellipse cx="108" cy="25.5" rx="3" ry="2.1" fill="#fff" opacity="0.45"/>`;
   }
 
   // A plain mouth: one line, the lower lip in a little shade, no colour to speak of.
@@ -383,7 +385,7 @@
   }
 
   // ------------------------------------------------------------ the head, three-quarter view
-  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 100 -34, 101 -24 C 101 -16, 97 -10, 97 -4 C 98 6, 103 14, 103 24 C 103 38, 99 50, 96 62 C 94 76, 93 90, 91 100 C 89 108, 82 115, 68 116.5 C 50 118, 22 112, -8 100 C -24 93, -38 86, -46 74 C -54 58, -84 32, -96 0 Z';
+  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 101 -34, 101 -24 C 101 -18, 98 -15, 96 -12 C 95 -6, 97 4, 97.5 16 C 98 28, 99 38, 98.5 46 C 98 52, 97 57, 96 62 C 94 76, 93 90, 91 100 C 89 108, 82 115, 68 116.5 C 50 118, 22 112, -8 100 C -24 93, -38 86, -46 74 C -54 58, -84 32, -96 0 Z';
   function head34(p, id) {
     const capped = p.cap === 'fwd';
     const tint = p.light.tint, rim = p.light.rim;
@@ -391,7 +393,7 @@
       <path d="${FACE}" fill="url(#${id}skin)"/>
       <g clip-path="url(#${id}faceclip)">
         ${ink([[80, -56], [88, -24], [90, 8], [92, 38], [88, 68], [82, 96]], 22, C.skinHi, [0.15, 0.15], 0.4, ` filter="url(#${id}soft2)"`)}
-        ${ink([[96, -40], [101, 0], [102, 40], [94, 80]], 6, tint, [0.2, 0.2], 0.3 * rim, ` filter="url(#${id}soft)"`)}
+        ${ink([[98, -40], [99, -16], [96, 4], [97, 30], [97, 50], [94, 80]], 6, tint, [0.2, 0.2], 0.3 * rim, ` filter="url(#${id}soft)"`)}
         ${blob([[-112, -70], [-14, -54], [-12, -22], [-16, 8], [-10, 40], [4, 66], [20, 90], [38, 110], [54, 124], [-40, 134], [-122, 60]], C.skinShade, 0.42, ` filter="url(#${id}soft2)"`)}
         ${ink([[-30, 46], [-4, 58], [24, 72]], 10, C.skinShade, [0.3, 0.3], 0.3, ` filter="url(#${id}soft2)"`)}
         ${ink([[-48, 66], [-14, 94], [30, 110], [68, 116]], 12, C.skinDeep, [0.2, 0.2], 0.3, ` filter="url(#${id}soft)"`)}
@@ -411,7 +413,8 @@
       ${nose(p, id)}
       ${mouth(p, id)}
       ${ink([[-52, 62], [-46, 74], [-30, 88], [-8, 100], [20, 111], [46, 117.5], [68, 116.5], [83, 112], [91, 100]], 3, C.line, [0.12, 0.08])}
-      ${ink([[91, 100], [93.5, 86], [96, 66], [99.5, 50], [103, 30], [103, 18], [99, 6], [97, -4], [100, -20], [100, -34]], 2, C.line, [0.05, 0.45])}
+      ${ink([[91, 100], [93, 90], [94.5, 78], [96, 64], [97, 56], [98.5, 48], [100.5, 43]], 2, C.line, [0.05, 0.1])}
+      ${ink([[96, -12], [98.5, -16], [101, -26], [100, -38]], 2, C.line, [0.05, 0.6])}
       ${capped ? `<path d="M -40 -50 C 0 -56, 60 -62, 108 -66 L 110 -34 C 80 -24, 40 -20, 0 -24 C -20 -28, -34 -36, -40 -50 Z" fill="url(#${id}capshadow)" clip-path="url(#${id}faceclip)" filter="url(#${id}soft)"/>` : ''}
       ${p.cap === 'fwd' ? capFwd(p, id) : p.cap === 'back' ? capBack(p, id) : fringe()}
       ${p.shades > 0.01 ? `<g opacity="${n(Math.min(1, p.shades * 1.5))}" transform="translate(0 ${n((1 - p.shades) * -46)})">${shades(p)}</g>` : ''}`;
@@ -623,7 +626,7 @@
 
   function defs(p, id) {
     return `<defs>
-      <linearGradient id="${id}skin" x1="0" y1="0" x2="1" y2="0.3">
+      <linearGradient id="${id}skin" gradientUnits="userSpaceOnUse" x1="-100" y1="-40" x2="112" y2="10">
         <stop offset="0" stop-color="${C.skinMid}"/><stop offset="0.45" stop-color="${C.skin}"/><stop offset="1" stop-color="${C.skinHi}"/>
       </linearGradient>
       <linearGradient id="${id}neck" x1="0" y1="0" x2="0" y2="1">
@@ -659,8 +662,8 @@
       <linearGradient id="lensg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#2A2A32"/><stop offset="0.5" stop-color="${C.lens}"/><stop offset="1" stop-color="#050506"/>
       </linearGradient>
-      <filter id="${id}soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
-      <filter id="${id}soft2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+      <filter id="${id}soft" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="${id}soft2" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5"/></filter>
       <clipPath id="${id}faceclip"><path d="${FACE}"/></clipPath>
       <clipPath id="${id}capclip"><path d="${CROWN_PATH}"/></clipPath>
       <clipPath id="${id}topclip"><path d="${TOP}"/></clipPath>
