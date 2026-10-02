@@ -229,6 +229,9 @@
       <radialGradient id="${id}vig" cx="0.5" cy="0.46" r="0.72"><stop offset="0.5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.7"/></radialGradient>
       <linearGradient id="${id}mouse" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3A3A40"/><stop offset="0.4" stop-color="#1A1A1E"/><stop offset="1" stop-color="#0B0B0D"/></linearGradient>
       <linearGradient id="${id}skinh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6D3BA"/><stop offset="0.55" stop-color="#EDBB98"/><stop offset="1" stop-color="#C9917A"/></linearGradient>
+      <linearGradient id="${id}slat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C1611"/><stop offset="0.6" stop-color="#2C2219"/><stop offset="1" stop-color="#5A4128"/></linearGradient>
+      <linearGradient id="${id}chair" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0E0D0C"/><stop offset="0.6" stop-color="#1A1816"/><stop offset="1" stop-color="#2A2622"/></linearGradient>
+      <linearGradient id="${id}glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.07"/><stop offset="0.56" stop-color="#fff" stop-opacity="0"/></linearGradient>
       <filter id="${id}b2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2"/></filter>
       <filter id="${id}b8" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
       <filter id="${id}b20" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20"/></filter>
@@ -257,6 +260,68 @@
         <path d="M 0 0 L ${CW * 0.42} 0 L ${CW * 0.18} ${CH} L 0 ${CH} Z" fill="#FFFFFF" opacity="0.025"/></g>`;
   }
 
+  // ------------------------------------------------------------ props
+  // A wall of vertical wood slats, lit warm from the strip below.
+  function slats(x0, y0, w, h, id) {
+    let o = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#120E0B"/>`;
+    for (let x = x0 + 6; x < x0 + w; x += 26) o += `<rect x="${x}" y="${y0}" width="17" height="${h}" fill="url(#${id}slat)"/>`;
+    return o;
+  }
+  // A snake plant in a black pot: upright leaves, banded, with pale edges.
+  function plant(x, y, sc, seed) {
+    const r = rng(seed);
+    let leaves = '';
+    const set = [[-26, 120, -14], [-14, 160, -6], [-2, 186, 2], [10, 150, 8], [20, 128, 14], [-6, 104, -20], [14, 96, 22]];
+    for (const [bx, h, lean] of set) {
+      const w = 14 + r() * 5, tipX = bx + lean * 1.4, tipY = -h;
+      const c = r() < 0.5 ? '#2E5737' : '#3A6A42';
+      leaves += `<path d="M ${bx - w / 2} 0 C ${bx - w / 2 + lean * 0.3} ${n(tipY * 0.5)}, ${n(tipX - 4)} ${n(tipY * 0.85)}, ${n(tipX)} ${tipY} C ${n(tipX + 3)} ${n(tipY * 0.8)}, ${bx + w / 2 + lean * 0.4} ${n(tipY * 0.5)}, ${bx + w / 2} 0 Z" fill="${c}"/>
+        <path d="M ${bx - w / 2} 0 C ${bx - w / 2 + lean * 0.3} ${n(tipY * 0.5)}, ${n(tipX - 4)} ${n(tipY * 0.85)}, ${n(tipX)} ${tipY}" fill="none" stroke="#B9C77A" stroke-width="2" opacity="0.7"/>
+        ${[0.25, 0.45, 0.65].map((k) => `<path d="M ${n(bx - w * 0.4 + lean * k * 0.6)} ${n(tipY * k)} q ${n(w * 0.4)} -4 ${n(w * 0.8)} 0" fill="none" stroke="#1E3A24" stroke-width="2.4" opacity="0.6"/>`).join('')}`;
+    }
+    return `<g transform="translate(${x} ${y}) scale(${sc})">${leaves}
+      <path d="M -36 -4 L 36 -4 L 30 40 L -30 40 Z" fill="#1A1714"/><path d="M -36 -4 L 36 -4" stroke="${GOLD}" stroke-width="2.4" opacity="0.7"/>
+      <path d="M -36 -4 L -30 40" stroke="#fff" stroke-width="2" opacity="0.06"/></g>`;
+  }
+  function books(x, y) {
+    const spines = [[22, 96, '#2B2420'], [16, 84, '#1F2A2E'], [26, 102, '#3A2A1E'], [18, 90, '#22201D'], [20, 78, '#2E2620']];
+    let o = '', cx = x;
+    for (const [w, h, c] of spines) {
+      o += `<rect x="${cx}" y="${y - h}" width="${w}" height="${h}" rx="2" fill="${c}"/><rect x="${cx + 3}" y="${y - h + 12}" width="${w - 6}" height="3" fill="${GOLD}" opacity="0.5"/><rect x="${cx}" y="${y - h}" width="2" height="${h}" fill="#fff" opacity="0.06"/>`;
+      cx += w + 2;
+    }
+    return `${o}<g transform="rotate(-14 ${cx + 10} ${y})"><rect x="${cx + 4}" y="${y - 84}" width="20" height="84" rx="2" fill="#2A2522"/></g>`;
+  }
+  // Steam off the mug: three wisps rising and swaying.
+  function steam(x, y, t, id) {
+    let o = '';
+    for (let i = 0; i < 3; i++) {
+      const ph = t * 1.6 + i * 2.1, pts = [];
+      for (let k = 0; k <= 8; k++) pts.push(`${n(x + (i - 1) * 12 + Math.sin(ph + k * 0.7) * (4 + k * 1.6))} ${n(y - k * 18)}`);
+      o += `<path d="M ${pts.join(' L ')}" fill="none" stroke="#F2E9DD" stroke-width="${7 - i}" stroke-linecap="round" opacity="0.16" filter="url(#${id}b8)"/>`;
+    }
+    return o;
+  }
+  // The desk's top in dark walnut: a few long grain lines.
+  function grain(x0, y0, x1, y1, seed) {
+    const r = rng(seed);
+    let o = '';
+    for (let i = 0; i < 9; i++) {
+      const y = y0 + (y1 - y0) * (i + r() * 0.6) / 9;
+      o += `<path d="M ${x0} ${n(y)} C ${n(x0 + (x1 - x0) * 0.3)} ${n(y + (r() - 0.5) * 6)}, ${n(x0 + (x1 - x0) * 0.7)} ${n(y + (r() - 0.5) * 6)}, ${x1} ${n(y + (r() - 0.5) * 4)}" stroke="#3A2E24" stroke-width="${n(1 + r() * 1.5)}" fill="none" opacity="0.6"/>`;
+    }
+    return o;
+  }
+  // A gaming chair's back: the shell, stitched panels, gold piping.
+  function chair(id) {
+    return `<path d="M 90 860 C 90 760, 140 720, 236 720 L 500 720 C 576 720, 604 784, 604 870 L 604 1900 L 90 1900 Z" fill="url(#${id}chair)"/>
+      <path d="M 150 900 C 150 820, 180 790, 250 788 L 444 788 C 510 790, 540 830, 540 900 L 540 1900 L 150 1900 Z" fill="#17140F"/>
+      <path d="M 150 900 C 150 820, 180 790, 250 788 L 444 788 C 510 790, 540 830, 540 900" fill="none" stroke="${GOLD}" stroke-width="3" opacity="0.55"/>
+      <path d="M 166 906 C 166 834, 194 806, 252 804 L 440 804 C 498 806, 524 840, 524 906" fill="none" stroke="#3A332B" stroke-width="1.6" stroke-dasharray="6 5"/>
+      ${[0, 1, 2].map((i) => `<path d="M 160 ${1000 + i * 130} C 260 ${990 + i * 130}, 430 ${990 + i * 130}, 530 ${1000 + i * 130}" fill="none" stroke="#0C0A08" stroke-width="5" opacity="0.8"/>`).join('')}
+      <path d="M 108 880 C 110 790, 150 744, 232 740" fill="none" stroke="#3A342D" stroke-width="6"/>`;
+  }
+
   // ------------------------------------------------------------ the sets
   // Each returns its layers, back to front: { f: depth (1 moves with the subject, less is further
   // away), svg, blur }.
@@ -275,37 +340,52 @@
     }).join('');
     const bg = `${roomDefs(id, glow)}
       <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}wall)"/>
+      ${slats(520, -400, 760, 1840, id)}
       <rect x="-80" y="160" width="600" height="1180" fill="url(#${id}sky)"/>
       <g filter="url(#${id}b2)">${bokeh(-80, 160, 600, 760, 34, 11, [2, 8])}${towers}</g>
+      <rect x="-80" y="160" width="600" height="1180" fill="url(#${id}glass)"/>
+      <path d="M -60 180 L 120 180 L -60 520 Z" fill="#fff" opacity="0.03"/>
       <path d="M -80 160 h 600 v 1180 h -600 Z M 220 160 v 1180 M -80 760 h 600" fill="none" stroke="#090807" stroke-width="20"/>
-      <rect x="-100" y="1330" width="640" height="28" fill="#0F0D0B"/>
-      <rect x="600" y="470" width="190" height="236" rx="3" fill="#0E0C0A" stroke="#2D261E" stroke-width="6"/>
+      <path d="M -70 170 h 580 M 230 170 v 580" stroke="#2A241E" stroke-width="3"/>
+      <rect x="-100" y="1330" width="640" height="28" fill="#0F0D0B"/><rect x="-100" y="1330" width="640" height="4" fill="#3A3128"/>
+      <rect x="586" y="456" width="218" height="264" rx="3" fill="#0B0908"/>
+      <rect x="600" y="470" width="190" height="236" rx="2" fill="#16120E" stroke="#3A2F23" stroke-width="5"/>
+      <rect x="616" y="486" width="158" height="204" fill="#0E0C0A" stroke="#2A231B" stroke-width="2"/>
       ${crown(695, 560, 0.34)}
-      <text x="695" y="658" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="36" fill="${GOLD}">TCP</text>
+      <text x="695" y="652" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="34" fill="${GOLD}">TCP</text>
+      <text x="695" y="674" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="9" fill="#8A7A5E" letter-spacing="2">THE CRYPTO PLAYBOOK</text>
+      <rect x="810" y="330" width="420" height="16" fill="#2A2018"/><rect x="810" y="346" width="420" height="5" fill="#000" opacity="0.4"/>
+      ${books(838, 330)}
+      ${plant(1040, 290, 0.8, 4)}
       <rect x="-200" y="1418" width="1500" height="30" fill="${GOLD}" opacity="0.6" filter="url(#${id}b20)"/>
       <rect x="-200" y="1430" width="1500" height="5" fill="${GOLDHI}" opacity="0.6"/>
       <ellipse cx="560" cy="1432" rx="760" ry="140" fill="url(#${id}warm)"/>`;
     const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
     const subject = `
-      <path d="M 90 860 C 90 770, 140 730, 230 730 L 500 730 C 570 730, 600 790, 600 870 L 600 1900 L 90 1900 Z" fill="#110F0D"/>
-      <path d="M 108 880 C 110 800, 146 754, 226 750" fill="none" stroke="#2E2A25" stroke-width="6"/>
+      ${chair(id)}
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
       <!-- the monitor on its stand, turned towards him and us -->
-      <path d="M 880 1080 L 904 1080 L 908 1460 L 876 1460 Z" fill="#141415"/>
+      <path d="M 874 1080 L 910 1080 L 914 1452 L 870 1452 Z" fill="#161618"/><path d="M 874 1080 L 880 1080 L 882 1452 L 870 1452 Z" fill="#26262A"/>
       <g transform="translate(690 740) skewY(-9) scale(0.72 1)">${monitor(st, id + 'c', 560)}</g>
-      <!-- the desk: its top, the near edge, the front -->
+      <path d="M 690 726 L 683 730 L 683 1150 L 690 1146 Z" fill="#202024"/>
+      <!-- the desk: walnut top with its grain, the near edge, the front -->
       <path d="M -300 1448 L 1400 1448 L 1400 1600 L -300 1600 Z" fill="url(#${id}desk)"/>
-      <path d="M -300 1448 L 1400 1448" stroke="#3B3229" stroke-width="3"/>
-      <ellipse cx="892" cy="1462" rx="84" ry="12" fill="#151516"/>
+      ${grain(-300, 1452, 1400, 1596, 9)}
+      <path d="M -300 1448 L 1400 1448" stroke="#4A3D30" stroke-width="3"/>
+      <path d="M 560 1466 L 1120 1458 L 1150 1560 L 540 1570 Z" fill="#141312"/><path d="M 560 1466 L 1120 1458" stroke="#2C2925" stroke-width="2"/>
+      <ellipse cx="892" cy="1462" rx="86" ry="12" fill="#18181A"/><ellipse cx="892" cy="1458" rx="70" ry="7" fill="#26262A"/>
       <path d="M -300 1600 L 1400 1600 L 1400 2400 L -300 2400 Z" fill="url(#${id}front)"/>
-      <path d="M -300 1600 L 1400 1600" stroke="#4A3F33" stroke-width="4"/>
-      <!-- the keyboard under his far hand, a mug -->
+      <path d="M -300 1600 L 1400 1600" stroke="#5A4A3A" stroke-width="4"/><path d="M -300 1604 L 1400 1604" stroke="#000" stroke-width="3" opacity="0.5"/>
+      <!-- the keyboard under his far hand, the mug and its steam -->
       <path d="M 610 1474 L 880 1468 L 896 1508 L 618 1516 Z" fill="#141416"/>
       <path d="M 624 1480 L 870 1475 L 882 1502 L 630 1508 Z" fill="#202024"/>
-      <g transform="translate(1010 1540)"><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#131211"/><path d="M 38 -66 C 66 -66, 66 -18, 38 -18" fill="none" stroke="#131211" stroke-width="12"/>${crown(0, -40, 0.17)}</g>
+      ${Array.from({ length: 3 }, (_, rr) => Array.from({ length: 12 }, (__, c) => `<rect x="${n(630 + c * 20.5 + rr * 3)}" y="${n(1482 + rr * 8 - c * 0.4)}" width="16" height="5" rx="1" fill="#2E2E34"/>`).join('')).join('')}
+      <g transform="translate(1010 1540)"><ellipse cx="0" cy="8" rx="44" ry="8" fill="#000" opacity="0.4"/><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#141312"/><rect x="-38" y="-86" width="14" height="94" rx="7" fill="#fff" opacity="0.05"/><path d="M 38 -66 C 66 -66, 66 -18, 38 -18" fill="none" stroke="#141312" stroke-width="12"/><ellipse cx="0" cy="-86" rx="38" ry="7" fill="#0A0908"/><ellipse cx="0" cy="-85" rx="32" ry="5" fill="#2A1A10"/>${crown(0, -40, 0.17)}</g>
+      ${steam(1010, 1446, t, id)}
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>
       <!-- the screen's light on him and the desk, and the room falling off -->
       <ellipse cx="860" cy="980" rx="560" ry="620" fill="url(#${id}glow)" style="mix-blend-mode:screen"/>
+      <ellipse cx="820" cy="1500" rx="420" ry="90" fill="url(#${id}glow)" style="mix-blend-mode:screen" opacity="0.7"/>
       <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}vig)"/>`;
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }];
   };
@@ -315,21 +395,30 @@
     const glow = glowOf(st);
     const bg = `${roomDefs(id, glow)}
       <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}wall)"/>
-      <rect x="760" y="250" width="230" height="16" fill="#1B1712"/>
-      <g opacity="0.8"><rect x="790" y="170" width="22" height="80" fill="#2A221A"/><rect x="816" y="186" width="18" height="64" fill="#3A2D1E"/><rect x="838" y="176" width="24" height="74" fill="#1F1A14"/>${crown(930, 214, 0.26)}</g>
+      ${slats(-400, -400, 1880, 1520, id)}
+      <rect x="640" y="300" width="460" height="16" fill="#2A2018"/><rect x="640" y="316" width="460" height="5" fill="#000" opacity="0.4"/>
+      ${books(700, 300)}${plant(980, 264, 0.85, 8)}
+      <rect x="40" y="250" width="160" height="200" rx="3" fill="#16120E" stroke="#3A2F23" stroke-width="5"/>${crown(120, 330, 0.26)}
       <rect x="-200" y="1100" width="1500" height="34" fill="${GOLD}" opacity="0.6" filter="url(#${id}b20)"/>
       <rect x="-200" y="1114" width="1500" height="5" fill="${GOLDHI}" opacity="0.55"/>
       <ellipse cx="540" cy="1120" rx="760" ry="150" fill="url(#${id}warm)"/>`;
     const mw = 900, mx = 540 - mw / 2, my = 560;
     const desk = `
       <path d="M -300 1190 L 1380 1190 L 1380 2300 L -300 2300 Z" fill="url(#${id}desk)"/>
-      <path d="M -300 1190 L 1380 1190" stroke="#3B3229" stroke-width="3"/>
-      <path d="M 490 1100 L 476 1196 L 604 1196 L 590 1100 Z" fill="#121213"/>
-      <ellipse cx="540" cy="1198" rx="110" ry="12" fill="#0E0E0F"/>
+      ${grain(-300, 1196, 1380, 1500, 21)}
+      <path d="M -300 1190 L 1380 1190" stroke="#4A3D30" stroke-width="3"/>
+      <path d="M 120 1250 L 980 1250 L 1060 1470 L 40 1470 Z" fill="#141312"/><path d="M 120 1250 L 980 1250" stroke="#2C2925" stroke-width="2"/>
+      <path d="M 486 1100 L 474 1192 L 606 1192 L 594 1100 Z" fill="#161618"/><path d="M 486 1100 L 494 1100 L 484 1192 L 474 1192 Z" fill="#26262A"/>
+      <ellipse cx="540" cy="1196" rx="120" ry="13" fill="#18181A"/><ellipse cx="540" cy="1192" rx="98" ry="8" fill="#26262A"/>
+      <g transform="translate(1010 660) skewY(12) scale(0.5 1)"><rect x="0" y="0" width="300" height="420" rx="12" fill="#0B0B0C" stroke="#2A2A2C" stroke-width="3"/><rect x="12" y="12" width="276" height="396" rx="6" fill="#0D1117"/>
+        ${Array.from({ length: 9 }, (_, i) => `<rect x="28" y="${40 + i * 40}" width="${120 + (i * 37) % 110}" height="12" rx="3" fill="${i % 3 ? '#1F2A36' : '#35A68C'}" opacity="0.7"/>`).join('')}</g>
       <g transform="translate(${mx} ${my})">${monitor(st, id + 'c', mw)}</g>
       <path d="M 240 1300 L 840 1300 L 860 1372 L 220 1372 Z" fill="#141416"/>
       <path d="M 258 1310 L 822 1310 L 838 1362 L 242 1362 Z" fill="#1E1E22"/>
-      <ellipse cx="960" cy="1350" rx="56" ry="34" fill="url(#${id}mouse)"/>
+      ${Array.from({ length: 4 }, (_, rr) => Array.from({ length: 15 }, (__, c) => `<rect x="${n(262 + c * 37.5 - rr * 1.5)}" y="${n(1314 + rr * 12)}" width="31" height="8" rx="2" fill="#2E2E34"/>`).join('')).join('')}
+      <ellipse cx="960" cy="1350" rx="56" ry="34" fill="url(#${id}mouse)"/><path d="M 920 1340 C 940 1322, 980 1322, 1000 1340" stroke="#4A4A52" stroke-width="2" fill="none"/>
+      <g transform="translate(150 1290)"><ellipse cx="0" cy="8" rx="44" ry="8" fill="#000" opacity="0.4"/><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#141312"/><path d="M -38 -66 C -66 -66, -66 -18, -38 -18" fill="none" stroke="#141312" stroke-width="12"/><ellipse cx="0" cy="-86" rx="38" ry="7" fill="#0A0908"/>${crown(0, -40, 0.17)}</g>
+      ${steam(150, 1196, t, id)}
       <ellipse cx="540" cy="860" rx="700" ry="560" fill="url(#${id}glow)" style="mix-blend-mode:screen" opacity="0.8"/>`;
     const him = `<g transform="translate(250 1560) scale(2.5)">${F.founderSVG(F.pose({ view: 'back', cap: p.cap }), id + 'b')}</g>`;
     const vig = `<rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}vig)"/>`;
@@ -373,7 +462,7 @@
   // button. Five fingers: the thumb along the far side, four on the buttons.
   function mouseHand(id, click, glow) {
     const press = click * 6;
-    const skin = `fill="url(#${id}skinh)"`;
+    const skin = `fill="url(#${id}skinh)" stroke="#3A2118" stroke-width="2.2" stroke-linejoin="round"`;
     const crease = 'fill="none" stroke="#B57F67" stroke-width="2.6" stroke-linecap="round"';
     const finger = (x0, y0, x1, y1, w, dip = 0) => {
       const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
@@ -400,10 +489,11 @@
       <path d="M -272 -68 L -236 -68 L -236 98 L -272 98 Z" fill="#0B0A09"/>
       ${Array.from({ length: 7 }, (_, i) => `<path d="M ${-270 + i * 5} -62 L ${-270 + i * 5} 92" stroke="#1F1D1B" stroke-width="1.4"/>`).join('')}
       <path d="M -540 -62 L -250 -66" stroke="${glow}" stroke-width="3" opacity="0.3"/>
-      <path d="M -244 -54 C -170 -66, -90 -72, -30 -78 L -24 88 C -90 86, -170 86, -244 86 Z" ${skin}/>
+      <path d="M -244 -54 C -170 -66, -90 -72, -30 -78 L -24 88 C -90 86, -170 86, -244 86 Z" fill="url(#${id}skinh)"/>
       <path d="M -240 70 C -170 76, -90 80, -26 84" fill="none" stroke="#A86F58" stroke-width="10" opacity="0.35" stroke-linecap="round"/>
       <!-- the back of the hand, its knuckles and tendons -->
-      <path d="M -40 -80 C 40 -100, 140 -102, 198 -86 C 216 -40, 216 40, 198 84 C 140 98, 40 100, -36 92 C -62 40, -62 -40, -40 -80 Z" ${skin}/>
+      <path d="M -40 -80 C 40 -100, 140 -102, 198 -86 C 216 -40, 216 40, 198 84 C 140 98, 40 100, -36 92 C -62 40, -62 -40, -40 -80 Z" fill="url(#${id}skinh)"/>
+      <path d="M -244 -54 C -170 -66, -90 -72, -40 -80 C 40 -100, 140 -102, 198 -86 M -244 86 C -170 86, -90 86, -36 92 C 40 100, 140 98, 198 84" fill="none" stroke="#3A2118" stroke-width="2.4" stroke-linecap="round"/>
       <path d="M -30 84 C 40 94, 140 92, 196 80" fill="none" stroke="#A86F58" stroke-width="12" opacity="0.3" stroke-linecap="round"/>
       <path d="M -10 -56 C 60 -60, 130 -58, 182 -54 M -14 -16 C 60 -16, 130 -12, 188 -10 M -12 24 C 60 26, 130 28, 186 32 M -6 60 C 60 62, 120 64, 176 66" fill="none" stroke="#C99479" stroke-width="2.2" opacity="0.35" stroke-linecap="round"/>
       ${[-54, -12, 30, 68].map((ky, i) => `<ellipse cx="${190 - (i === 3 ? 8 : 0)}" cy="${ky}" rx="14" ry="16" fill="#F7D9C4" opacity="0.7"/>`).join('')}
@@ -480,7 +570,7 @@
   KINDS.handPhone = {
     make(s, root) {
       KINDS.phone.make(s, root);
-      const skin = 'fill="#EDBB98"';
+      const skin = 'fill="#EDBB98" stroke="#3A2118" stroke-width="3" stroke-linejoin="round"';
       const tip = (x, y, r) => `<path d="M ${x} ${y - 30} C ${x - 34} ${y - 30}, ${x - 36} ${y + 30}, ${x} ${y + 30} Z" ${skin}/><path d="M ${x - 4} ${y - 22} C ${x - 22} ${y - 20}, ${x - 22} ${y + 20}, ${x - 4} ${y + 22} Z" fill="#F7DCCB" opacity="0.8"/>`;
       const back = `<svg class="hand" style="left:-260px;top:0;width:1124px;height:1900px" viewBox="-260 0 1124 1900">
         <path d="M 360 1150 C 470 1080, 650 1100, 700 1220 C 760 1360, 740 1560, 700 1900 L 330 1900 C 340 1700, 320 1400, 360 1150 Z" ${skin}/>

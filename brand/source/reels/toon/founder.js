@@ -1,10 +1,12 @@
-// The TCP founder as an animated character: one vector drawing, built from parameters, so the face,
-// cap, chain and clothes are identical in every shot (the thing AI video can't hold steady).
+// The TCP founder as an animated character, drawn as a detailed 2D cartoon: ink lines that taper,
+// two tones of shade with soft edges, the screen's light in front of him, and detailed eyes. One
+// drawing built from parameters, so his face, cap, chain and clothes are the same in every shot.
 //
-// founderSVG(pose, id) returns an SVG <g> in the character's own space: the head's centre near 0,0,
-// the cap's top at about y -160, the chin at about y 112, the torso down to y 560. A shot places
-// and scales it. Every pose field is a number or a named part, so two poses can be blended:
-// blendPose(a, b, k).
+// founderSVG(pose, id, part) returns an SVG <g> in the character's own space: the head's centre near
+// 0,0, the cap's top at about y -162, the chin at about y 112, the torso down to y 560. A shot places
+// and scales it. part 'body' leaves out the near arm and 'arm' draws only that (it uses the body's
+// gradients, so draw both into one document). Every pose field is a number or a named part, so two
+// poses blend: blendPose(a, b, k).
 //
 // pose = {
 //   view: '34' (three-quarter, facing right) | 'back',
@@ -24,18 +26,19 @@
 // }
 (function () {
   const C = {
-    skin: '#EDBB98', skinMid: '#DCA283', skinShade: '#B97B5F', skinDeep: '#93594A', skinLight: '#F8D9C3', blush: '#E28E78',
-    lip: '#C27866', lipDark: '#7A4033',
-    hair: '#3E2B20', hairDark: '#22160F', hairLight: '#71513C',
-    cap: '#191919', capDark: '#0C0C0C', capLight: '#3A3938',
-    top: '#161514', topDark: '#0B0A09', topLight: '#3A352F',
-    pearl: '#F2F0EB', pearlShade: '#A7A198',
-    white: '#F5F0EA', iris: '#5E412D', irisDark: '#3A271B', pupil: '#140E0A', lash: '#22160F',
-    gold: '#D8AD4E', goldHi: '#F6E3A3', goldLo: '#B0812F',
-    lens: '#0A0A0C',
+    line: '#3A2118', lineHair: '#1C120C', lineCloth: '#050505',
+    skin: '#F1C4A4', skinHi: '#FCE1CE', skinMid: '#E5AC8D', skinShade: '#CD8B6D', skinDeep: '#A9654F', skinOcc: '#7A4233', blush: '#E98F79',
+    lipTop: '#B07462', lipLow: '#C68673', lipLine: '#5E2C22', lipHi: '#F0C2B2', mouthIn: '#3E1612', teeth: '#F4EEE6', tongue: '#B9605A',
+    hair: '#4B3426', hairDark: '#281A12', hairLight: '#9C7459', brow: '#352218',
+    white: '#F8F3ED', whiteShade: '#D8CCC2', iris: '#6C4830', irisLight: '#A87D53', irisDark: '#382315', pupil: '#110B08', lash: '#1E120C', caruncle: '#E39C8B',
+    cap: '#1E1E21', capHi: '#36363C', capDark: '#0E0E10', stitch: '#4C4C55', eyelet: '#2C2C31',
+    gold: '#D8AD4E', goldHi: '#F8E3A6', goldLo: '#9E7428',
+    top: '#211F1E', topHi: '#3A3734', topDark: '#100F0E', stitchTop: '#3C3936',
+    pearl: '#EFEBE3', pearlShade: '#ADA597', lens: '#0B0B0E',
   };
   const n = (v) => Math.round(v * 100) / 100;
   const lerp = (a, b, k) => a + (b - a) * k;
+  const xy = (p) => `${n(p[0])} ${n(p[1])}`;
 
   const BASE = {
     view: '34', flip: false,
@@ -59,314 +62,627 @@
 
   // Blend two full poses: numbers interpolate, named parts switch half-way.
   function blendPose(a, b, k) {
-    const mix = (x, y) => {
+    const mixed = (x, y) => {
       if (typeof x === 'number' && typeof y === 'number') return lerp(x, y, k);
-      if (Array.isArray(x)) return x.map((v, i) => mix(v, y[i]));
-      if (x && typeof x === 'object') { const o = {}; for (const key in x) o[key] = mix(x[key], y[key]); return o; }
+      if (Array.isArray(x)) return x.map((v, i) => mixed(v, y[i]));
+      if (x && typeof x === 'object') { const o = {}; for (const key in x) o[key] = mixed(x[key], y[key]); return o; }
       return k < 0.5 ? x : y;
     };
-    return mix(a, b);
+    return mixed(a, b);
   }
 
-  // ------------------------------------------------------------ face parts
-  // An eye: fixed corners, the upper lid's curve moving with lid, wide and blink.
-  function eye(cx, cy, w, near, p, id) {
-    const open = Math.max(0, Math.min(1.25, 1 - Math.max(p.lid, p.blink) + p.wide * 0.4));
-    const x0 = cx - w / 2, x1 = cx + w / 2;
-    const y0 = cy + 1, y1 = cy - 1;
-    const up = cy - (near ? 14 : 10) * open - 0.5;
-    const lo = cy + (near ? 6 : 5) * Math.min(1, 0.35 + open);
-    const shape = `M ${n(x0)} ${n(y0)} C ${n(x0 + w * 0.2)} ${n(up)}, ${n(x1 - w * 0.32)} ${n(up - 1)}, ${n(x1)} ${n(y1)} C ${n(x1 - w * 0.25)} ${n(lo)}, ${n(x0 + w * 0.28)} ${n(lo + 1)}, ${n(x0)} ${n(y0)} Z`;
-    const ix = cx + w * 0.06 + p.look[0] * w * 0.2, iy = cy - 1 + p.look[1] * 3;
-    const r = near ? 7.8 : 6.3;
-    const clip = `${id}eye${near ? 'n' : 'f'}`;
-    const lash = `M ${n(x0 - 2)} ${n(y0 + 0.5)} C ${n(x0 + w * 0.2)} ${n(up - 1.2)}, ${n(x1 - w * 0.32)} ${n(up - 2.2)}, ${n(x1 + 3)} ${n(y1 - 1.5)}`;
-    const ch = 13 + p.wide * 4;
-    const crease = `M ${n(x0 + 4)} ${n(cy - ch)} C ${n(x0 + w * 0.3)} ${n(cy - ch - 7)}, ${n(x1 - w * 0.3)} ${n(cy - ch - 7)}, ${n(x1 - 1)} ${n(cy - ch + 2)}`;
-    return `
-      <clipPath id="${clip}"><path d="${shape}"/></clipPath>
-      <path d="${shape}" fill="${C.white}"/>
-      <g clip-path="url(#${clip})">
-        <circle cx="${n(ix)}" cy="${n(iy)}" r="${r}" fill="${C.iris}"/>
-        <circle cx="${n(ix)}" cy="${n(iy)}" r="${n(r - 0.8)}" fill="none" stroke="${C.irisDark}" stroke-width="1.6"/>
-        <circle cx="${n(ix)}" cy="${n(iy)}" r="${n(r * 0.48)}" fill="${C.pupil}"/>
-        <circle cx="${n(ix + r * 0.36)}" cy="${n(iy - r * 0.36)}" r="${n(r * 0.24)}" fill="#fff" opacity="0.92"/>
-        <path d="M ${n(x0 - 2)} ${n(up - 6)} L ${n(x1 + 2)} ${n(up - 6)} L ${n(x1 + 2)} ${n(up + 4)} C ${n(cx)} ${n(up + 1)}, ${n(cx)} ${n(up + 1)}, ${n(x0 - 2)} ${n(up + 4)} Z" fill="${C.skinDeep}" opacity="0.22"/>
-      </g>
-      <path d="${lash}" fill="none" stroke="${C.lash}" stroke-width="${near ? 3.6 : 3}" stroke-linecap="round"/>
-      <path d="M ${n(x1 - 1)} ${n(y1 - 1)} l ${near ? 5 : 4} -3" fill="none" stroke="${C.lash}" stroke-width="${near ? 2.6 : 2.2}" stroke-linecap="round"/>
-      <path d="${crease}" fill="none" stroke="${C.skinShade}" stroke-width="1.8" stroke-linecap="round" opacity="${n(0.75 * Math.min(1, open))}"/>
-      <path d="M ${n(x0 + 5)} ${n(lo + 3)} Q ${n(cx)} ${n(lo + 6)} ${n(x1 - 5)} ${n(lo + 2)}" fill="none" stroke="${C.skinShade}" stroke-width="1.3" opacity="0.55"/>`;
-  }
-
-  function brow(x0, y0, x1, y1, raise, thick) {
-    const dy = -raise * 7;
-    const inner = y0 + dy + Math.max(0, -raise) * 5; // a frown pulls the inner end down
-    const outer = y1 + dy * 0.8;
-    const mx = (x0 + x1) / 2, my = (inner + outer) / 2 - 4 - Math.max(0, raise) * 2;
-    return `<path d="M ${n(x0)} ${n(inner + thick * 0.4)} C ${n(x0 + 4)} ${n(inner - thick * 0.7)}, ${n(mx)} ${n(my - thick * 0.5)}, ${n(x1)} ${n(outer)} C ${n(mx + 4)} ${n(my + thick * 0.45)}, ${n(x0 + 10)} ${n(inner + thick * 0.75)}, ${n(x0)} ${n(inner + thick * 0.4)} Z" fill="${C.hair}"/>`;
-  }
-
-  function mouth(p) {
-    const { open, smile, smirk } = p.mouth;
-    const x0 = 47, y0 = 63 - smile * 2, x1 = 88, y1 = 61 - smile * 3 - smirk * 7;
-    const mid = 64 + smile * 3 - smirk * 1.5, mx = (x0 + x1) / 2;
-    if (open > 0.05) {
-      const drop = 3 + open * 17;
-      return `<path d="M ${x0} ${n(y0)} Q ${n(mx)} ${n(mid - 2)} ${x1} ${n(y1)} Q ${n(mx + 3)} ${n(mid + drop)} ${x0} ${n(y0)} Z" fill="${C.lipDark}"/>
-        <path d="M ${x0 + 6} ${n(y0 + 0.5)} Q ${n(mx)} ${n(mid - 1)} ${x1 - 6} ${n(y1 + 0.5)} L ${x1 - 8} ${n(y1 + 2.5 + open * 2)} Q ${n(mx)} ${n(mid + 2)} ${x0 + 8} ${n(y0 + 2.5 + open * 2)} Z" fill="${C.white}" opacity="${n(Math.min(1, open * 2))}"/>
-        <path d="M ${x0 + 9} ${n(y0 + drop * 0.62)} Q ${n(mx)} ${n(mid + drop * 0.95)} ${x1 - 9} ${n(y1 + drop * 0.55)}" fill="none" stroke="${C.lip}" stroke-width="2.4" opacity="0.85"/>`;
+  // ------------------------------------------------------------ drawing helpers
+  // A smooth path through points (Catmull-Rom, as cubic Béziers).
+  function smooth(pts, closed = false) {
+    const P = closed ? [pts[pts.length - 1], ...pts, pts[0], pts[1]] : [pts[0], ...pts, pts[pts.length - 1]];
+    let d = `M ${xy(P[1])}`;
+    for (let i = 1; i < P.length - 2; i++) {
+      const [p0, p1, p2, p3] = [P[i - 1], P[i], P[i + 1], P[i + 2]];
+      d += ` C ${xy([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6])}, ${xy([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6])}, ${xy(p2)}`;
     }
-    return `<path d="M ${x0} ${n(y0)} Q ${n(mx)} ${n(mid)} ${x1} ${n(y1)}" fill="none" stroke="${C.lipDark}" stroke-width="3" stroke-linecap="round"/>
-      <path d="M ${x0 + 10} ${n(y0 + 7)} Q ${n(mx + 2)} ${n(mid + 9)} ${x1 - 11} ${n(y1 + 6.5)}" fill="none" stroke="${C.lip}" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
-      ${smirk > 0.15 ? `<path d="M ${x1} ${n(y1)} q 4 -1 5.5 -5" fill="none" stroke="${C.skinShade}" stroke-width="2" stroke-linecap="round" opacity="${n(smirk)}"/>` : ''}`;
+    return closed ? `${d} Z` : d;
+  }
+  // Two open curves joined into one closed shape (the second starts where the first ends).
+  const loop = (a, b) => `${smooth(a)} L ${xy(b[0])} ${smooth(b).replace(/^M [-\d.]+ [-\d.]+/, '')} Z`;
+  // Points along that curve.
+  function sample(pts, per = 10) {
+    const P = [pts[0], ...pts, pts[pts.length - 1]];
+    const out = [];
+    for (let i = 1; i < P.length - 2; i++) {
+      const [p0, p1, p2, p3] = [P[i - 1], P[i], P[i + 1], P[i + 2]];
+      for (let j = 0; j < per; j++) {
+        const t = j / per, t2 = t * t, t3 = t2 * t;
+        out.push([0, 1].map((k) => 0.5 * (2 * p1[k] + (p2[k] - p0[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (3 * p1[k] - p0[k] - 3 * p2[k] + p3[k]) * t3)));
+      }
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+  // An ink line through points, w wide at its fullest and tapering to its ends (taper is the share of
+  // its length each end takes to reach full width).
+  function ink(pts, w, fill = C.line, taper = [0.3, 0.3], op = 1, extra = '') {
+    const S = sample(pts, 12);
+    const L = [0];
+    for (let i = 1; i < S.length; i++) L.push(L[i - 1] + Math.hypot(S[i][0] - S[i - 1][0], S[i][1] - S[i - 1][1]));
+    const total = L[L.length - 1] || 1;
+    const a = [], b = [];
+    S.forEach((p, i) => {
+      const q0 = S[Math.max(0, i - 1)], q1 = S[Math.min(S.length - 1, i + 1)];
+      let dx = q1[0] - q0[0], dy = q1[1] - q0[1];
+      const len = Math.hypot(dx, dy) || 1;
+      dx /= len; dy /= len;
+      const u = L[i] / total;
+      const k = Math.max(0, Math.min(1, taper[0] ? u / taper[0] : 1, taper[1] ? (1 - u) / taper[1] : 1));
+      const h = (w / 2) * (0.12 + 0.88 * Math.pow(k, 0.65));
+      a.push([p[0] - dy * h, p[1] + dx * h]);
+      b.push([p[0] + dy * h, p[1] - dx * h]);
+    });
+    const ring = a.concat(b.reverse());
+    return `<path d="M ${ring.map(xy).join(' L ')} Z" fill="${fill}"${op < 1 ? ` opacity="${n(op)}"` : ''}${extra}/>`;
+  }
+  const blob = (pts, fill, op = 1, extra = '') => `<path d="${smooth(pts, true)}" fill="${fill}"${op < 1 ? ` opacity="${n(op)}"` : ''}${extra}/>`;
+  const off = (pts, dx, dy) => pts.map(([x, y]) => [x + dx, y + dy]);
+  // A little seeded randomness, so hair and stitches are the same every frame.
+  function rnd(seed) {
+    return () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
   }
 
+  // ------------------------------------------------------------ the eyes
+  // An eye: its corners fixed, the lids moving with lid, wide and blink. The near eye's outer corner is
+  // on the left; the far eye, beyond the bridge of the nose, is narrower and its outer corner is on the
+  // right. Iris and pupil follow look; two highlights face the screen.
+  function eye(near, p, id) {
+    const A = near ? [0, 1] : [69, -2], B = near ? [45, 3] : [92, -3];
+    const at = (k, dy = 0) => [lerp(A[0], B[0], k), lerp(A[1], B[1], k) + dy];
+    const open = Math.max(0, Math.min(1.3, 1 - Math.max(p.lid, p.blink) * 1.08 + p.wide * 0.42));
+    const rise = (near ? 14 : 11) * open;
+    const pk = near ? 0.57 : 0.43;
+    const drop = (near ? 6.4 : 4.8) * (0.6 + 0.4 * Math.min(1, open));
+    const lashW = near ? 3.2 : 2.5;
+    const lashTaper = near ? [0.04, 0.6] : [0.6, 0.04];
+    const outer = near ? A : B, dir = near ? -1 : 1;
+    // the crease sits close above the lashes: heavy, hooded lids
+    const lift = 4.5 + 3 * p.wide + 2 * open;
+    const crease = ink([at(0.12, -rise * 0.55 - lift * 0.8), at(pk, -rise - lift), at(0.9, -rise * 0.6 - lift * 0.9)], near ? 1.9 : 1.5, C.skinDeep, [0.35, 0.35], 0.8);
+    const under = ink([at(0.18, drop + 4.5), at(0.5, drop + 6.2), at(0.84, drop + 4)], 2.2, C.skinMid, [0.45, 0.45], 0.55);
+    if (open < 0.12) {
+      const shut = [A, at(0.3, drop * 0.5), at(0.62, drop * 0.55), B];
+      return `${ink(shut, lashW, C.lash, lashTaper)}${ink([at(0.15, drop * 0.2 - 3), at(0.5, drop * 0.3 - 4), at(0.85, drop * 0.2 - 3)], 1.6, C.skinDeep, [0.4, 0.4], 0.7)}
+        ${ink([outer, [outer[0] + dir * 5, outer[1] + 3]], 1.8, C.lash, [0.1, 0.8])}`;
+    }
+    const upper = [A, at(pk * 0.38, -rise * 0.62), at(pk, -rise), at(pk + (1 - pk) * 0.56, -rise * 0.74), B];
+    const lower = [B, at(0.79, drop * 0.72), at(0.47, drop), at(0.16, drop * 0.64), A];
+    const w = B[0] - A[0];
+    const r = near ? 9.3 : 7.1, rx = near ? r : r * 0.78;
+    const ix = (A[0] + B[0]) / 2 + w * 0.03 + p.look[0] * w * 0.19, iy = (A[1] + B[1]) / 2 - 1.6 + p.look[1] * 3.4;
+    const clip = `${id}eye${near ? 'n' : 'f'}`;
+    let tex = '';
+    for (let k = 0; k < 14; k++) {
+      const a = k * (Math.PI * 2 / 14) + 0.2;
+      tex += `<path d="M ${xy([ix + Math.cos(a) * rx * 0.46, iy + Math.sin(a) * r * 0.46])} L ${xy([ix + Math.cos(a) * rx * 0.9, iy + Math.sin(a) * r * 0.9])}" stroke="${k % 2 ? C.irisLight : C.irisDark}" stroke-width="0.7" opacity="0.45"/>`;
+    }
+    // a few lashes flicking out at the outer corner
+    const flick = [0.08].map((k, i) => {
+      const s = near ? at(k, -rise * (0.25 + k * 1.4)) : at(1 - k, -rise * (0.25 + k * 1.4));
+      return ink([s, [s[0] + dir * (4.5 - i * 0.8), s[1] - 3.5 - i * 1.4]], 1.6 - i * 0.2, C.lash, [0.1, 0.85]);
+    }).join('');
+    const inner = near ? B : A;
+    return `
+      <clipPath id="${clip}"><path d="${loop(upper, lower)}"/></clipPath>
+      <path d="${loop(upper, lower)}" fill="url(#${id}sclera)"/>
+      <g clip-path="url(#${clip})">
+        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx)}" ry="${n(r)}" fill="url(#${id}iris)"/>
+        ${tex}
+        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx * 0.97)}" ry="${n(r * 0.97)}" fill="none" stroke="${C.irisDark}" stroke-width="1.4"/>
+        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx * 0.43)}" ry="${n(r * 0.43)}" fill="${C.pupil}"/>
+        ${ink(upper, 10, C.skinOcc, [0, 0], 0.32)}
+        <ellipse cx="${n(ix + rx * 0.34)}" cy="${n(iy - r * 0.38)}" rx="${n(r * 0.3)}" ry="${n(r * 0.24)}" fill="#fff" opacity="0.95"/>
+        <circle cx="${n(ix - rx * 0.4)}" cy="${n(iy + r * 0.36)}" r="${n(r * 0.1)}" fill="#fff" opacity="0.75"/>
+      </g>
+      ${blob([[inner[0] - dir * 0.5, inner[1] - 2.2], [inner[0] - dir * 5.5, inner[1] - 1.2], [inner[0] - dir * 6, inner[1] + 1.6], [inner[0] - dir * 1, inner[1] + 2.4]], C.caruncle, 0.9)}
+      ${ink(lower, 1.4, C.skinDeep, [0.5, 0.3], 0.75)}
+      ${ink(upper, lashW, C.lash, lashTaper)}
+      ${flick}${crease}${under}`;
+  }
+
+  // A brow: a thick head by the nose, thinning to its tail, and short hairs along it.
+  function brow(near, raise) {
+    const up = -raise * 7, frown = Math.max(0, -raise);
+    const T = near ? [-9, -20 + up * 0.8] : [97, -21 + up * 0.8];
+    const H = near ? [50 - frown * 3, -26 + up + frown * 5] : [65 + frown * 3, -27 + up + frown * 5];
+    const M = near ? [20, -28.5 + up - Math.max(0, raise) * 1.5] : [82, -29.5 + up];
+    const pts = near ? [T, M, H] : [H, M, T];
+    let hairs = '';
+    const S = sample(pts, 10);
+    for (let i = 1; i < S.length - 1; i += 1) {
+      const k = i / (S.length - 1);
+      const headness = near ? k : 1 - k;
+      const lat = near ? -1 : 1;
+      const dx = lat * (1 - headness * 0.75), dy = -(0.35 + headness * 0.7);
+      const len = Math.hypot(dx, dy);
+      const [x, y] = S[i];
+      const yo = (i % 3 - 1) * 1.6;
+      hairs += ink([[x - dx / len * 3, y - dy / len * 3 + yo], [x + dx / len * 4.5, y + dy / len * 4.5 + yo]], 1.15, i % 2 ? C.hairDark : C.lineHair, [0.25, 0.6], 0.9);
+    }
+    return `${ink(pts, near ? 8.6 : 7, C.brow, near ? [0.8, 0.06] : [0.06, 0.8])}${hairs}`;
+  }
+
+  // ------------------------------------------------------------ nose, mouth, ear
+  function nose(p, id) {
+    return `
+      ${blob([[80, 41], [92, 42.5], [100, 44], [93, 49], [82, 48]], C.skinShade, 0.4, ` filter="url(#${id}soft)"`)}
+      <path d="${smooth([[97, 2], [104, 13], [111, 23], [112.5, 31], [107, 38.5], [99, 40.5], [95, 30]], true)}" fill="url(#${id}skin)"/>
+      ${blob([[94, 35.5], [99, 36.5], [104, 38.6], [100.5, 40.8], [95, 40]], C.skinOcc)}
+      ${ink([[86.5, 26.5], [82.8, 32.5], [85, 38.8], [92, 40.6]], 2.2, C.line, [0.5, 0.25], 0.95)}
+      ${ink([[112, 27], [111.2, 34.5], [105.5, 39.5], [99, 40.8]], 2.4, C.line, [0.35, 0.35])}
+      ${ink([[78, 3.5], [92, 10.5], [103, 18]], 2.4, C.skinHi, [0.4, 0.4], 0.7)}
+      <ellipse cx="106" cy="25" rx="3.3" ry="2.4" fill="#fff" opacity="0.55"/>`;
+  }
+
+  function mouth(p, id) {
+    const { open, smile, smirk } = p.mouth;
+    const L = [51, 65.5 - smile * 3.2 + Math.max(0, -smile) * 1.4];
+    const R = [95, 61.5 - smile * 3.6 - smirk * 7];
+    const gap = open > 0.04 ? 3 + open * 17 : 0;
+    const line = [L, [62, 65 + smile * 0.6], [76, 64.4 + smile * 1.2 - smirk * 1.5], [87, 63 - smirk * 3.4], R];
+    const top = [R, [89, 58.5 - smirk * 3], [81, 56.4], [76, 58.4], [70, 56.9], [60, 60 - smile * 0.4], L];
+    const low = line.map(([x, y], i) => [x, y + gap * [0, 0.85, 1, 0.82, 0][i]]);
+    const bottom = [R, [87.5, 69.5 + gap * 0.82 - smirk * 2], [76, 73.4 + gap], [62, 71.2 + gap * 0.86], L];
+    const upperLip = `<path d="${loop(line, top)}" fill="${C.lipTop}"/>`;
+    const lowerLip = `<path d="${loop(low, bottom)}" fill="${C.lipLow}"/>`;
+    let inside = '';
+    if (gap) {
+      const hole = loop(line, [...low].reverse());
+      inside = `<clipPath id="${id}mouth"><path d="${hole}"/></clipPath>
+        <path d="${hole}" fill="${C.mouthIn}"/>
+        <g clip-path="url(#${id}mouth)">
+          ${ink(off(line, 0, 2), 7.5, C.teeth, [0.12, 0.12])}
+          ${[64, 70, 76, 82, 88].map((x) => `<path d="M ${x} ${n(lerp(line[1][1], line[3][1], (x - 62) / 25) + 1)} l 0.6 4.5" stroke="#C9C0B6" stroke-width="0.8"/>`).join('')}
+          ${open > 0.3 ? `<ellipse cx="76" cy="${n(64 + gap + 1)}" rx="13" ry="${n(4 + open * 3)}" fill="${C.tongue}"/>` : ''}
+        </g>`;
+    }
+    return `
+      ${ink([[83, 43], [81.5, 49], [81, 55]], 1.5, C.skinShade, [0.35, 0.35], 0.3)}
+      ${ink([[70, 53.5], [78, 52], [86, 53]], 2, C.skinHi, [0.4, 0.4], 0.6)}
+      ${blob([[63, 76 + gap], [76, 78.5 + gap], [88, 75 + gap], [80, 81 + gap], [68, 81 + gap]], C.skinDeep, 0.4, ` filter="url(#${id}soft)"`)}
+      ${inside}${upperLip}${lowerLip}
+      <ellipse cx="74" cy="${n(68.6 + gap)}" rx="7" ry="1.9" fill="${C.lipHi}" opacity="0.35"/>
+      ${ink(line, 2.4, C.lipLine, [0.22, 0.22])}
+      ${gap ? ink(low, 1.6, C.lipLine, [0.3, 0.3], 0.8) : ''}
+      ${ink([[L[0] + 3, L[1] - 0.5], L, [L[0] - 2.5, L[1] + 1.5]], 2, C.lipLine, [0.3, 0.6], 0.8)}
+      ${smirk > 0.15 ? ink([[R[0] - 1, R[1]], [R[0] + 3, R[1] - 2.5], [R[0] + 4.5, R[1] - 6.5]], 1.7, C.skinDeep, [0.2, 0.6], smirk) : ''}
+      ${smile > 0.35 ? ink([[56, 50], [52, 58], [53, 66]], 1.6, C.skinShade, [0.4, 0.4], (smile - 0.35) * 1.5) : ''}`;
+  }
+
+  function ear(id) {
+    const rim = [[-33, -17], [-44, -25], [-57, -22], [-65, -10], [-66.5, 6], [-62, 20], [-55, 31], [-48, 40], [-40, 41.5], [-35, 33]];
+    return `
+      ${blob(rim, C.skinMid)}
+      ${blob([[-38, -14], [-52, -17], [-60, -6], [-59, 10], [-54, 24], [-47, 31], [-40, 29], [-36.5, 16], [-36.5, 0]], C.skinShade, 0.6)}
+      ${ink([[-40, -17], [-53, -18.5], [-61, -6], [-60, 12], [-53, 27]], 2.6, C.skinDeep, [0.2, 0.5], 0.85)}
+      ${ink([[-46.5, -8], [-53.5, 2], [-52.5, 14], [-46, 24]], 2.2, C.skinDeep, [0.3, 0.4], 0.75)}
+      ${ink([[-45, -4], [-51, 4], [-50, 13]], 1.6, C.skinHi, [0.4, 0.4], 0.45)}
+      ${blob([[-43.5, 4], [-39, 7], [-39, 15], [-43.5, 17.5], [-46.5, 11]], C.skinDeep, 0.7)}
+      ${ink([[-36.5, 5], [-33, 10.5], [-35, 16.5]], 3.2, C.skinMid, [0.3, 0.3])}
+      <ellipse cx="-44" cy="35" rx="3.6" ry="2.8" fill="${C.skinHi}" opacity="0.55"/>
+      ${ink(rim.slice(0, 9), 1.9, C.line, [0.15, 0.3])}`;
+  }
+
+  // ------------------------------------------------------------ hair
+  // Short dark-brown hair under the cap: the side above and behind the ear, the sideburn, and the
+  // back falling to the nape in a few flicks. Strands for texture, highlights where the light falls.
+  function sideHair(id) {
+    const r = rnd(7);
+    const mass = [[-126, -26], [-84, -37], [-46, -44], [-27, -47], [-22.5, -31], [-23.5, -12], [-27.5, -8], [-31, -18], [-38, -24.5], [-50, -28.5], [-62, -24.5], [-68.5, -11], [-70.5, 3], [-72, 14], [-80, 20], [-88, 18.5], [-96, 23], [-104, 18], [-112, 16], [-118, 6], [-123, -8]];
+    let strands = '', lights = '';
+    for (let i = 0; i < 18; i++) {
+      const k = i / 17;
+      const x0 = lerp(-120, -32, k) + (r() - 0.5) * 3;
+      const y0 = lerp(-28, -44, k) + 2;
+      const len = lerp(40, 26, k) * (0.85 + r() * 0.3);
+      const x1 = x0 - lerp(16, 6, k) - r() * 4, y1 = y0 + len;
+      strands += ink([[x0, y0], [lerp(x0, x1, 0.45) - 1, lerp(y0, y1, 0.5)], [x1, y1]], 1.5 + r() * 0.7, C.hairDark, [0.15, 0.75], 0.8);
+      if (i % 3 === 1) lights += ink([[x0 + 1, y0 + 4], [x0 - 4, y0 + len * 0.45]], 1.6, C.hairLight, [0.3, 0.6], 0.6);
+    }
+    return `
+      ${blob(mass, C.hair)}
+      ${blob([[-70, 0], [-72, 12], [-82, 17], [-96, 19], [-110, 13], [-118, 2], [-104, 4], [-88, 2]], C.hairDark, 0.45)}
+      ${strands}${lights}
+      ${[0, 1, 2, 3].map((i) => ink([[-28 + i * 1.4, -45], [-27.5 + i * 1.2, -28], [-28 + i * 1.1, -12 - i * 2]], 1.1, C.hairDark, [0.2, 0.5], 0.75)).join('')}
+      ${ink(mass.slice(5, 21), 1.5, C.lineHair, [0.1, 0.1], 0.6)}`;
+  }
+  // The hair on top, when the cap is off or backwards: a textured crop swept towards his face.
+  function fringe() {
+    const r = rnd(3);
+    const edge = [[-114, -44], [-118, -96], [-84, -142], [-20, -162], [40, -156], [84, -126], [100, -86], [96, -60], [88, -66], [80, -56], [70, -66], [58, -58], [48, -70], [34, -62], [22, -76], [6, -70], [-8, -82], [-30, -74], [-60, -62], [-90, -52]];
+    let strands = '';
+    for (let i = 0; i < 16; i++) {
+      const k = i / 15;
+      const x0 = lerp(-100, 50, k) + (r() - 0.5) * 6, y0 = -150 + Math.abs(k - 0.4) * 30;
+      const x1 = x0 + 30 + r() * 12, y1 = y0 + 62 + r() * 16;
+      strands += ink([[x0, y0], [lerp(x0, x1, 0.5) + 6, lerp(y0, y1, 0.5) - 4], [x1, y1]], 2 + r(), C.hairDark, [0.2, 0.7], 0.75);
+    }
+    return `${blob(edge, C.hair)}
+      ${blob([[-110, -60], [-100, -100], [-60, -80], [-20, -78], [-40, -66], [-90, -52]], C.hairDark, 0.4)}
+      ${strands}
+      ${ink([[-70, -128], [-20, -146], [30, -140]], 4, C.hairLight, [0.4, 0.4], 0.55)}
+      ${ink([[-30, -120], [10, -132], [50, -122]], 2.5, C.hairLight, [0.4, 0.4], 0.45)}
+      ${ink(edge, 1.8, C.lineHair, [0.05, 0.05], 0.7)}`;
+  }
+
+  // ------------------------------------------------------------ caps
   function crownMark(fill) {
     const k = window.CROWN;
     if (!k) return '';
     return `<g transform="translate(-100 -88)"><path d="${k.path}" fill="${fill}" fill-rule="evenodd"/>${k.circles.map(([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"/>`).join('')}</g>`;
   }
-
-  // ------------------------------------------------------------ caps
+  // The crown, embroidered in gold thread: a shadow under it, satin-stitch sheen, a darker edge.
+  function embroidery(id) {
+    const k = window.CROWN;
+    if (!k) return '';
+    let satin = '';
+    for (let i = -14; i < 16; i++) satin += `<path d="M ${-120 + i * 16} 120 L ${-20 + i * 16} -120" stroke="${C.goldHi}" stroke-width="5" opacity="0.28"/>`;
+    return `
+      <clipPath id="${id}crownclip"><path d="${k.path}" transform="translate(-100 -88)" fill-rule="evenodd"/>${k.circles.map(([cx, cy, r]) => `<circle cx="${cx - 100}" cy="${cy - 88}" r="${r}"/>`).join('')}</clipPath>
+      <g transform="translate(5 8)" opacity="0.55">${crownMark('#000')}</g>
+      ${crownMark(`url(#${id}goldg)`)}
+      <g clip-path="url(#${id}crownclip)">${satin}</g>
+      <g transform="translate(-100 -88)"><path d="${k.path}" fill="none" stroke="${C.goldLo}" stroke-width="5" fill-rule="evenodd"/></g>`;
+  }
   const CROWN_PATH = 'M -122 -30 C -130 -100, -76 -160, -2 -162 C 62 -162, 102 -120, 106 -64 C 60 -54, -36 -46, -122 -30 Z';
+  const CAP_EDGE = [[-122, -30], [-117, -80], [-92.8, -121.5], [-53, -150.4], [-2, -162], [41.3, -154.6], [74.5, -134], [96.4, -102.9], [106, -64]];
+  function stitchLine(pts, dx = 2.6) {
+    return `<path d="${smooth(off(pts, -dx, 0))}" fill="none" stroke="${C.stitch}" stroke-width="1.1" stroke-dasharray="3 2.6" opacity="0.8"/>
+      <path d="${smooth(off(pts, dx, 0))}" fill="none" stroke="${C.stitch}" stroke-width="1.1" stroke-dasharray="3 2.6" opacity="0.8"/>`;
+  }
   function capFwd(p, id) {
+    const front = [[-2, -162], [36, -136], [56, -100], [66, -58]];
+    const side = [[-2, -162], [-30, -132], [-48, -92], [-56, -42]];
+    const far = [[-2, -162], [50, -146], [84, -114], [99, -78]];
+    const rows = [0, 1, 2, 3, 4, 5].map((i) => {
+      const k = i * 5.2;
+      return `<path d="${smooth([[24 + k * 0.5, -66 - k * 0.6], [80, -80 + k * 0.7], [140, -80.5 + k * 0.75], [188 - k * 1.1, -60 + k * 0.4]])}" fill="none" stroke="${C.stitch}" stroke-width="1.1" stroke-dasharray="3.2 2.4" opacity="${n(0.75 - i * 0.07)}"/>`;
+    }).join('');
     return `
       <path d="${CROWN_PATH}" fill="url(#${id}capg)"/>
-      <path d="M -2 -162 C 34 -142, 58 -104, 68 -60" fill="none" stroke="${C.capDark}" stroke-width="2.6"/>
-      <path d="M -2 -162 C -28 -134, -48 -92, -56 -44" fill="none" stroke="${C.capDark}" stroke-width="2.6"/>
-      <path d="M -2 -162 C 56 -152, 94 -120, 104 -78" fill="none" stroke="${C.capLight}" stroke-width="1.6" opacity="0.45"/>
-      <path d="M -2 -162 C 34 -142, 58 -104, 68 -60" fill="none" stroke="${C.capLight}" stroke-width="1" opacity="0.3" transform="translate(3 0)"/>
-      <circle cx="-34" cy="-118" r="3" fill="${C.capDark}"/><circle cx="44" cy="-130" r="3" fill="${C.capDark}"/>
-      <ellipse cx="-2" cy="-162" rx="9" ry="4.4" fill="${C.capLight}"/>
-      <g transform="translate(46 -100) rotate(9) skewY(-6) scale(0.2)">${crownMark(C.gold)}</g>
-      <path d="M -122 -30 C -36 -46, 60 -54, 106 -64 L 106 -56 C 60 -46, -36 -38, -120 -22 Z" fill="${C.capDark}"/>
-      <path d="M 106 -64 C 104 -100, 90 -126, 70 -144" fill="none" stroke="${p.light.tint}" stroke-width="3" opacity="${n(0.3 * p.light.rim)}" stroke-linecap="round"/>
-      <!-- the bill: top, stitching, underside, and the light along its edge -->
-      <path d="M 16 -64 C 70 -84, 150 -86, 200 -58 C 204 -54, 202 -50, 196 -48 C 152 -48, 106 -45, 96 -52 C 70 -57, 42 -59, 16 -64 Z" fill="url(#${id}billg)"/>
-      <path d="M 52 -74 C 104 -86, 158 -82, 192 -60" fill="none" stroke="${C.capLight}" stroke-width="1.4" stroke-dasharray="4 4" opacity="0.5"/>
-      <path d="M 70 -70 C 112 -78, 156 -75, 184 -58" fill="none" stroke="${C.capLight}" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.35"/>
-      <path d="M 96 -52 C 106 -45, 152 -48, 196 -48 C 186 -40, 150 -34, 120 -36 C 106 -38, 98 -44, 96 -52 Z" fill="${C.capDark}"/>
-      <path d="M 16 -64 C 70 -84, 150 -86, 200 -58" fill="none" stroke="${p.light.tint}" stroke-width="2.4" opacity="${n(0.45 * p.light.rim)}" stroke-linecap="round"/>`;
+      <g clip-path="url(#${id}capclip)">
+        ${blob([[-130, -40], [-60, -150], [-20, -150], [-44, -90], [-56, -40]], C.capDark, 0.6, ` filter="url(#${id}soft)"`)}
+        ${blob([[40, -130], [80, -128], [104, -80], [70, -60], [56, -96]], C.capHi, 0.55, ` filter="url(#${id}soft)"`)}
+        ${blob([[-122, -30], [106, -64], [106, -54], [-120, -20]], C.capDark, 0.8)}
+      </g>
+      ${ink(front, 2.2, C.capDark, [0.1, 0.1])}${stitchLine(front)}
+      ${ink(side, 2.2, C.capDark, [0.1, 0.1])}${stitchLine(side)}
+      ${ink(far, 1.8, C.capDark, [0.1, 0.3], 0.8)}
+      ${[[-30, -120], [52, -128], [-80, -96]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="3.6" ry="3" fill="${C.eyelet}"/><ellipse cx="${x}" cy="${y}" rx="1.6" ry="1.3" fill="#060607"/>`).join('')}
+      <ellipse cx="-2" cy="-161" rx="10" ry="5" fill="${C.cap}"/><ellipse cx="-4" cy="-163" rx="5" ry="2" fill="${C.capHi}"/>
+      <g transform="translate(47 -101) rotate(9) skewY(-6) scale(0.2)">${embroidery(id)}</g>
+      <path d="M -122 -30 C -36 -46, 60 -54, 106 -64 L 106 -55 C 60 -45, -36 -37, -120 -21 Z" fill="${C.capDark}"/>
+      ${ink([[-120, -27], [-36, -42.5], [60, -51], [105, -60]], 1.2, C.capHi, [0.2, 0.2], 0.5)}
+      ${ink([[103, -66], [94, -102], [73, -131], [44, -150]], 3, p.light.tint, [0.2, 0.5], 0.32 * p.light.rim)}
+      <!-- the bill: top, rows of stitching, the edge, the dark underside -->
+      <path d="M 16 -64 C 70 -84, 150 -87, 201 -59 C 206 -55, 204 -50, 197 -48 C 152 -48, 106 -45, 96 -52 C 70 -57, 42 -59, 16 -64 Z" fill="url(#${id}billg)"/>
+      ${rows}
+      <path d="M 96 -52 C 106 -45, 152 -48, 197 -48 C 187 -40, 150 -34, 120 -36 C 106 -38, 98 -44, 96 -52 Z" fill="${C.capDark}"/>
+      ${ink([[104, -82.5], [150, -86.5], [201, -59]], 2.6, p.light.tint, [0.3, 0.1], 0.5 * p.light.rim)}
+      ${ink([[201, -58], [197, -48.5], [150, -47.5], [100, -51]], 1.8, C.capHi, [0.1, 0.4], 0.6)}
+      ${ink(CAP_EDGE, 2.2, '#050506', [0.05, 0.05], 0.9)}`;
   }
 
   function capBack(p, id) {
     return `
       <path d="M -112 -40 C -138 -52, -170 -52, -186 -38 C -176 -30, -150 -26, -120 -28 Z" fill="url(#${id}billg)"/>
-      <path d="M -112 -40 C -138 -52, -170 -52, -186 -38" fill="none" stroke="${C.capLight}" stroke-width="2" opacity="0.5"/>
+      ${ink([[-114, -40], [-140, -49], [-168, -48], [-185, -38]], 2, C.capHi, [0.1, 0.3], 0.5)}
       <path d="${CROWN_PATH}" fill="url(#${id}capg)"/>
-      <path d="M -2 -162 C 34 -142, 58 -104, 68 -60" fill="none" stroke="${C.capDark}" stroke-width="2.6"/>
-      <path d="M -2 -162 C -28 -134, -48 -92, -56 -44" fill="none" stroke="${C.capDark}" stroke-width="2.6"/>
-      <ellipse cx="-2" cy="-162" rx="9" ry="4.4" fill="${C.capLight}"/>
+      ${ink([[-2, -162], [36, -136], [56, -100], [66, -58]], 2.2, C.capDark, [0.1, 0.1])}
+      ${ink([[-2, -162], [-30, -132], [-48, -92], [-56, -42]], 2.2, C.capDark, [0.1, 0.1])}
+      <ellipse cx="-2" cy="-161" rx="10" ry="5" fill="${C.cap}"/>
       <path d="M 44 -96 C 60 -96, 76 -86, 86 -70 L 74 -64 C 66 -76, 56 -82, 40 -84 Z" fill="${C.hair}"/>
       <path d="M 34 -98 C 56 -98, 82 -86, 98 -68" fill="none" stroke="${C.capDark}" stroke-width="7" stroke-linecap="round"/>
       <rect x="52" y="-88" width="10" height="6" rx="1.5" fill="#6E6A64" transform="rotate(28 57 -85)"/>
-      <path d="M -122 -30 C -36 -46, 60 -54, 106 -64 L 106 -56 C 60 -46, -36 -38, -120 -22 Z" fill="${C.capDark}"/>`;
+      <path d="M -122 -30 C -36 -46, 60 -54, 106 -64 L 106 -56 C 60 -46, -36 -38, -120 -22 Z" fill="${C.capDark}"/>
+      ${ink(CAP_EDGE, 2.2, '#050506', [0.05, 0.05], 0.9)}`;
   }
 
-  function shades() {
+  // Sunglasses: thin black frames, dark lenses with the screen's light caught in them.
+  function shades(p) {
+    const lensL = [[-6, -19], [20, -25], [48, -22], [52, -14], [46, 4], [28, 10], [6, 8], [-5, -4]];
+    const lensR = [[62, -21], [80, -26], [97, -21], [98, -10], [93, 3], [79, 6], [65, 2], [61, -10]];
+    const glint = (x, y, s) => `<path d="M ${x} ${y} l ${n(14 * s)} ${n(-4 * s)} l ${n(3 * s)} ${n(12 * s)} l ${n(-14 * s)} ${n(4 * s)} Z" fill="${p.light.tint}" opacity="0.35"/>`;
     return `
-      <path d="M -6 -18 C -4 -24, 44 -26, 52 -18 C 54 -6, 48 8, 30 10 C 10 11, -4 4, -6 -18 Z" fill="url(#lensg)"/>
-      <path d="M 62 -20 C 66 -26, 92 -26, 98 -18 C 99 -8, 94 4, 80 5 C 66 6, 60 -4, 62 -20 Z" fill="url(#lensg)"/>
-      <path d="M 52 -18 C 55 -21, 59 -21, 62 -19" fill="none" stroke="${C.lens}" stroke-width="4"/>
-      <path d="M -6 -16 L -44 -12" fill="none" stroke="${C.lens}" stroke-width="5" stroke-linecap="round"/>
-      <path d="M 4 -14 C 14 -20, 34 -20, 44 -14" fill="none" stroke="#fff" stroke-width="2.6" opacity="0.3" stroke-linecap="round"/>
-      <path d="M 68 -16 C 74 -20, 86 -20, 92 -15" fill="none" stroke="#fff" stroke-width="2.2" opacity="0.24" stroke-linecap="round"/>`;
+      ${blob(lensL, 'url(#lensg)')}${blob(lensR, 'url(#lensg)')}
+      ${glint(18, -12, 1)}${glint(76, -14, 0.75)}
+      ${ink([[2, -14], [20, -19], [40, -15]], 2.6, '#fff', [0.4, 0.4], 0.3)}
+      ${ink([...lensL, lensL[0]], 2.4, C.lens, [0, 0])}${ink([...lensR, lensR[0]], 2, C.lens, [0, 0])}
+      ${ink([[50, -19], [55, -22], [61, -19]], 3, C.lens, [0.1, 0.1])}
+      ${ink([[-6, -16], [-30, -14], [-46, -11]], 3.6, C.lens, [0.05, 0.3])}`;
   }
 
   // ------------------------------------------------------------ the head, three-quarter view
-  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 100 -34, 101 -24 C 101 -16, 97 -10, 97 -4 C 98 6, 103 14, 103 24 C 103 38, 98 50, 95 60 C 92 74, 90 86, 85 97 C 79 107, 70 112, 58 112 C 32 110, 4 100, -18 86 C -30 78, -38 68, -44 56 C -60 46, -84 28, -96 0 Z';
+  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 100 -34, 101 -24 C 101 -16, 97 -10, 97 -4 C 98 6, 103 14, 103 24 C 103 38, 98 50, 95 60 C 92 74, 91 88, 88 98 C 85 106, 78 112, 66 114 C 48 116, 22 110, -6 98 C -22 91, -36 82, -44 70 C -54 56, -84 32, -96 0 Z';
   function head34(p, id) {
     const capped = p.cap === 'fwd';
+    const tint = p.light.tint, rim = p.light.rim;
     return `
-      <!-- the face, with soft form shading -->
-      <path id="${id}face" d="${FACE}" fill="url(#${id}skin)"/>
+      <path d="${FACE}" fill="url(#${id}skin)"/>
       <g clip-path="url(#${id}faceclip)">
-        <path d="M -104 -40 C -76 -44, -56 -26, -46 -2 C -34 26, -18 52, 0 74 C 18 94, 40 108, 70 116 L -40 130 L -120 40 Z" fill="${C.skinShade}" opacity="0.5" filter="url(#${id}soft)"/>
-        <path d="M 30 22 C 48 34, 72 36, 96 28 C 92 40, 84 46, 72 48 C 56 46, 40 38, 30 22 Z" fill="${C.skinShade}" opacity="0.3" filter="url(#${id}soft)"/>
-        <ellipse cx="54" cy="30" rx="20" ry="10" fill="${C.blush}" opacity="0.16" filter="url(#${id}soft)"/>
-        <path d="M 60 100 C 70 102, 78 98, 82 92" fill="none" stroke="${C.skinLight}" stroke-width="5" opacity="0.5" stroke-linecap="round" filter="url(#${id}soft)"/>
+        ${ink([[80, -56], [88, -24], [90, 8], [92, 38], [88, 68], [82, 96]], 22, C.skinHi, [0.15, 0.15], 0.4, ` filter="url(#${id}soft2)"`)}
+        ${ink([[96, -40], [101, 0], [102, 40], [94, 80]], 6, tint, [0.2, 0.2], 0.3 * rim, ` filter="url(#${id}soft)"`)}
+        ${blob([[-112, -70], [-10, -54], [-6, -22], [-11, 8], [-5, 36], [10, 60], [28, 84], [48, 104], [64, 120], [-40, 134], [-122, 60]], C.skinShade, 0.62, ` filter="url(#${id}soft)"`)}
+        ${ink([[-6, -34], [-9, 6], [-3, 38], [12, 62], [30, 86], [50, 106]], 7, C.skinDeep, [0.2, 0.2], 0.22, ` filter="url(#${id}soft)"`)}
+        ${ink([[-30, 46], [-4, 58], [24, 72]], 10, C.skinShade, [0.3, 0.3], 0.3, ` filter="url(#${id}soft2)"`)}
+        ${ink([[-48, 66], [-14, 94], [30, 110], [68, 116]], 12, C.skinDeep, [0.2, 0.2], 0.3, ` filter="url(#${id}soft)"`)}
+        ${blob([[56, -22], [64, -6], [74, 9], [84, 24], [88, 33], [80, 34], [69, 20], [57, 2], [50, -12]], C.skinShade, 0.55, ` filter="url(#${id}soft)"`)}
+        ${ink([[84, 41], [68, 50], [57, 60]], 2.4, C.skinShade, [0.3, 0.5], 0.35, ` filter="url(#${id}soft)"`)}
+        <ellipse cx="30" cy="-9" rx="27" ry="10" fill="${C.skinMid}" opacity="0.55" filter="url(#${id}soft)"/>
+        <ellipse cx="84" cy="-9" rx="11" ry="7" fill="${C.skinMid}" opacity="0.5" filter="url(#${id}soft)"/>
+        <ellipse cx="22" cy="30" rx="19" ry="9" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
+        <ellipse cx="34" cy="42" rx="15" ry="7.5" fill="${C.blush}" opacity="0.07" filter="url(#${id}soft)"/>
+        <ellipse cx="80" cy="101" rx="9" ry="5" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
+        ${ink([[93, -60], [101, -24], [97, -4], [103, 24], [95, 60], [88, 98]], 8, tint, [0.2, 0.2], 0.45 * rim, ` filter="url(#${id}soft)"`)}
       </g>
-      <path d="M 93 -60 C 96 -44, 100 -34, 101 -24 C 101 -16, 97 -10, 97 -4 C 98 6, 103 14, 103 24 C 103 38, 98 50, 95 60 C 92 74, 90 86, 85 97" fill="none" stroke="${p.light.tint}" stroke-width="3.4" opacity="${n(0.55 * p.light.rim)}" stroke-linecap="round"/>
-      <!-- short hair on the side of the head, above and behind the ear, flicking out at the nape -->
-      <path d="M -124 -26 C -66 -40, -40 -44, -24 -46 C -26 -34, -28 -24, -30 -16 C -40 -26, -56 -28, -66 -18 C -74 -6, -72 14, -66 30 C -72 36, -78 40, -86 46 C -84 38, -84 32, -88 28 C -94 36, -100 40, -108 42 C -104 34, -104 26, -106 20 C -114 8, -122 -8, -124 -26 Z" fill="${C.hair}"/>
-      <path d="M -100 -14 C -102 4, -98 20, -92 30" fill="none" stroke="${C.hairLight}" stroke-width="2.2" opacity="0.55" stroke-linecap="round"/>
-      <path d="M -84 -18 C -86 0, -82 16, -78 26" fill="none" stroke="${C.hairDark}" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
-      <!-- the ear, on top of the hair -->
-      <path d="M -34 -16 C -52 -26, -70 -12, -66 8 C -63 24, -55 36, -40 38 C -32 28, -30 -4, -34 -16 Z" fill="${C.skinMid}"/>
-      <path d="M -43 -7 C -55 -10, -60 2, -57 14 C -55 22, -51 27, -45 29" fill="none" stroke="${C.skinShade}" stroke-width="3" stroke-linecap="round"/>
-      <path d="M -40 6 C -46 6, -48 12, -46 16" fill="none" stroke="${C.skinDeep}" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
-      <path d="M -34 -16 C -30 -4, -31 24, -38 36" fill="none" stroke="${C.skinShade}" stroke-width="2" opacity="0.5"/>
-      <!-- eyes and brows -->
-      ${eye(24, -2, 40, true, p, id)}
-      ${eye(79, -4, 23, false, p, id)}
-      ${brow(-2, -25, 48, -27, p.brow[0], 8.5)}
-      ${brow(64, -28, 95, -24, p.brow[1], 7)}
-      <!-- nose -->
-      <path d="M 86 -8 C 92 6, 100 17, 105 25 C 109 31, 107 38, 99 40 C 95 41, 92 40, 89 38 L 85 30 Z" fill="url(#${id}skin)"/>
-      <path d="M 85 -6 C 87 8, 88 22, 87 33 C 90 37, 94 39, 98 39 C 93 32, 91 18, 89 4 Z" fill="${C.skinShade}" opacity="0.45" filter="url(#${id}soft)"/>
-      <path d="M 92 37 C 95 35, 98 35, 101 37" fill="none" stroke="${C.skinDeep}" stroke-width="2.4" stroke-linecap="round" opacity="0.8"/>
-      <path d="M 105 25 C 109 30, 108 36, 102 39" fill="none" stroke="${p.light.tint}" stroke-width="2.2" opacity="${n(0.55 * p.light.rim)}" stroke-linecap="round"/>
-      ${mouth(p)}
-      <!-- sideburn; fringe when the cap is off or backwards -->
-      <path d="M -26 -46 C -22 -32, -22 -18, -24 -4 L -17 -10 C -15 -24, -14 -36, -12 -48 Z" fill="${C.hair}"/>
-      ${capped ? '' : `
-        <path d="M -16 -84 C 8 -98, 46 -96, 70 -84 C 80 -78, 88 -70, 94 -60 C 80 -64, 70 -66, 62 -62 C 58 -72, 46 -76, 34 -72 C 26 -80, 10 -80, -6 -74 Z" fill="${C.hair}"/>
-        <path d="M 22 -92 C 42 -90, 58 -82, 68 -70" fill="none" stroke="${C.hairLight}" stroke-width="2.4" opacity="0.7" stroke-linecap="round"/>`}
-      <!-- the bill's shadow over the forehead and eyes -->
-      ${capped ? `<rect x="-110" y="-70" width="220" height="80" fill="url(#${id}capshadow)" clip-path="url(#${id}faceclip)"/>` : ''}
-      ${p.cap === 'fwd' ? capFwd(p, id) : p.cap === 'back' ? capBack(p, id) : `<path d="M -112 -46 C -120 -110, -60 -156, 2 -158 C 62 -160, 98 -118, 96 -66 C 70 -76, 40 -86, 10 -82 C -30 -78, -70 -62, -112 -46 Z" fill="${C.hair}"/>
-        <path d="M -80 -100 C -50 -130, 10 -146, 60 -126" fill="none" stroke="${C.hairLight}" stroke-width="3" opacity="0.5" stroke-linecap="round"/>`}
-      ${p.shades > 0.01 ? `<g opacity="${n(Math.min(1, p.shades * 1.5))}" transform="translate(0 ${n((1 - p.shades) * -46)})">${shades()}</g>` : ''}`;
+      ${sideHair(id)}
+      ${ear(id)}
+      ${eye(true, p, id)}${eye(false, p, id)}
+      ${brow(true, p.brow[0])}${brow(false, p.brow[1])}
+      ${nose(p, id)}
+      ${mouth(p, id)}
+      ${ink([[-50, 58], [-42, 72], [-26, 86], [-6, 98], [20, 108], [44, 114.5], [66, 114], [80, 109], [88, 98]], 3, C.line, [0.12, 0.08])}
+      ${ink([[88, 98], [91.5, 84], [95, 66], [99, 48], [103, 30], [103, 18], [99, 6], [97, -4], [100, -20], [100, -34]], 2, C.line, [0.05, 0.45])}
+      ${capped ? `<path d="M -40 -50 C 0 -56, 60 -62, 108 -66 L 110 -34 C 80 -24, 40 -20, 0 -24 C -20 -28, -34 -36, -40 -50 Z" fill="url(#${id}capshadow)" clip-path="url(#${id}faceclip)" filter="url(#${id}soft)"/>` : ''}
+      ${p.cap === 'fwd' ? capFwd(p, id) : p.cap === 'back' ? capBack(p, id) : fringe()}
+      ${p.shades > 0.01 ? `<g opacity="${n(Math.min(1, p.shades * 1.5))}" transform="translate(0 ${n((1 - p.shades) * -46)})">${shades(p)}</g>` : ''}`;
   }
 
   // ------------------------------------------------------------ the body
-  const TOP = 'M -58 156 C -100 158, -160 172, -186 206 C -206 236, -210 300, -202 400 L -188 580 L 128 580 C 140 440, 152 320, 150 254 C 146 210, 112 172, 56 158 C 30 176, -32 176, -58 156 Z';
+  const NECK = 'M -52 50 C -54 92, -58 128, -68 168 L 62 168 C 54 142, 48 120, 50 100 C 28 110, -16 92, -52 50 Z';
+  const TOP = 'M -64 156 C -104 158, -156 168, -182 192 C -202 212, -210 270, -204 360 L -192 580 L 132 580 C 142 452, 154 336, 154 264 C 152 214, 118 176, 62 158 C 34 180, -36 180, -64 156 Z';
+  const TOP_EDGE_NEAR = [[-64, 156], [-104, 158], [-150, 166], [-182, 192], [-204, 236], [-208, 300], [-204, 360], [-192, 580]];
+  const TOP_EDGE_FAR = [[62, 158], [116, 176], [148, 214], [154, 264], [150, 340], [142, 452], [132, 580]];
   function torso34(p, id) {
+    const tint = p.light.tint, rim = p.light.rim;
+    let ribs = '';
+    for (let i = 0; i <= 24; i++) {
+      const k = i / 24, x = lerp(-62, 60, k);
+      const y0 = 157 + Math.sin(k * Math.PI) * 21 - k * 1.5;
+      ribs += `<path d="M ${n(x)} ${n(y0)} L ${n(x + (k - 0.5) * 3)} ${n(y0 + 10)}" stroke="${C.topHi}" stroke-width="0.9" opacity="0.4"/>`;
+    }
     return `
-      <!-- neck, in the jaw's shadow at the top -->
-      <path d="M -46 54 C -48 90, -50 126, -56 162 L 52 162 C 46 138, 42 118, 44 100 C 24 108, -14 92, -46 54 Z" fill="url(#${id}neck)"/>
-      <path d="M -46 54 C -40 70, -28 84, -10 94" fill="none" stroke="${C.skinDeep}" stroke-width="5" opacity="0.35" filter="url(#${id}soft)"/>
-      <!-- the crewneck -->
+      <!-- the neck: the jaw's shadow across it, the muscle down its side, the throat -->
+      <path d="${NECK}" fill="url(#${id}neck)"/>
+      ${blob([[-52, 50], [-12, 88], [50, 102], [52, 120], [12, 118], [-44, 98]], C.skinDeep, 0.55, ` filter="url(#${id}soft)"`)}
+      ${ink([[-44, 68], [-24, 112], [2, 156]], 4, C.skinShade, [0.3, 0.3], 0.45)}
+      <ellipse cx="42" cy="124" rx="4.5" ry="7" fill="${C.skinHi}" opacity="0.35"/>
+      ${ink([[37, 133], [43, 135.5], [48, 131]], 1.6, C.skinShade, [0.3, 0.3], 0.6)}
+      ${ink([[50, 102], [46, 124], [50, 148], [58, 166]], 1.8, C.line, [0.2, 0.2], 0.8)}
+      ${ink([[-52, 56], [-56, 112], [-66, 166]], 2.2, C.line, [0.1, 0.1], 0.8)}
+      <!-- the crewneck: shade, folds, seams, the ribbed collar -->
       <path d="${TOP}" fill="url(#${id}top)"/>
-      <path d="M -58 156 C -30 178, 30 178, 56 158" fill="none" stroke="${C.topDark}" stroke-width="13" stroke-linecap="round"/>
-      <path d="M -58 154 C -30 174, 30 174, 56 156" fill="none" stroke="${C.topLight}" stroke-width="1.6" opacity="0.5"/>
-      <path d="M 56 158 C 112 172, 148 210, 152 254 C 156 320, 150 440, 146 560" fill="none" stroke="${p.light.tint}" stroke-width="4.5" opacity="${n(0.4 * p.light.rim)}"/>
-      <path d="M -140 300 C -124 360, -124 440, -132 540" fill="none" stroke="${C.topDark}" stroke-width="6" opacity="0.8" stroke-linecap="round"/>
-      <path d="M 40 260 C 70 300, 84 360, 86 430" fill="none" stroke="${C.topDark}" stroke-width="4" opacity="0.6" stroke-linecap="round"/>
-      ${pearls()}`;
+      <g clip-path="url(#${id}topclip)">
+        ${blob([[-214, 196], [-152, 186], [-120, 300], [-128, 600], [-224, 600]], C.topDark, 0.6, ` filter="url(#${id}soft2)"`)}
+        ${blob([[40, 200], [122, 190], [162, 262], [154, 600], [76, 600], [62, 330]], C.topHi, 0.5, ` filter="url(#${id}soft2)"`)}
+        ${ink([[-60, 172], [0, 194], [58, 174]], 9, C.topDark, [0.2, 0.2], 0.55, ` filter="url(#${id}soft)"`)}
+        ${ink([[-40, 266], [-4, 306], [26, 368]], 3.6, C.topDark, [0.4, 0.4], 0.6)}
+        ${ink([[-30, 270], [4, 314]], 2, C.topHi, [0.4, 0.4], 0.45)}
+        ${ink([[112, 300], [98, 360], [102, 432]], 3.2, C.topDark, [0.4, 0.4], 0.7)}
+        ${ink([[118, 306], [106, 362]], 1.8, C.topHi, [0.4, 0.4], 0.4)}
+        ${ink([[-60, 470], [-20, 500], [30, 520]], 3, C.topDark, [0.4, 0.4], 0.5)}
+        ${ink([[-100, 420], [-70, 446], [-40, 452]], 2.6, C.topDark, [0.4, 0.4], 0.45)}
+      </g>
+      ${ink([[-60, 160], [-110, 170], [-162, 190]], 1.8, C.lineCloth, [0.1, 0.3], 0.9)}
+      <path d="${smooth([[-60, 164], [-110, 174], [-160, 194]])}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>
+      ${ink([[-162, 192], [-176, 250], [-170, 320], [-156, 364]], 1.6, C.lineCloth, [0.2, 0.3], 0.8)}
+      <path d="M -64 156 C -34 180, 34 180, 62 158 L 60 169 C 32 191, -34 191, -62 167 Z" fill="${C.topDark}"/>
+      ${ribs}
+      ${ink([[-64, 155], [-34, 178], [0, 181], [34, 177], [62, 157]], 1.6, C.lineCloth, [0.1, 0.1], 0.9)}
+      ${ink([[-62, 167], [-34, 189], [0, 192], [32, 189], [60, 169]], 1.2, C.lineCloth, [0.1, 0.1], 0.6)}
+      ${ink(TOP_EDGE_FAR, 4.5, tint, [0.1, 0.2], 0.42 * rim)}
+      ${ink(TOP_EDGE_NEAR, 2.4, C.lineCloth, [0.05, 0.05], 0.9)}
+      ${ink(TOP_EDGE_FAR, 2, C.lineCloth, [0.05, 0.05], 0.8)}
+      ${pearls(id)}`;
   }
 
-  // The pearl chain, worn over the top: hangs round the front of the neck.
-  function pearls() {
-    const out = [];
-    const N = 24;
+  // The pearl chain, worn over the top round the front of the neck, its shadow on the collar.
+  function pearls(id) {
+    const N = 24, pts = [];
     for (let i = 0; i <= N; i++) {
       const k = i / N;
-      const x = lerp(-56, 56, k);
-      const y = 168 + Math.sin(k * Math.PI) * 30 - k * 4;
-      out.push(`<circle cx="${n(x)}" cy="${n(y)}" r="5" fill="${C.pearl}"/><circle cx="${n(x + 1.5)}" cy="${n(y + 1.6)}" r="3" fill="${C.pearlShade}" opacity="0.5"/><circle cx="${n(x - 1.4)}" cy="${n(y - 1.6)}" r="1.4" fill="#fff"/>`);
+      pts.push([lerp(-58, 58, k), 170 + Math.sin(k * Math.PI) * 30 - k * 4]);
     }
-    return out.join('');
+    return `${ink(off(pts, 1, 4), 7, '#000', [0.1, 0.1], 0.35, ` filter="url(#${id}soft)"`)}
+      ${pts.map(([x, y]) => `<circle cx="${n(x)}" cy="${n(y)}" r="5.3" fill="url(#${id}pearl)"/><circle cx="${n(x + 1.6)}" cy="${n(y - 1.8)}" r="1.3" fill="#fff"/>`).join('')}`;
   }
 
-  // Arms: the far arm is drawn behind the body, the near arm over it.
+  // Arms: the far arm is drawn behind the body, the near arm over it. Sleeves have folds at the
+  // elbow and ribbed cuffs.
   function arms34(p, id, layer) {
     const sleeve = `fill="url(#${id}top)"`;
+    const cuff = (pts) => `${ink(pts, 11, C.topDark, [0.1, 0.1], 0.95)}${ink(pts, 11, C.topHi, [0.1, 0.1], 0.18)}`;
     if (p.arms === 'fold') {
       if (layer === 'back') return '';
       return `
         <path d="M -192 236 C -214 300, -206 372, -160 394 C -96 418, 10 412, 108 388 C 136 380, 140 352, 120 342 C 60 354, -40 362, -122 350 C -150 340, -160 304, -150 254 Z" ${sleeve}/>
+        ${ink([[-188, 296], [-174, 348], [-146, 374]], 3.4, C.topDark, [0.3, 0.3], 0.85)}
+        ${ink([[-196, 330], [-186, 366]], 2.4, C.topDark, [0.3, 0.3], 0.7)}
+        ${ink([[-110, 362], [-40, 366], [20, 360]], 2.8, C.topDark, [0.3, 0.3], 0.6)}
+        ${ink([[-100, 352], [-30, 356]], 2, C.topHi, [0.3, 0.3], 0.5)}
         <path d="M 150 270 C 160 322, 152 370, 122 388 C 60 404, -40 410, -98 392 C -70 378, 40 370, 104 354 C 124 338, 132 306, 132 278 Z" fill="${C.top}"/>
-        <path d="M -98 392 C -40 410, 60 404, 122 388" fill="none" stroke="${C.topDark}" stroke-width="5"/>
-        ${handShape(-112, 364, -10, 'tuck')}
-        ${handShape(116, 344, 160, 'grip')}`;
+        ${ink([[-60, 392], [10, 398], [80, 388]], 2.6, C.topDark, [0.3, 0.3], 0.7)}
+        ${ink([[-98, 392], [-40, 410], [60, 404], [122, 388]], 2.4, C.lineCloth, [0.1, 0.1], 0.9)}
+        ${ink([[-192, 236], [-212, 300], [-206, 372], [-160, 394]], 2.4, C.lineCloth, [0.05, 0.1], 0.9)}
+        ${cuff([[-128, 350], [-122, 366]])}${cuff([[104, 354], [112, 340]])}
+        ${handShape(-112, 364, -10, 'tuck', id)}
+        ${handShape(116, 344, 160, 'grip', id)}`;
     }
     if (p.arms === 'desk') {
       const hx = 196 + p.hand.x, hy = 420 + p.hand.y;
-      if (layer === 'back') return `<path d="M 118 246 C 150 290, 172 352, 188 402 L 242 392 C 218 340, 192 290, 160 244 Z" fill="${C.topDark}"/>${handShape(226, 394, 6, 'keys')}`;
+      if (layer === 'back') return `<path d="M 118 246 C 150 290, 172 352, 188 402 L 242 392 C 218 340, 192 290, 160 244 Z" fill="${C.topDark}"/>${handShape(226, 394, 6, 'keys', id)}`;
       return `
         <path d="M -186 232 C -212 300, -206 380, -162 420 C -102 454, 40 452, ${n(hx - 40)} ${n(hy + 6)} L ${n(hx - 36)} ${n(hy - 44)} C 40 398, -80 400, -126 384 C -150 366, -156 316, -148 254 Z" ${sleeve}/>
-        <path d="M -126 384 C -80 400, 40 398, ${n(hx - 36)} ${n(hy - 44)}" fill="none" stroke="${C.topLight}" stroke-width="2.2" opacity="0.45"/>
-        ${handShape(hx, hy - 16, 0, p.hand.click > 0.5 ? 'mouseDown' : 'mouse')}`;
+        ${ink([[-182, 330], [-170, 382], [-142, 414]], 3.2, C.topDark, [0.3, 0.3], 0.85)}
+        ${ink([[-196, 350], [-186, 392]], 2.4, C.topDark, [0.3, 0.3], 0.7)}
+        ${ink([[-110, 406], [-40, 414], [40, 416]], 2.4, C.topHi, [0.3, 0.3], 0.5)}
+        ${ink([[-60, 438], [0, 444], [60, 438]], 2.6, C.topDark, [0.3, 0.3], 0.6)}
+        ${ink([[-186, 232], [-212, 300], [-206, 380], [-162, 420], [-102, 454], [40, 452], [hx - 40, hy + 6]], 2.4, C.lineCloth, [0.05, 0.05], 0.9)}
+        ${cuff([[hx - 42, hy + 2], [hx - 38, hy - 40]])}
+        ${handShape(hx, hy - 16, 0, p.hand.click > 0.5 ? 'mouseDown' : 'mouse', id)}`;
     }
     if (p.arms === 'phone') {
       if (layer === 'back') return '';
       return `
         <path d="M -186 232 C -212 300, -208 372, -168 398 C -118 424, -40 424, 30 392 L 22 346 C -40 368, -100 368, -130 354 C -150 334, -156 300, -148 254 Z" ${sleeve}/>
-        ${handShape(40, 370, -24, 'phone')}`;
+        ${ink([[-182, 320], [-170, 370], [-146, 392]], 3.2, C.topDark, [0.3, 0.3], 0.8)}
+        ${ink([[-186, 232], [-212, 300], [-208, 372], [-168, 398], [-118, 424], [-40, 424], [30, 392]], 2.4, C.lineCloth, [0.05, 0.05], 0.9)}
+        ${cuff([[26, 394], [20, 348]])}
+        ${handShape(40, 370, -24, 'phone', id)}`;
     }
     if (layer === 'back') return '';
-    return `<path d="M -192 236 C -214 310, -218 420, -210 540 L -160 540 C -156 440, -150 350, -146 264 Z" ${sleeve}/>`;
+    // hanging at his side: the elbow, the forearm a little forward, the hand relaxed
+    const outer = [[-180, 196], [-202, 216], [-215, 270], [-217, 350], [-209, 430], [-197, 500], [-188, 526]];
+    const inner = [[-146, 526], [-150, 500], [-158, 432], [-160, 352], [-156, 282], [-146, 238]];
+    return `
+      ${ink(off(inner, 4, 0), 14, '#000', [0.1, 0.1], 0.35, ` filter="url(#${id}soft)"`)}
+      <path d="${loop(outer, inner)}" ${sleeve}/>
+      ${ink([[-210, 352], [-190, 372], [-166, 366]], 3, C.topDark, [0.3, 0.3], 0.8)}
+      ${ink([[-206, 382], [-186, 396], [-164, 392]], 2.4, C.topDark, [0.3, 0.3], 0.6)}
+      ${ink([[-170, 230], [-180, 300], [-182, 340]], 2.6, C.topHi, [0.3, 0.3], 0.45)}
+      ${ink(outer, 2.4, C.lineCloth, [0.05, 0.05], 0.9)}${ink(inner, 2, C.lineCloth, [0.05, 0.05], 0.85)}
+      ${cuff([[-190, 512], [-148, 512]])}
+      ${handShape(-170, 546, 0, 'hang', id)}`;
   }
 
-  // Hands: simple, and five-fingered wherever fingers show.
-  function handShape(x, y, rot, kind) {
-    const skin = `fill="${C.skin}"`;
-    const line = `fill="none" stroke="${C.skinShade}" stroke-width="2.2" stroke-linecap="round"`;
+  // Hands: five fingers wherever fingers show, knuckles and nails, shade on the side away from the screen.
+  function handShape(x, y, rot, kind, id) {
+    const skin = `fill="url(#${id}skin)"`;
+    const crease = (pts, op = 0.7) => ink(pts, 1.6, C.skinDeep, [0.3, 0.3], op);
+    const nail = (cx, cy, a) => `<ellipse cx="${cx}" cy="${cy}" rx="4.2" ry="2.8" transform="rotate(${a} ${cx} ${cy})" fill="${C.skinHi}" opacity="0.9"/>`;
     let body = '';
     if (kind === 'mouse' || kind === 'mouseDown') {
       const d = kind === 'mouseDown' ? 3 : 0;
       body = `
-        <ellipse cx="34" cy="22" rx="34" ry="20" fill="#1C1C1E"/>
-        <path d="M 6 18 C 14 12, 40 10, 64 18" fill="none" stroke="#3A3A3E" stroke-width="2"/>
-        <path d="M -40 -4 C -20 -18, 30 -20, 58 ${-8 + d} C 66 ${-4 + d}, 66 ${8 + d}, 56 ${12 + d} C 30 18, -10 20, -36 16 C -48 12, -50 2, -40 -4 Z" ${skin}/>
-        <path d="M 20 ${-12 + d} C 34 ${-12 + d}, 48 ${-8 + d}, 58 ${-4 + d}" ${line}/>
-        <path d="M 16 ${-3 + d} C 32 ${-3 + d}, 46 ${1 + d}, 58 ${4 + d}" ${line} opacity="0.6"/>
-        <path d="M 12 6 C 28 7, 42 10, 54 12" ${line} opacity="0.6"/>
-        <path d="M -12 12 C 0 18, 12 22, 22 22" ${line}/>`;
+        <ellipse cx="34" cy="22" rx="35" ry="20" fill="#1C1C1F"/>
+        <path d="M 4 16 C 14 8, 44 6, 66 16" fill="none" stroke="#45454C" stroke-width="2"/>
+        <path d="M -40 -4 C -20 -18, 30 -21, 58 ${-8 + d} C 67 ${-4 + d}, 67 ${8 + d}, 56 ${12 + d} C 30 18, -10 20, -36 16 C -48 12, -50 2, -40 -4 Z" ${skin}/>
+        ${ink([[-38, 12], [-10, 18], [30, 16], [56, 12 + d]], 4, C.skinDeep, [0.3, 0.3], 0.45)}
+        ${crease([[20, -12 + d], [34, -12 + d], [48, -8 + d], [58, -4 + d]])}
+        ${crease([[16, -3 + d], [32, -3 + d], [46, 1 + d], [58, 4 + d]], 0.55)}
+        ${crease([[12, 6], [28, 7], [42, 10], [54, 12]], 0.55)}
+        ${nail(57, -6 + d, 10)}${nail(58, 3 + d, 12)}
+        ${[[4, -14], [14, -15], [24, -14]].map(([a, b]) => `<ellipse cx="${a}" cy="${b}" rx="4" ry="3" fill="${C.skinHi}" opacity="0.55"/>`).join('')}
+        ${ink([[-40, -4], [-20, -18], [30, -21], [58, -8 + d]], 1.7, C.line, [0.1, 0.2], 0.8)}`;
     } else if (kind === 'phone') {
       body = `
         <rect x="-22" y="-96" width="56" height="112" rx="10" fill="#0E0E10" stroke="#3A3A3E" stroke-width="2.4"/>
         <rect x="-17" y="-90" width="46" height="100" rx="7" fill="#1B2533"/>
         <path d="M -30 -10 C -36 -4, -36 14, -26 22 C -8 34, 22 34, 36 22 C 42 14, 40 0, 34 -6 L 34 6 C 20 14, -6 14, -22 4 Z" ${skin}/>
-        <path d="M -30 -10 C -40 -20, -40 -40, -32 -50 C -26 -54, -22 -48, -24 -40 C -26 -30, -24 -18, -20 -10 Z" ${skin}/>`;
+        <path d="M -30 -10 C -40 -20, -40 -40, -32 -50 C -26 -54, -22 -48, -24 -40 C -26 -30, -24 -18, -20 -10 Z" ${skin}/>
+        ${nail(-28, -46, 80)}
+        ${crease([[-22, 12], [0, 18], [26, 16]])}
+        ${ink([[-30, -10], [-36, 4], [-26, 22], [-8, 32], [22, 32], [36, 22]], 1.7, C.line, [0.1, 0.1], 0.8)}`;
     } else if (kind === 'tuck') {
       body = `<path d="M -26 -16 C -8 -24, 22 -22, 34 -10 C 38 0, 34 12, 20 14 C 0 16, -20 10, -28 2 Z" ${skin}/>
-        <path d="M -2 -16 C 8 -18, 20 -14, 28 -6" ${line}/>`;
-    } else if (kind === 'keys') {
-      body = `<path d="M -20 -10 C 0 -17, 28 -15, 42 -6 C 48 -2, 48 6, 42 9 C 28 13, 4 13, -16 9 C -26 5, -26 -6, -20 -10 Z" fill="${C.skinMid}"/>
-        <path d="M 16 -12 C 24 -10, 32 -6, 38 0 M 12 -3 C 22 -1, 30 3, 38 7" ${line} opacity="0.5"/>`;
+        ${crease([[-2, -16], [8, -18], [20, -14], [28, -6]])}${crease([[-6, -6], [6, -8], [18, -4], [26, 2]], 0.5)}
+        ${nail(30, -4, 40)}
+        ${ink([[-26, -16], [-8, -24], [22, -22], [34, -10], [38, 0], [34, 12], [20, 14]], 1.6, C.line, [0.1, 0.1], 0.8)}`;
     } else if (kind === 'grip') {
       body = `<path d="M -20 -14 C -4 -22, 20 -18, 28 -6 C 30 4, 24 12, 12 14 C -6 16, -18 8, -22 0 Z" ${skin}/>
-        <path d="M -6 -12 C 4 -14, 14 -10, 20 -4" ${line}/><path d="M -10 -2 C 0 -4, 12 0, 18 6" ${line} opacity="0.6"/>`;
+        ${crease([[-6, -12], [4, -14], [14, -10], [20, -4]])}${crease([[-10, -2], [0, -4], [12, 0], [18, 6]], 0.5)}
+        ${nail(22, 4, -30)}
+        ${ink([[-20, -14], [-4, -22], [20, -18], [28, -6], [30, 4], [24, 12], [12, 14]], 1.6, C.line, [0.1, 0.1], 0.8)}`;
+    } else if (kind === 'hang') {
+      body = `<path d="M -20 -30 C -6 -34, 12 -34, 22 -28 C 26 -8, 24 12, 18 26 C 12 38, 0 44, -10 40 C -19 34, -23 18, -24 2 C -25 -12, -24 -22, -20 -30 Z" ${skin}/>
+        <path d="M 16 -16 C 26 -10, 32 4, 30 18 C 28 24, 22 24, 20 18 C 20 8, 18 -2, 12 -10 Z" ${skin}/>
+        ${crease([[-15, 12], [-13, 28], [-9, 37]], 0.6)}${crease([[-5, 14], [-3, 31], [1, 40]], 0.6)}${crease([[5, 12], [7, 28], [9, 34]], 0.5)}
+        ${nail(-8, 36, 80)}${nail(2, 39, 80)}${nail(25, 20, 70)}
+        ${ink([[-20, -30], [-24, 2], [-19, 34], [-10, 40], [0, 44], [12, 38], [18, 26]], 1.6, C.line, [0.1, 0.1], 0.8)}`;
+    } else if (kind === 'keys') {
+      body = `<path d="M -20 -10 C 0 -17, 28 -15, 42 -6 C 48 -2, 48 6, 42 9 C 28 13, 4 13, -16 9 C -26 5, -26 -6, -20 -10 Z" fill="${C.skinShade}"/>
+        ${crease([[16, -12], [24, -10], [32, -6], [38, 0]], 0.5)}${crease([[12, -3], [22, -1], [30, 3], [38, 7]], 0.5)}`;
     }
     return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)})">${body}</g>`;
   }
 
   // ------------------------------------------------------------ from behind
   function back(p, id) {
+    const r = rnd(11);
+    let strands = '';
+    for (let i = 0; i < 18; i++) {
+      const x = lerp(-76, 76, i / 17) + (r() - 0.5) * 4;
+      strands += ink([[x * 0.9, -26], [x * 0.95 + (r() - 0.5) * 6, 14], [x * 0.85, 46 + r() * 16]], 1.6, C.hairDark, [0.2, 0.6], 0.8);
+    }
     return `
-      <path d="M -52 40 C -54 84, -58 116, -60 150 L 60 150 C 58 116, 54 84, 52 40 Z" fill="url(#${id}neck)"/>
-      <path d="M -150 228 C -150 186, -104 152, -46 144 C -20 154, 20 154, 46 144 C 104 152, 150 186, 150 228 L 156 580 L -156 580 Z" fill="url(#${id}topb)"/>
-      <path d="M -46 144 C -20 154, 20 154, 46 144" fill="none" stroke="${C.topDark}" stroke-width="10" stroke-linecap="round"/>
-      <path d="M -52 96 C -30 106, 30 106, 52 96" fill="none" stroke="${C.skinShade}" stroke-width="5" opacity="0.4" filter="url(#${id}soft)"/>
-      <path d="M -82 -18 C -94 -22, -100 -8, -97 6 C -94 18, -88 24, -80 22 Z" fill="${C.skinMid}"/>
-      <path d="M 82 -18 C 94 -22, 100 -8, 97 6 C 94 18, 88 24, 80 22 Z" fill="${C.skinMid}"/>
-      <path d="M -84 -28 C -88 8, -80 42, -60 66 C -50 64, -40 70, -32 80 C -22 72, -10 74, -2 84 C 4 74, 16 72, 24 80 C 32 70, 44 64, 60 66 C 80 42, 88 8, 84 -28 Z" fill="${C.hair}"/>
-      <path d="M -54 -12 C -56 14, -50 36, -40 52 M -20 -4 C -20 22, -16 44, -10 60 M 18 -4 C 18 22, 14 44, 8 60 M 54 -12 C 56 14, 50 36, 40 52" fill="none" stroke="${C.hairDark}" stroke-width="2.4" opacity="0.55" stroke-linecap="round"/>
-      <path d="M -72 -8 C -72 16, -66 34, -56 48 M 72 -8 C 72 16, 66 34, 56 48" fill="none" stroke="${C.hairLight}" stroke-width="2" opacity="0.4" stroke-linecap="round"/>
+      <path d="M -58 36 C -60 84, -62 116, -68 150 L 68 150 C 62 116, 60 84, 58 36 Z" fill="url(#${id}neck)"/>
+      ${ink([[-30, 70], [-34, 110], [-38, 146]], 3, C.skinShade, [0.3, 0.3], 0.5)}${ink([[30, 70], [34, 110], [38, 146]], 3, C.skinShade, [0.3, 0.3], 0.5)}
+      <path d="M -156 230 C -156 186, -108 152, -50 144 C -22 154, 22 154, 50 144 C 108 152, 156 186, 156 230 L 150 580 L -150 580 Z" fill="url(#${id}topb)"/>
+      ${blob([[-110, 230], [-60, 240], [-50, 330], [-100, 350], [-130, 300]], C.topHi, 0.35, ` filter="url(#${id}soft2)"`)}${blob([[110, 230], [60, 240], [50, 330], [100, 350], [130, 300]], C.topHi, 0.3, ` filter="url(#${id}soft2)"`)}
+      ${ink([[-120, 250], [-90, 300], [-80, 380]], 4, C.topDark, [0.3, 0.3], 0.6)}${ink([[110, 250], [86, 310], [84, 400]], 4, C.topDark, [0.3, 0.3], 0.6)}
+      ${ink([[-20, 400], [0, 460], [10, 540]], 3, C.topDark, [0.3, 0.3], 0.45)}
+      <path d="M -46 144 C -20 154, 20 154, 46 144 L 44 156 C 18 166, -18 166, -44 156 Z" fill="${C.topDark}"/>
+      ${ink([[-150, 580], [-156, 230], [-156, 186], [-108, 152], [-50, 144]], 2.4, C.lineCloth, [0.05, 0.05], 0.9)}${ink([[50, 144], [108, 152], [156, 186], [156, 230], [150, 580]], 2.4, C.lineCloth, [0.05, 0.05], 0.9)}
+      ${blob([[-82, -18], [-94, -22], [-100, -8], [-97, 6], [-94, 18], [-88, 24], [-80, 22]], C.skinMid)}${ink([[-84, -16], [-94, -16], [-96, 0], [-92, 16]], 2, C.skinDeep, [0.2, 0.4], 0.7)}
+      ${blob([[82, -18], [94, -22], [100, -8], [97, 6], [94, 18], [88, 24], [80, 22]], C.skinMid)}${ink([[84, -16], [94, -16], [96, 0], [92, 16]], 2, C.skinDeep, [0.2, 0.4], 0.7)}
+      ${blob([[-84, -30], [-88, 6], [-80, 36], [-66, 56], [-50, 58], [-36, 66], [-20, 62], [-6, 70], [8, 64], [22, 68], [36, 60], [52, 60], [68, 52], [82, 30], [88, 2], [84, -30]], C.hair)}
+      ${ink([[-66, 56], [-50, 58], [-36, 66], [-20, 62], [-6, 70], [8, 64], [22, 68], [36, 60], [52, 60], [68, 52]], 1.6, C.lineHair, [0.1, 0.1], 0.6)}
+      ${strands}
+      ${ink([[-60, -16], [-62, 10], [-54, 34]], 2.4, C.hairLight, [0.3, 0.5], 0.5)}${ink([[40, -16], [44, 10], [40, 30]], 2.4, C.hairLight, [0.3, 0.5], 0.5)}
       <path d="M -100 -30 C -104 -108, -54 -156, 0 -158 C 54 -156, 104 -108, 100 -30 C 60 -40, -60 -40, -100 -30 Z" fill="url(#${id}capg)"/>
-      <path d="M 0 -158 L 0 -40" stroke="${C.capDark}" stroke-width="2.4"/>
-      <path d="M 0 -158 C -40 -140, -62 -96, -66 -40 M 0 -158 C 40 -140, 62 -96, 66 -40" fill="none" stroke="${C.capDark}" stroke-width="2" opacity="0.8"/>
-      <ellipse cx="0" cy="-158" rx="8" ry="4" fill="${C.capLight}"/>
+      ${ink([[0, -158], [0, -40]], 2.4, C.capDark, [0.05, 0.05])}${stitchLine([[0, -158], [0, -100], [0, -40]])}
+      ${ink([[0, -158], [-40, -140], [-62, -96], [-66, -40]], 2, C.capDark, [0.05, 0.05], 0.8)}${ink([[0, -158], [40, -140], [62, -96], [66, -40]], 2, C.capDark, [0.05, 0.05], 0.8)}
+      <ellipse cx="0" cy="-158" rx="9" ry="4.5" fill="${C.capHi}"/>
       ${p.cap === 'back' ? '' : `
         <path d="M -34 -34 C -32 -64, 32 -64, 34 -34 Z" fill="${C.hair}"/>
         <path d="M -40 -34 C -36 -70, 36 -70, 40 -34" fill="none" stroke="${C.capDark}" stroke-width="6"/>
         <rect x="-30" y="-44" width="60" height="9" rx="4" fill="${C.capDark}"/>
-        <rect x="-8" y="-45" width="16" height="11" rx="2" fill="#6E6A64"/>`}
-      <path d="M -100 -30 C -60 -40, 60 -40, 100 -30 L 100 -22 C 60 -32, -60 -32, -100 -22 Z" fill="${C.capDark}"/>`;
+        <rect x="-8" y="-45.5" width="16" height="12" rx="2" fill="#6E6A64"/><rect x="-5" y="-43" width="10" height="7" rx="1" fill="#46433E"/>`}
+      <path d="M -100 -30 C -60 -40, 60 -40, 100 -30 L 100 -22 C 60 -32, -60 -32, -100 -22 Z" fill="${C.capDark}"/>
+      ${ink([[-100, -30], [-93.7, -82.6], [-71.8, -122.5], [-39, -148.1], [0, -158], [39, -148.1], [71.8, -122.5], [93.7, -82.6], [100, -30]], 2.2, '#050506', [0.05, 0.05], 0.9)}`;
   }
 
   function defs(p, id) {
-    const key = p.light.key;
     return `<defs>
-      <linearGradient id="${id}skin" x1="0" y1="0" x2="1" y2="0.25">
-        <stop offset="0" stop-color="${C.skinMid}"/><stop offset="0.5" stop-color="${C.skin}"/><stop offset="1" stop-color="${C.skinLight}"/>
+      <linearGradient id="${id}skin" x1="0" y1="0" x2="1" y2="0.3">
+        <stop offset="0" stop-color="${C.skinMid}"/><stop offset="0.45" stop-color="${C.skin}"/><stop offset="1" stop-color="${C.skinHi}"/>
       </linearGradient>
       <linearGradient id="${id}neck" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${C.skinDeep}"/><stop offset="0.5" stop-color="${C.skinShade}"/><stop offset="1" stop-color="${C.skinMid}"/>
+        <stop offset="0" stop-color="${C.skinDeep}"/><stop offset="0.45" stop-color="${C.skinShade}"/><stop offset="1" stop-color="${C.skinMid}"/>
+      </linearGradient>
+      <radialGradient id="${id}sclera" cx="0.55" cy="0.6" r="0.6">
+        <stop offset="0.5" stop-color="${C.white}"/><stop offset="1" stop-color="${C.whiteShade}"/>
+      </radialGradient>
+      <radialGradient id="${id}iris" cx="0.45" cy="0.55" r="0.55">
+        <stop offset="0" stop-color="${C.irisLight}"/><stop offset="0.55" stop-color="${C.iris}"/><stop offset="1" stop-color="${C.irisDark}"/>
+      </radialGradient>
+      <radialGradient id="${id}pearl" cx="0.38" cy="0.32" r="0.72">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="0.4" stop-color="${C.pearl}"/><stop offset="1" stop-color="${C.pearlShade}"/>
+      </radialGradient>
+      <linearGradient id="${id}goldg" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0" stop-color="${C.goldHi}"/><stop offset="0.45" stop-color="${C.gold}"/><stop offset="1" stop-color="${C.goldLo}"/>
       </linearGradient>
       <linearGradient id="${id}capg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="${C.capLight}"/><stop offset="0.45" stop-color="${C.cap}"/><stop offset="1" stop-color="${C.capDark}"/>
+        <stop offset="0" stop-color="${C.capHi}"/><stop offset="0.45" stop-color="${C.cap}"/><stop offset="1" stop-color="${C.capDark}"/>
       </linearGradient>
-      <linearGradient id="${id}billg" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="${C.capDark}"/><stop offset="0.5" stop-color="${C.cap}"/><stop offset="1" stop-color="#242424"/>
+      <linearGradient id="${id}billg" x1="0" y1="0" x2="1" y2="0.2">
+        <stop offset="0" stop-color="${C.capDark}"/><stop offset="0.55" stop-color="${C.cap}"/><stop offset="1" stop-color="#2A2A2F"/>
       </linearGradient>
       <linearGradient id="${id}top" x1="0" y1="0" x2="1" y2="0.3">
-        <stop offset="0" stop-color="${C.topDark}"/><stop offset="0.6" stop-color="${C.top}"/><stop offset="1" stop-color="${C.topLight}"/>
+        <stop offset="0" stop-color="${C.topDark}"/><stop offset="0.6" stop-color="${C.top}"/><stop offset="1" stop-color="${C.topHi}"/>
       </linearGradient>
       <linearGradient id="${id}topb" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${C.topLight}"/><stop offset="0.3" stop-color="${C.top}"/><stop offset="1" stop-color="${C.topDark}"/>
+        <stop offset="0" stop-color="${C.topHi}"/><stop offset="0.3" stop-color="${C.top}"/><stop offset="1" stop-color="${C.topDark}"/>
       </linearGradient>
       <linearGradient id="${id}capshadow" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#2A140C" stop-opacity="0.6"/><stop offset="0.5" stop-color="#2A140C" stop-opacity="0.28"/><stop offset="1" stop-color="#2A140C" stop-opacity="0"/>
+        <stop offset="0" stop-color="#2A140C" stop-opacity="0.62"/><stop offset="0.55" stop-color="#2A140C" stop-opacity="0.3"/><stop offset="1" stop-color="#2A140C" stop-opacity="0"/>
       </linearGradient>
       <linearGradient id="lensg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#2A2A30"/><stop offset="0.5" stop-color="${C.lens}"/><stop offset="1" stop-color="#050506"/>
+        <stop offset="0" stop-color="#2A2A32"/><stop offset="0.5" stop-color="${C.lens}"/><stop offset="1" stop-color="#050506"/>
       </linearGradient>
-      <filter id="${id}soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>
+      <filter id="${id}soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="${id}soft2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
       <clipPath id="${id}faceclip"><path d="${FACE}"/></clipPath>
+      <clipPath id="${id}capclip"><path d="${CROWN_PATH}"/></clipPath>
+      <clipPath id="${id}topclip"><path d="${TOP}"/></clipPath>
     </defs>`;
   }
 
