@@ -27,10 +27,10 @@
 (function () {
   const C = {
     line: '#3A2118', lineHair: '#1C120C', lineCloth: '#050505',
-    skin: '#F1C4A4', skinHi: '#FCE1CE', skinMid: '#E5AC8D', skinShade: '#CD8B6D', skinDeep: '#A9654F', skinOcc: '#7A4233', blush: '#E98F79',
-    lipTop: '#B07462', lipLow: '#C68673', lipLine: '#5E2C22', lipHi: '#F0C2B2', mouthIn: '#3E1612', teeth: '#F4EEE6', tongue: '#B9605A',
+    skin: '#EEBF9E', skinHi: '#FADDC8', skinMid: '#E0A787', skinShade: '#C8876B', skinDeep: '#A2614B', skinOcc: '#774131', stubble: '#6F5D58',
+    lipLow: '#C98B78', lipLine: '#5E3328', mouthIn: '#3E1612', teeth: '#F4EEE6', tongue: '#B9605A',
     hair: '#4B3426', hairDark: '#281A12', hairLight: '#9C7459', brow: '#352218',
-    white: '#F8F3ED', whiteShade: '#D8CCC2', iris: '#6C4830', irisLight: '#A87D53', irisDark: '#382315', pupil: '#110B08', lash: '#1E120C', caruncle: '#E39C8B',
+    white: '#F2ECE5', whiteShade: '#D3C6BB', iris: '#5E3F2A', irisLight: '#8E6844', irisDark: '#2E1C11', pupil: '#110B08', lash: '#24170F',
     cap: '#1E1E21', capHi: '#36363C', capDark: '#0E0E10', stitch: '#4C4C55', eyelet: '#2C2C31',
     gold: '#D8AD4E', goldHi: '#F8E3A6', goldLo: '#9E7428',
     top: '#211F1E', topHi: '#3A3734', topDark: '#100F0E', stitchTop: '#3C3936',
@@ -131,130 +131,112 @@
   }
 
   // ------------------------------------------------------------ the eyes
-  // An eye: its corners fixed, the lids moving with lid, wide and blink. The near eye's outer corner is
-  // on the left; the far eye, beyond the bridge of the nose, is narrower and its outer corner is on the
-  // right. Iris and pupil follow look; two highlights face the screen.
+  // An almond eye under a heavy lid: one clean lid line, no lashes drawn, a small iris tucked under
+  // the lid, one highlight. The near eye's outer corner is on the left; the far eye, beyond the bridge
+  // of the nose, is narrower and partly hidden by it.
   function eye(near, p, id) {
-    const A = near ? [0, 1] : [69, -2], B = near ? [45, 3] : [92, -3];
+    const A = near ? [1, 1] : [70, -1.5], B = near ? [44, 2.5] : [91, -3];
     const at = (k, dy = 0) => [lerp(A[0], B[0], k), lerp(A[1], B[1], k) + dy];
-    const open = Math.max(0, Math.min(1.3, 1 - Math.max(p.lid, p.blink) * 1.08 + p.wide * 0.42));
-    const rise = (near ? 14 : 11) * open;
-    const pk = near ? 0.57 : 0.43;
-    const drop = (near ? 6.4 : 4.8) * (0.6 + 0.4 * Math.min(1, open));
-    const lashW = near ? 3.2 : 2.5;
-    const lashTaper = near ? [0.04, 0.6] : [0.6, 0.04];
+    const open = Math.max(0, Math.min(1.3, 1 - Math.max(p.lid, p.blink) * 1.05 + p.wide * 0.45));
+    const rise = (near ? 10.5 : 8.5) * open;
+    const pk = near ? 0.55 : 0.45;
+    const drop = (near ? 4.6 : 3.6) * (0.65 + 0.35 * Math.min(1, open));
+    const lineW = near ? 2.7 : 2.3;
     const outer = near ? A : B, dir = near ? -1 : 1;
-    // the crease sits close above the lashes: heavy, hooded lids
-    const lift = 4.5 + 3 * p.wide + 2 * open;
-    const crease = ink([at(0.12, -rise * 0.55 - lift * 0.8), at(pk, -rise - lift), at(0.9, -rise * 0.6 - lift * 0.9)], near ? 1.9 : 1.5, C.skinDeep, [0.35, 0.35], 0.8);
-    const under = ink([at(0.18, drop + 4.5), at(0.5, drop + 6.2), at(0.84, drop + 4)], 2.2, C.skinMid, [0.45, 0.45], 0.55);
+    const tail = [outer[0] + dir * 3.5, outer[1] + 2];
+    const crease = ink([at(0.15, -rise - 4.5 - p.wide * 2), at(pk, -rise - 6 - p.wide * 3), at(0.85, -rise * 0.8 - 4.5 - p.wide * 2)], 1.5, C.skinShade, [0.4, 0.4], 0.6);
     if (open < 0.12) {
-      const shut = [A, at(0.3, drop * 0.5), at(0.62, drop * 0.55), B];
-      return `${ink(shut, lashW, C.lash, lashTaper)}${ink([at(0.15, drop * 0.2 - 3), at(0.5, drop * 0.3 - 4), at(0.85, drop * 0.2 - 3)], 1.6, C.skinDeep, [0.4, 0.4], 0.7)}
-        ${ink([outer, [outer[0] + dir * 5, outer[1] + 3]], 1.8, C.lash, [0.1, 0.8])}`;
+      const shut = [A, at(0.35, drop * 0.45), at(0.65, drop * 0.45), B];
+      return `${ink(near ? [tail, ...shut] : [...shut, tail], lineW, C.lash, [0.15, 0.15])}${crease}`;
     }
-    const upper = [A, at(pk * 0.38, -rise * 0.62), at(pk, -rise), at(pk + (1 - pk) * 0.56, -rise * 0.74), B];
-    const lower = [B, at(0.79, drop * 0.72), at(0.47, drop), at(0.16, drop * 0.64), A];
+    const upper = [A, at(pk * 0.4, -rise * 0.7), at(pk, -rise), at(pk + (1 - pk) * 0.55, -rise * 0.78), B];
+    const lower = [B, at(0.78, drop * 0.8), at(0.46, drop), at(0.16, drop * 0.7), A];
     const w = B[0] - A[0];
-    const r = near ? 9.3 : 7.1, rx = near ? r : r * 0.78;
-    const ix = (A[0] + B[0]) / 2 + w * 0.03 + p.look[0] * w * 0.19, iy = (A[1] + B[1]) / 2 - 1.6 + p.look[1] * 3.4;
+    const r = near ? 7.4 : 5.9, rx = near ? r : r * 0.78;
+    const ix = (A[0] + B[0]) / 2 + w * 0.03 + p.look[0] * w * 0.2, iy = (A[1] + B[1]) / 2 - 1.2 + p.look[1] * 2.8;
     const clip = `${id}eye${near ? 'n' : 'f'}`;
-    let tex = '';
-    for (let k = 0; k < 14; k++) {
-      const a = k * (Math.PI * 2 / 14) + 0.2;
-      tex += `<path d="M ${xy([ix + Math.cos(a) * rx * 0.46, iy + Math.sin(a) * r * 0.46])} L ${xy([ix + Math.cos(a) * rx * 0.9, iy + Math.sin(a) * r * 0.9])}" stroke="${k % 2 ? C.irisLight : C.irisDark}" stroke-width="0.7" opacity="0.45"/>`;
-    }
-    // a few lashes flicking out at the outer corner
-    const flick = [0.08].map((k, i) => {
-      const s = near ? at(k, -rise * (0.25 + k * 1.4)) : at(1 - k, -rise * (0.25 + k * 1.4));
-      return ink([s, [s[0] + dir * (4.5 - i * 0.8), s[1] - 3.5 - i * 1.4]], 1.6 - i * 0.2, C.lash, [0.1, 0.85]);
-    }).join('');
-    const inner = near ? B : A;
     return `
       <clipPath id="${clip}"><path d="${loop(upper, lower)}"/></clipPath>
       <path d="${loop(upper, lower)}" fill="url(#${id}sclera)"/>
       <g clip-path="url(#${clip})">
         <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx)}" ry="${n(r)}" fill="url(#${id}iris)"/>
-        ${tex}
-        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx * 0.97)}" ry="${n(r * 0.97)}" fill="none" stroke="${C.irisDark}" stroke-width="1.4"/>
-        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx * 0.43)}" ry="${n(r * 0.43)}" fill="${C.pupil}"/>
-        ${ink(upper, 10, C.skinOcc, [0, 0], 0.32)}
-        <ellipse cx="${n(ix + rx * 0.34)}" cy="${n(iy - r * 0.38)}" rx="${n(r * 0.3)}" ry="${n(r * 0.24)}" fill="#fff" opacity="0.95"/>
-        <circle cx="${n(ix - rx * 0.4)}" cy="${n(iy + r * 0.36)}" r="${n(r * 0.1)}" fill="#fff" opacity="0.75"/>
+        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx * 0.45)}" ry="${n(r * 0.45)}" fill="${C.pupil}"/>
+        ${ink(upper, 7, C.skinOcc, [0, 0], 0.35)}
+        <circle cx="${n(ix + rx * 0.32)}" cy="${n(iy - r * 0.34)}" r="${n(r * 0.22)}" fill="#fff" opacity="0.9"/>
       </g>
-      ${blob([[inner[0] - dir * 0.5, inner[1] - 2.2], [inner[0] - dir * 5.5, inner[1] - 1.2], [inner[0] - dir * 6, inner[1] + 1.6], [inner[0] - dir * 1, inner[1] + 2.4]], C.caruncle, 0.9)}
-      ${ink(lower, 1.4, C.skinDeep, [0.5, 0.3], 0.75)}
-      ${ink(upper, lashW, C.lash, lashTaper)}
-      ${flick}${crease}${under}`;
+      ${ink(lower.slice(near ? 2 : 0, near ? 5 : 3), 1.2, C.skinShade, [0.4, 0.4], 0.5)}
+      ${ink(near ? [tail, ...upper] : [...upper, tail], lineW, C.lash, [0.12, 0.12])}
+      ${crease}`;
   }
 
-  // A brow: a thick head by the nose, thinning to its tail, and short hairs along it.
+  // A brow: thick and fairly straight, low over the eye, squared at the head by the nose.
   function brow(near, raise) {
-    const up = -raise * 7, frown = Math.max(0, -raise);
-    const T = near ? [-9, -20 + up * 0.8] : [97, -21 + up * 0.8];
-    const H = near ? [50 - frown * 3, -26 + up + frown * 5] : [65 + frown * 3, -27 + up + frown * 5];
-    const M = near ? [20, -28.5 + up - Math.max(0, raise) * 1.5] : [82, -29.5 + up];
+    const up = -raise * 6, frown = Math.max(0, -raise);
+    const T = near ? [-10, -18.5 + up * 0.8] : [97, -19.5 + up * 0.8];
+    const H = near ? [50 - frown * 3, -22.5 + up + frown * 4.5] : [64 + frown * 3, -24 + up + frown * 4.5];
+    const M = near ? [21, -25.5 + up - Math.max(0, raise) * 1.5] : [81, -26.5 + up];
     const pts = near ? [T, M, H] : [H, M, T];
     let hairs = '';
-    const S = sample(pts, 10);
+    const S = sample(pts, 8);
     for (let i = 1; i < S.length - 1; i += 1) {
       const k = i / (S.length - 1);
       const headness = near ? k : 1 - k;
       const lat = near ? -1 : 1;
-      const dx = lat * (1 - headness * 0.75), dy = -(0.35 + headness * 0.7);
+      const dx = lat * (1 - headness * 0.75), dy = -(0.3 + headness * 0.6);
       const len = Math.hypot(dx, dy);
       const [x, y] = S[i];
-      const yo = (i % 3 - 1) * 1.6;
-      hairs += ink([[x - dx / len * 3, y - dy / len * 3 + yo], [x + dx / len * 4.5, y + dy / len * 4.5 + yo]], 1.15, i % 2 ? C.hairDark : C.lineHair, [0.25, 0.6], 0.9);
+      const yo = (i % 3 - 1) * 2;
+      hairs += ink([[x - dx / len * 3, y - dy / len * 3 + yo], [x + dx / len * 4, y + dy / len * 4 + yo]], 1.2, C.lineHair, [0.25, 0.6], 0.8);
     }
-    return `${ink(pts, near ? 8.6 : 7, C.brow, near ? [0.8, 0.06] : [0.06, 0.8])}${hairs}`;
+    return `${ink(pts, near ? 10 : 8.5, C.brow, near ? [0.7, 0.04] : [0.04, 0.7])}${hairs}`;
   }
 
   // ------------------------------------------------------------ nose, mouth, ear
+  // A straight nose, its bridge along the far edge of the face and its tip out past the cheek, as in
+  // the first sheet.
   function nose(p, id) {
+    const shape = [[89, -9], [95, 2], [103, 14], [110.5, 24], [113, 31], [109, 38.5], [101, 41], [93, 41.5], [87, 39], [84, 33], [85.5, 24], [87.5, 10]];
     return `
-      ${blob([[80, 41], [92, 42.5], [100, 44], [93, 49], [82, 48]], C.skinShade, 0.4, ` filter="url(#${id}soft)"`)}
-      <path d="${smooth([[97, 2], [104, 13], [111, 23], [112.5, 31], [107, 38.5], [99, 40.5], [95, 30]], true)}" fill="url(#${id}skin)"/>
-      ${blob([[94, 35.5], [99, 36.5], [104, 38.6], [100.5, 40.8], [95, 40]], C.skinOcc)}
-      ${ink([[86.5, 26.5], [82.8, 32.5], [85, 38.8], [92, 40.6]], 2.2, C.line, [0.5, 0.25], 0.95)}
-      ${ink([[112, 27], [111.2, 34.5], [105.5, 39.5], [99, 40.8]], 2.4, C.line, [0.35, 0.35])}
-      ${ink([[78, 3.5], [92, 10.5], [103, 18]], 2.4, C.skinHi, [0.4, 0.4], 0.7)}
-      <ellipse cx="106" cy="25" rx="3.3" ry="2.4" fill="#fff" opacity="0.55"/>`;
+      <path d="${smooth(shape, true)}" fill="url(#${id}skin)"/>
+      ${blob([[86, -4], [90, 10], [92, 24], [90, 34], [84, 35], [81.5, 25], [82.5, 8]], C.skinShade, 0.45, ` filter="url(#${id}soft)"`)}
+      ${blob([[80, 42], [92, 43], [101, 45], [93, 50], [82, 48.5]], C.skinShade, 0.4, ` filter="url(#${id}soft)"`)}
+      ${ink([[93, -2], [100, 8], [107, 18]], 2.4, C.skinHi, [0.3, 0.3], 0.65)}
+      ${ink([[91.5, -7], [99, 5], [106.5, 16.5], [112.5, 27.5]], 2.2, C.line, [0.6, 0.05], 0.85)}
+      ${ink([[113, 28], [112, 35], [106.5, 39.8], [99, 41.4]], 2.4, C.line, [0.1, 0.4])}
+      ${blob([[94, 36.5], [99, 37.5], [104, 39.5], [100.5, 41.3], [95, 40.8]], C.skinOcc, 0.85)}
+      ${ink([[87.5, 27], [84, 33], [86, 39], [92, 41.3]], 2, C.line, [0.45, 0.25], 0.85)}
+      <ellipse cx="107.5" cy="25.5" rx="3" ry="2.1" fill="#fff" opacity="0.45"/>`;
   }
 
+  // A plain mouth: one line, the lower lip in a little shade, no colour to speak of.
   function mouth(p, id) {
     const { open, smile, smirk } = p.mouth;
-    const L = [51, 65.5 - smile * 3.2 + Math.max(0, -smile) * 1.4];
-    const R = [95, 61.5 - smile * 3.6 - smirk * 7];
-    const gap = open > 0.04 ? 3 + open * 17 : 0;
-    const line = [L, [62, 65 + smile * 0.6], [76, 64.4 + smile * 1.2 - smirk * 1.5], [87, 63 - smirk * 3.4], R];
-    const top = [R, [89, 58.5 - smirk * 3], [81, 56.4], [76, 58.4], [70, 56.9], [60, 60 - smile * 0.4], L];
+    const L = [53, 64.5 - smile * 3 + Math.max(0, -smile) * 1.4];
+    const R = [94, 61.5 - smile * 3.4 - smirk * 6.5];
+    const gap = open > 0.04 ? 2.5 + open * 16 : 0;
+    const line = [L, [63, 64.2 + smile * 0.6], [76, 63.8 + smile * 1.1 - smirk * 1.3], [86, 62.6 - smirk * 3.2], R];
     const low = line.map(([x, y], i) => [x, y + gap * [0, 0.85, 1, 0.82, 0][i]]);
-    const bottom = [R, [87.5, 69.5 + gap * 0.82 - smirk * 2], [76, 73.4 + gap], [62, 71.2 + gap * 0.86], L];
-    const upperLip = `<path d="${loop(line, top)}" fill="${C.lipTop}"/>`;
-    const lowerLip = `<path d="${loop(low, bottom)}" fill="${C.lipLow}"/>`;
     let inside = '';
     if (gap) {
       const hole = loop(line, [...low].reverse());
       inside = `<clipPath id="${id}mouth"><path d="${hole}"/></clipPath>
         <path d="${hole}" fill="${C.mouthIn}"/>
         <g clip-path="url(#${id}mouth)">
-          ${ink(off(line, 0, 2), 7.5, C.teeth, [0.12, 0.12])}
-          ${[64, 70, 76, 82, 88].map((x) => `<path d="M ${x} ${n(lerp(line[1][1], line[3][1], (x - 62) / 25) + 1)} l 0.6 4.5" stroke="#C9C0B6" stroke-width="0.8"/>`).join('')}
-          ${open > 0.3 ? `<ellipse cx="76" cy="${n(64 + gap + 1)}" rx="13" ry="${n(4 + open * 3)}" fill="${C.tongue}"/>` : ''}
+          ${ink(off(line, 0, 2), 7, C.teeth, [0.12, 0.12])}
+          ${[66, 72, 78, 84].map((x) => `<path d="M ${x} ${n(lerp(line[1][1], line[3][1], (x - 63) / 23) + 1)} l 0.5 4" stroke="#C9C0B6" stroke-width="0.8"/>`).join('')}
+          ${open > 0.3 ? `<ellipse cx="76" cy="${n(64 + gap + 1)}" rx="12" ry="${n(4 + open * 3)}" fill="${C.tongue}"/>` : ''}
         </g>`;
     }
     return `
-      ${ink([[83, 43], [81.5, 49], [81, 55]], 1.5, C.skinShade, [0.35, 0.35], 0.3)}
-      ${ink([[70, 53.5], [78, 52], [86, 53]], 2, C.skinHi, [0.4, 0.4], 0.6)}
-      ${blob([[63, 76 + gap], [76, 78.5 + gap], [88, 75 + gap], [80, 81 + gap], [68, 81 + gap]], C.skinDeep, 0.4, ` filter="url(#${id}soft)"`)}
-      ${inside}${upperLip}${lowerLip}
-      <ellipse cx="74" cy="${n(68.6 + gap)}" rx="7" ry="1.9" fill="${C.lipHi}" opacity="0.35"/>
-      ${ink(line, 2.4, C.lipLine, [0.22, 0.22])}
-      ${gap ? ink(low, 1.6, C.lipLine, [0.3, 0.3], 0.8) : ''}
-      ${ink([[L[0] + 3, L[1] - 0.5], L, [L[0] - 2.5, L[1] + 1.5]], 2, C.lipLine, [0.3, 0.6], 0.8)}
-      ${smirk > 0.15 ? ink([[R[0] - 1, R[1]], [R[0] + 3, R[1] - 2.5], [R[0] + 4.5, R[1] - 6.5]], 1.7, C.skinDeep, [0.2, 0.6], smirk) : ''}
-      ${smile > 0.35 ? ink([[56, 50], [52, 58], [53, 66]], 1.6, C.skinShade, [0.4, 0.4], (smile - 0.35) * 1.5) : ''}`;
+      ${blob([[57, 62.5], [70, 59], [78, 60], [86, 58.5], [92, 61], [86, 62.8], [72, 63.4], [59, 64.4]], C.skinShade, 0.25)}
+      ${blob([[60, 66 + gap], [76, 67 + gap], [88, 65 + gap], [84, 70.5 + gap], [72, 72 + gap], [62, 69.5 + gap]], C.lipLow, 0.3)}
+      ${ink([[64, 75.5 + gap], [75, 77 + gap], [85, 74.5 + gap]], 3.4, C.skinShade, [0.4, 0.4], 0.55, ` filter="url(#${id}soft)"`)}
+      ${inside}
+      ${ink(line, 2.4, C.lipLine, [0.2, 0.2])}
+      ${gap ? ink(low, 1.6, C.lipLine, [0.3, 0.3], 0.7) : ''}
+      ${ink([[L[0] + 2.5, L[1] - 0.4], L, [L[0] - 2, L[1] + 1.4]], 1.8, C.lipLine, [0.3, 0.6], 0.7)}
+      ${smirk > 0.15 ? ink([[R[0] - 1, R[1]], [R[0] + 3, R[1] - 2.5], [R[0] + 4.5, R[1] - 6.5]], 1.7, C.skinShade, [0.2, 0.6], smirk) : ''}
+      ${smile > 0.35 ? ink([[57, 50], [53, 58], [54, 66]], 1.6, C.skinShade, [0.4, 0.4], (smile - 0.35) * 1.5) : ''}`;
   }
 
   function ear(id) {
@@ -401,7 +383,7 @@
   }
 
   // ------------------------------------------------------------ the head, three-quarter view
-  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 100 -34, 101 -24 C 101 -16, 97 -10, 97 -4 C 98 6, 103 14, 103 24 C 103 38, 98 50, 95 60 C 92 74, 91 88, 88 98 C 85 106, 78 112, 66 114 C 48 116, 22 110, -6 98 C -22 91, -36 82, -44 70 C -54 56, -84 32, -96 0 Z';
+  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 100 -34, 101 -24 C 101 -16, 97 -10, 97 -4 C 98 6, 103 14, 103 24 C 103 38, 99 50, 96 62 C 94 76, 93 90, 91 100 C 89 108, 82 115, 68 116.5 C 50 118, 22 112, -8 100 C -24 93, -38 86, -46 74 C -54 58, -84 32, -96 0 Z';
   function head34(p, id) {
     const capped = p.cap === 'fwd';
     const tint = p.light.tint, rim = p.light.rim;
@@ -410,16 +392,15 @@
       <g clip-path="url(#${id}faceclip)">
         ${ink([[80, -56], [88, -24], [90, 8], [92, 38], [88, 68], [82, 96]], 22, C.skinHi, [0.15, 0.15], 0.4, ` filter="url(#${id}soft2)"`)}
         ${ink([[96, -40], [101, 0], [102, 40], [94, 80]], 6, tint, [0.2, 0.2], 0.3 * rim, ` filter="url(#${id}soft)"`)}
-        ${blob([[-112, -70], [-10, -54], [-6, -22], [-11, 8], [-5, 36], [10, 60], [28, 84], [48, 104], [64, 120], [-40, 134], [-122, 60]], C.skinShade, 0.62, ` filter="url(#${id}soft)"`)}
-        ${ink([[-6, -34], [-9, 6], [-3, 38], [12, 62], [30, 86], [50, 106]], 7, C.skinDeep, [0.2, 0.2], 0.22, ` filter="url(#${id}soft)"`)}
+        ${blob([[-112, -70], [-14, -54], [-12, -22], [-16, 8], [-10, 40], [4, 66], [20, 90], [38, 110], [54, 124], [-40, 134], [-122, 60]], C.skinShade, 0.42, ` filter="url(#${id}soft2)"`)}
         ${ink([[-30, 46], [-4, 58], [24, 72]], 10, C.skinShade, [0.3, 0.3], 0.3, ` filter="url(#${id}soft2)"`)}
         ${ink([[-48, 66], [-14, 94], [30, 110], [68, 116]], 12, C.skinDeep, [0.2, 0.2], 0.3, ` filter="url(#${id}soft)"`)}
-        ${blob([[56, -22], [64, -6], [74, 9], [84, 24], [88, 33], [80, 34], [69, 20], [57, 2], [50, -12]], C.skinShade, 0.55, ` filter="url(#${id}soft)"`)}
         ${ink([[84, 41], [68, 50], [57, 60]], 2.4, C.skinShade, [0.3, 0.5], 0.35, ` filter="url(#${id}soft)"`)}
         <ellipse cx="30" cy="-9" rx="27" ry="10" fill="${C.skinMid}" opacity="0.55" filter="url(#${id}soft)"/>
         <ellipse cx="84" cy="-9" rx="11" ry="7" fill="${C.skinMid}" opacity="0.5" filter="url(#${id}soft)"/>
         <ellipse cx="22" cy="30" rx="19" ry="9" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
-        <ellipse cx="34" cy="42" rx="15" ry="7.5" fill="${C.blush}" opacity="0.07" filter="url(#${id}soft)"/>
+        ${ink([[-40, 70], [-14, 94], [24, 110], [62, 117], [86, 108]], 16, C.stubble, [0.2, 0.2], 0.1, ` filter="url(#${id}soft2)"`)}
+        ${blob([[56, 47], [76, 44.5], [94, 46], [95, 54], [76, 53], [56, 57]], C.stubble, 0.1, ` filter="url(#${id}soft)"`)}
         <ellipse cx="80" cy="101" rx="9" ry="5" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
         ${ink([[93, -60], [101, -24], [97, -4], [103, 24], [95, 60], [88, 98]], 8, tint, [0.2, 0.2], 0.45 * rim, ` filter="url(#${id}soft)"`)}
       </g>
@@ -429,15 +410,15 @@
       ${brow(true, p.brow[0])}${brow(false, p.brow[1])}
       ${nose(p, id)}
       ${mouth(p, id)}
-      ${ink([[-50, 58], [-42, 72], [-26, 86], [-6, 98], [20, 108], [44, 114.5], [66, 114], [80, 109], [88, 98]], 3, C.line, [0.12, 0.08])}
-      ${ink([[88, 98], [91.5, 84], [95, 66], [99, 48], [103, 30], [103, 18], [99, 6], [97, -4], [100, -20], [100, -34]], 2, C.line, [0.05, 0.45])}
+      ${ink([[-52, 62], [-46, 74], [-30, 88], [-8, 100], [20, 111], [46, 117.5], [68, 116.5], [83, 112], [91, 100]], 3, C.line, [0.12, 0.08])}
+      ${ink([[91, 100], [93.5, 86], [96, 66], [99.5, 50], [103, 30], [103, 18], [99, 6], [97, -4], [100, -20], [100, -34]], 2, C.line, [0.05, 0.45])}
       ${capped ? `<path d="M -40 -50 C 0 -56, 60 -62, 108 -66 L 110 -34 C 80 -24, 40 -20, 0 -24 C -20 -28, -34 -36, -40 -50 Z" fill="url(#${id}capshadow)" clip-path="url(#${id}faceclip)" filter="url(#${id}soft)"/>` : ''}
       ${p.cap === 'fwd' ? capFwd(p, id) : p.cap === 'back' ? capBack(p, id) : fringe()}
       ${p.shades > 0.01 ? `<g opacity="${n(Math.min(1, p.shades * 1.5))}" transform="translate(0 ${n((1 - p.shades) * -46)})">${shades(p)}</g>` : ''}`;
   }
 
   // ------------------------------------------------------------ the body
-  const NECK = 'M -52 50 C -54 92, -58 128, -68 168 L 62 168 C 54 142, 48 120, 50 100 C 28 110, -16 92, -52 50 Z';
+  const NECK = 'M -56 50 C -58 92, -62 128, -72 168 L 66 168 C 58 142, 52 120, 54 104 C 30 112, -18 94, -56 50 Z';
   const TOP = 'M -64 156 C -104 158, -156 168, -182 192 C -202 212, -210 270, -204 360 L -192 580 L 132 580 C 142 452, 154 336, 154 264 C 152 214, 118 176, 62 158 C 34 180, -36 180, -64 156 Z';
   const TOP_EDGE_NEAR = [[-64, 156], [-104, 158], [-150, 166], [-182, 192], [-204, 236], [-208, 300], [-204, 360], [-192, 580]];
   const TOP_EDGE_FAR = [[62, 158], [116, 176], [148, 214], [154, 264], [150, 340], [142, 452], [132, 580]];
@@ -452,12 +433,12 @@
     return `
       <!-- the neck: the jaw's shadow across it, the muscle down its side, the throat -->
       <path d="${NECK}" fill="url(#${id}neck)"/>
-      ${blob([[-52, 50], [-12, 88], [50, 102], [52, 120], [12, 118], [-44, 98]], C.skinDeep, 0.55, ` filter="url(#${id}soft)"`)}
+      ${blob([[-56, 52], [-12, 92], [54, 106], [56, 124], [12, 122], [-46, 100]], C.skinDeep, 0.55, ` filter="url(#${id}soft)"`)}
       ${ink([[-44, 68], [-24, 112], [2, 156]], 4, C.skinShade, [0.3, 0.3], 0.45)}
-      <ellipse cx="42" cy="124" rx="4.5" ry="7" fill="${C.skinHi}" opacity="0.35"/>
-      ${ink([[37, 133], [43, 135.5], [48, 131]], 1.6, C.skinShade, [0.3, 0.3], 0.6)}
-      ${ink([[50, 102], [46, 124], [50, 148], [58, 166]], 1.8, C.line, [0.2, 0.2], 0.8)}
-      ${ink([[-52, 56], [-56, 112], [-66, 166]], 2.2, C.line, [0.1, 0.1], 0.8)}
+      <ellipse cx="46" cy="128" rx="5" ry="8" fill="${C.skinHi}" opacity="0.4"/>
+      ${ink([[40, 138], [46, 141], [52, 136]], 1.8, C.skinShade, [0.3, 0.3], 0.65)}
+      ${ink([[54, 106], [50, 128], [54, 150], [62, 166]], 1.8, C.line, [0.2, 0.2], 0.8)}
+      ${ink([[-56, 56], [-60, 112], [-70, 166]], 2.2, C.line, [0.1, 0.1], 0.8)}
       <!-- the crewneck: shade, folds, seams, the ribbed collar -->
       <path d="${TOP}" fill="url(#${id}top)"/>
       <g clip-path="url(#${id}topclip)">
