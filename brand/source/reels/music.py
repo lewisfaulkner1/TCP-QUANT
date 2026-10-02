@@ -2,13 +2,14 @@
 (nothing sampled or licensed), with the voice on top and the music ducking under it.
 
 usage: python3 music.py --dur 28.5 --out mix.wav [--voice voice.wav] [--cues cues.json]
-                        [--style pulse|drive|calm] [--bpm 120] [--seed 1] [--bed bed.wav]
+                        [--style pulse|drive|calm] [--bpm 120] [--seed 1] [--bed bed.wav] [--sfx sfx.wav]
 
   pulse  a light bed for voiceovers (kick on 1 and 3, hats, pad, plucks)
   drive  an upbeat track for reels without a voice (four to the floor, claps, 16th hats, bass)
   calm   pad and plucks only, for the welcome video
-Cues are {t, sfx} with sfx one of tick, pop, slam, whoosh, rise. --bed also writes the music and
-effects without the voice.
+Cues are {t, sfx} with sfx one of tick, pop, slam, whoosh, rise, click, or {t, sfx: 'mute', until},
+which drops the music out (a beat of silence for a punchline; the effects carry on). --bed also
+writes the music and effects without the voice, and --sfx the effects alone.
 """
 import argparse
 import json
@@ -27,6 +28,7 @@ p.add_argument('--style', default='pulse')
 p.add_argument('--bpm', type=float, default=120)
 p.add_argument('--seed', type=int, default=1)
 p.add_argument('--bed')
+p.add_argument('--sfx')
 p.add_argument('--fadeout', type=float, default=1.6)
 args = p.parse_args()
 
@@ -235,12 +237,26 @@ def sfx_rise():
     return noise + tone
 
 
-SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise}
-GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55}
-if args.cues:
-    for c in json.load(open(args.cues)):
-        if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
-            put(sfx, c['t'], SFX[c['sfx']]() * GAIN[c['sfx']], pan=rng.uniform(-0.2, 0.2), rv=0.25 if c['sfx'] in ('slam', 'whoosh') else 0.1)
+def sfx_click():
+    # a mouse button: the press, then a softer release
+    n = int(0.14 * SR)
+    out = np.zeros(n)
+    for start, g in ((0.0, 1.0), (0.07, 0.5)):
+        i = int(start * SR)
+        t = tt(n - i)
+        burst = highpass(rng.standard_normal(n - i), 2500) * np.exp(-t * 900) * 0.7
+        ring = np.sin(2 * np.pi * 4300 * t) * np.exp(-t * 520) * 0.45
+        body = np.sin(2 * np.pi * 950 * t) * np.exp(-t * 240) * 0.3
+        out[i:] += (burst + ring + body) * g
+    return out
+
+
+SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise, 'click': sfx_click}
+GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55, 'click': 0.6}
+cues = json.load(open(args.cues)) if args.cues else []
+for c in cues:
+    if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
+        put(sfx, c['t'], SFX[c['sfx']]() * GAIN[c['sfx']], pan=rng.uniform(-0.2, 0.2), rv=0.25 if c['sfx'] in ('slam', 'whoosh') else 0.1)
 
 # ----------------------------------------------------------------------- reverb
 ir_n = int(1.8 * SR)
@@ -248,11 +264,19 @@ ir = rng.standard_normal((2, ir_n)) * np.exp(-tt(ir_n) * 3.2)
 ir = np.vstack([lowpass(ir[0], 5000), lowpass(ir[1], 5000)])
 wet = np.vstack([signal.fftconvolve(send[0], ir[0])[:N], signal.fftconvolve(send[1], ir[1])[:N]]) * 0.06
 
-bed = music + wet + sfx
-# fade the music out at the end (effects keep their tails)
+# fade the music out at the end, and drop it out where the cues say (effects keep their tails)
 fade = np.ones(N)
 f = int(args.fadeout * SR)
 fade[-f:] = np.linspace(1, 0, f) ** 1.5
+edge = int(0.02 * SR)
+for c in cues:
+    if c['sfx'] == 'mute':
+        a, b = int(c['t'] * SR), min(N, int(c['until'] * SR))
+        gate = np.ones(N)
+        gate[max(0, a - edge):a] = np.linspace(1, 0, a - max(0, a - edge))
+        gate[a:b] = 0
+        gate[b:min(N, b + edge)] = np.linspace(0, 1, min(N, b + edge) - b)
+        fade *= gate
 bed = (music + wet) * fade + sfx
 
 mix = bed * (0.55 if style == 'drive' else 0.42 if style == 'pulse' else 0.35)
@@ -277,5 +301,9 @@ mix = mix / (np.abs(mix).max() or 1) * 0.95
 wavfile.write(args.out, SR, (mix.T * 32767).astype(np.int16))
 if args.bed:
     b2 = np.tanh(bed * 0.9)
-    wavfile.write(args.bed, SR, ((b2 / (np.abs(b2).max() or 1) * 0.95).T * 32767).astype(np.int16))
+    peak = np.abs(b2).max() or 1
+    wavfile.write(args.bed, SR, ((b2 / peak * 0.95).T * 32767).astype(np.int16))
+    if args.sfx:
+        # the effects as loud as they are in the bed, so they sit the same under another sound
+        wavfile.write(args.sfx, SR, ((np.tanh(sfx * 0.9) / peak * 0.95).T * 32767).astype(np.int16))
 print(f'{args.out}: {args.dur:.2f}s, {style}, {args.bpm:.0f} bpm')

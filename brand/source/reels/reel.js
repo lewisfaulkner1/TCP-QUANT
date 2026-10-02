@@ -777,9 +777,19 @@ async function renderFrame(t) {
 
 window.renderFrame = renderFrame;
 window.reelCues = () => cues();
+// Scripts a spec adds to the engine (toon/ for the animated episodes), loaded in order.
+const loadScript = (src) => new Promise((res, rej) => {
+  const s = document.createElement('script');
+  s.src = src;
+  s.onload = res;
+  s.onerror = () => rej(new Error(`no module ${src}`));
+  document.head.appendChild(s);
+});
 window.reelReady = (async () => {
   await Promise.all(['400 20px "Archivo"', '800 20px "TCP Display"', '500 20px "JB Mono"', '600 20px "JB Mono"', 'italic 20px "Serif"'].map((f) => document.fonts.load(f)));
+  for (const src of SPEC.modules || []) await loadScript(src);
   crownSvg(document.querySelector('#bug svg'), 'bugfoil');
+  $('bug').style.display = SPEC.bug === false ? 'none' : '';
   setupBackground();
   setupGrain();
   setupSubs();

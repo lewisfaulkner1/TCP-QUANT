@@ -22,6 +22,7 @@ Instagram play at). The captions and posting plan are in `brand/video/reels/POST
 | File | Does |
 |---|---|
 | `reel.html`, `reel.js` | The engine: draws any moment of a reel from its script, in Chromium. Background, headlines, stamps, tables, coin grids, compounding curves, lists, a phone playing app footage, the probability swarm, the end card, and the subtitles |
+| `toon/` | The animated founder and his sets, for the episodes |
 | `voice.py` | The voice: Kokoro through sherpa-onnx, offline. Speaks each line, trims it, and times every word for the subtitles |
 | `music.py` | Original music in D minor (`pulse` under a voice, `drive` without, `calm` for the welcome video) and the sound effects, on the cues the frames report. Ducks under the voice |
 | `render.cjs` | Runs the lot: voice, frames (4 browsers at once), sound, and the videos with ffmpeg |
@@ -77,7 +78,26 @@ A spec is a list of voice lines and a list of scenes. Copy one close to what you
 - Other settings: `tail` (seconds after the voice), `cover` (the cover's time), `seed`, `style` and
   `bpm` for the music, `subsY` (subtitle height), `voiceName` (`bf_emma` by default; `bf_isabella`,
   `bm_george` and `bm_lewis` are the other British voices), `speed`, `music` (make a `-music` file
-  even with a voice) and `sound: false` (no silent copy).
+  even with a voice), `sound: false` (no silent copy), `sfx: true` (a copy with the effects only, to
+  keep under a trending sound), `bug: false` (no TCP badge in the corner) and `cues` (extra sound
+  effects: `tick`, `pop`, `slam`, `whoosh`, `rise`, `click`, or `{ t, sfx: 'mute', until }` to drop
+  the music out for a punchline).
+- `variants`: other cuts of the same reel, made with `--variant=<name>` and named
+  `tcp-<reel>-<name>-*`. A variant's settings go over the spec's, and its `scenes` and `voice` patch
+  the spec's by `id` (`null` drops one). The animated episodes use one for the founder's own account.
+
+## Animated episodes
+
+`toon/` adds the founder as an animated character (see `brand/video/reels/EPISODES.md`). A spec
+loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
+
+- `toon/founder.js` draws him from parameters: view, head turn, lean, eyes, lids, brows, mouth, cap,
+  shades and arms. Poses blend, so one drawing serves every shot.
+- `toon/toon.js` adds the `toon` kind (a shot: a set, a camera that moves by keys, his pose track and
+  the story chart's track, depth of field, and a shake when a stop is hit), `caption` (meme text, a
+  numbered lesson `note`, or a line of `steps`) and `handPhone` (the phone scene, held in his hand).
+  Sets: `desk`, `ots` (over the shoulder), `screen` and `mouse`.
+- `node toon/sheet.cjs <out.png>` draws the character sheet, to check a change to him.
 
 ## Rules
 
@@ -88,4 +108,7 @@ A spec is a list of voice lines and a list of scenes. Copy one close to what you
   and the bot, which shows the partner disclosure and risk warning.
 - **Safe zones.** Keep text between y 130 and 1540, and clear of the right-hand buttons: check with
   `--safe`.
-- **AI label.** The voice is AI: label voiceover reels as AI-generated when posting.
+- **AI label.** The voice is AI: label voiceover reels as AI-generated when posting. The animated
+  founder is drawn in code, not by an AI model.
+- **One founder.** Don't redraw him per episode: change `toon/founder.js` only on purpose, and check
+  the sheet.

@@ -1,11 +1,13 @@
-// Makes a reel: node render.cjs <reel> <workdir> [--stills=0.5,3.2] [--workers=4] [--safe] [--reuse]
-// (--reuse keeps the frames already drawn, to redo only the sound and the videos)
+// Makes a reel: node render.cjs <reel> <workdir> [--stills=0.5,3.2] [--workers=4] [--safe] [--reuse] [--variant=name]
+// (--reuse keeps the frames already drawn, to redo only the sound and the videos; --variant makes one of
+// the spec's variants, such as an episode's personal-account cut, as tcp-<reel>-<variant>-*)
 //   1. the voice (voice.py, Kokoro) and its word timings, if the reel has a voice
 //   2. every frame, drawn by reel.js in Chromium and saved as a JPEG
 //   3. the sound: music.py's bed and effects on the reel's cues, under the voice
 //   4. the videos, with ffmpeg: <reel>-voice.mp4 (voice, music, effects) for reels with a voice,
 //      <reel>-music.mp4 (music and effects) for reels without, <reel>-sound.mp4 (no sound: add a
-//      trending one in the app; `sound: false` in the spec skips it), and a cover
+//      trending one in the app; `sound: false` in the spec skips it), <reel>-sfx.mp4 (the effects only,
+//      to keep under a trending sound; `sfx: true` in the spec makes it), and a cover
 // Footage of the app comes from capture.cjs, in <workdir>/shots.
 // Playwright from this folder's node_modules, or the copy installed globally in the cloud container.
 const { chromium } = (() => { try { return require('playwright'); } catch { return require('/opt/node22/lib/node_modules/playwright'); } })();
@@ -23,11 +25,21 @@ const FPS = 30;
 const FFMPEG = process.env.FFMPEG || ['/usr/local/lib/python3.11/dist-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2'].find((f) => fs.existsSync(f)) || 'ffmpeg';
 // Python: $PY_VOICE, or the virtual environment in the workdir (Linux and macOS, or Windows).
 const PY_VOICE = process.env.PY_VOICE || [path.join(WORK, 'venv/bin/python'), path.join(WORK, 'venv/Scripts/python.exe')].find((f) => fs.existsSync(f)) || 'python3';
+const VARIANT = typeof args.variant === 'string' ? args.variant : null;
+const TAG = VARIANT ? `${NAME}-${VARIANT}` : NAME;
 const OUT = path.join(REPO, 'brand/video/reels');
-const DIR = path.join(WORK, 'reels', NAME);
-const SPEC = require(path.join(HERE, 'specs', `${NAME}.js`));
+const DIR = path.join(WORK, 'reels', TAG);
+// A variant's settings go over the spec's, and its scenes and voice lines patch the spec's by id
+// (null drops one). The page gets the same function, so both sides see the same spec.
+function variantOf(spec, name) {
+  const v = spec.variants && spec.variants[name];
+  if (!v) throw new Error(`no variant ${name}`);
+  const patch = (list, by) => (list && by ? list.filter((x) => by[x.id] !== null).map((x) => (x.id && by[x.id] ? { ...x, ...by[x.id] } : x)) : list);
+  return { ...spec, ...v, scenes: patch(spec.scenes, v.scenes), voice: patch(spec.voice, v.voice) };
+}
+const SPEC = VARIANT ? variantOf(require(path.join(HERE, 'specs', `${NAME}.js`)), VARIANT) : require(path.join(HERE, 'specs', `${NAME}.js`));
 fs.mkdirSync(DIR, { recursive: true });
-const log = (m) => console.log(`[${NAME}] ${m}`);
+const log = (m) => console.log(`[${TAG}] ${m}`);
 
 // ------------------------------------------------------------------ voice
 let VOICE = null;
@@ -71,7 +83,10 @@ async function openPage(browser) {
     else if (rel === 'spec.js') file = path.join(HERE, 'specs', `${NAME}.js`);
     else file = path.join(HERE, rel);
     if (!fs.existsSync(file)) return r.fulfill({ status: 404, body: 'missing ' + rel });
-    return r.fulfill({ status: 200, contentType: TYPES[path.extname(file)] || 'application/octet-stream', body: fs.readFileSync(file) });
+    let body = fs.readFileSync(file);
+    // (the spec's own `const SPEC` is what reel.js reads, so the variant patches that object in place)
+    if (rel === 'spec.js' && VARIANT) body = `${body}\nObject.assign(window.SPEC, (${variantOf})(window.SPEC, ${JSON.stringify(VARIANT)}));\n`;
+    return r.fulfill({ status: 200, contentType: TYPES[path.extname(file)] || 'application/octet-stream', body });
   });
   await page.addInitScript(({ SHOTS, CROWN, VOICE, SAFE }) => {
     window.SHOTS = SHOTS; window.CROWN = CROWN; window.VOICE = VOICE; window.SHOW_SAFE = SAFE; window.module = undefined;
@@ -131,7 +146,7 @@ function ffmpeg(list) {
   fs.writeFileSync(path.join(DIR, 'cues.json'), JSON.stringify(cues));
   const music = [process.env.PY_MUSIC || 'python3', path.join(HERE, 'music.py'), '--dur', DURATION.toFixed(3), '--cues', path.join(DIR, 'cues.json'),
     '--style', SPEC.style || (VOICE ? 'pulse' : 'drive'), '--bpm', String(SPEC.bpm || 120), '--seed', String(SPEC.seed || 1),
-    '--out', path.join(DIR, 'mix.wav'), '--bed', path.join(DIR, 'bed.wav')];
+    '--out', path.join(DIR, 'mix.wav'), '--bed', path.join(DIR, 'bed.wav'), '--sfx', path.join(DIR, 'sfx.wav')];
   if (VOICE) music.push('--voice', path.join(DIR, 'voice.wav'));
   execFileSync(music[0], music.slice(1), { stdio: 'inherit' });
 
@@ -142,19 +157,24 @@ function ffmpeg(list) {
   const loud = ['-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'];
   const made = [];
   if (VOICE) {
-    ffmpeg([...video, '-i', path.join(DIR, 'mix.wav'), ...enc, ...loud, '-shortest', path.join(OUT, `tcp-${NAME}-voice.mp4`)]);
-    made.push(`tcp-${NAME}-voice.mp4`);
+    ffmpeg([...video, '-i', path.join(DIR, 'mix.wav'), ...enc, ...loud, '-shortest', path.join(OUT, `tcp-${TAG}-voice.mp4`)]);
+    made.push(`tcp-${TAG}-voice.mp4`);
   }
   if (SPEC.music ?? !VOICE) {
-    ffmpeg([...video, '-i', path.join(DIR, 'bed.wav'), ...enc, ...loud, '-shortest', path.join(OUT, `tcp-${NAME}-music.mp4`)]);
-    made.push(`tcp-${NAME}-music.mp4`);
+    ffmpeg([...video, '-i', path.join(DIR, 'bed.wav'), ...enc, ...loud, '-shortest', path.join(OUT, `tcp-${TAG}-music.mp4`)]);
+    made.push(`tcp-${TAG}-music.mp4`);
+  }
+  if (SPEC.sfx) {
+    // the effects at the level they have in the mix, not loudness-matched: they sit under the app's sound
+    ffmpeg([...video, '-i', path.join(DIR, 'sfx.wav'), ...enc, '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest', path.join(OUT, `tcp-${TAG}-sfx.mp4`)]);
+    made.push(`tcp-${TAG}-sfx.mp4`);
   }
   if (SPEC.sound ?? true) {
-    ffmpeg([...video, '-f', 'lavfi', '-i', `anullsrc=channel_layout=stereo:sample_rate=48000`, ...enc, '-c:a', 'aac', '-b:a', '64k', '-t', DURATION.toFixed(3), path.join(OUT, `tcp-${NAME}-sound.mp4`)]);
-    made.push(`tcp-${NAME}-sound.mp4`);
+    ffmpeg([...video, '-f', 'lavfi', '-i', `anullsrc=channel_layout=stereo:sample_rate=48000`, ...enc, '-c:a', 'aac', '-b:a', '64k', '-t', DURATION.toFixed(3), path.join(OUT, `tcp-${TAG}-sound.mp4`)]);
+    made.push(`tcp-${TAG}-sound.mp4`);
   }
   const coverFrame = Math.min(FRAMES - 1, Math.round((SPEC.cover ?? 0.8) * FPS));
-  fs.copyFileSync(path.join(frameDir, `${String(coverFrame).padStart(5, '0')}.jpg`), path.join(OUT, `tcp-${NAME}-cover.jpg`));
-  made.push(`tcp-${NAME}-cover.jpg`);
+  fs.copyFileSync(path.join(frameDir, `${String(coverFrame).padStart(5, '0')}.jpg`), path.join(OUT, `tcp-${TAG}-cover.jpg`));
+  made.push(`tcp-${TAG}-cover.jpg`);
   log(`made ${made.join(', ')} in ${((Date.now() - started) / 1000).toFixed(0)}s`);
 })().catch((e) => { console.error(e); process.exit(1); });

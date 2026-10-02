@@ -32,7 +32,7 @@ can't pay for services yet: prefer free tiers, and ask before anything that cost
 | `bridge/` | TCP bridge for a Windows PC with MT5: reads connected members' accounts read-only and sends the Worker percentages only | `cd bridge && python3.12 -m unittest -v` |
 | `signals/` | Signal publisher for the VPS: the algo's signals and results as branded cards | `cd signals && npm install && npm test` |
 | `tools/card-studio/` | Card Studio (a private Claude artifact) for signal and results images | — |
-| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music | see its README |
+| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music; `toon/` adds the animated founder for the TikTok episodes (`brand/video/reels/EPISODES.md`) | see its README |
 | `brand/`, `community/` | Logo pack, videos and reels (`brand/video/reels/POSTS.md`), captions, business cards; the Inner Circle kit, pinned posts and socials setup | — |
 
 The terminal builds into one file, `terminal/dist/worker.js`, which Lewis pastes into the Cloudflare
@@ -60,6 +60,8 @@ dashboard. Always run `npm test` (it builds first) and commit the rebuilt `dist/
   model comes from an npm package (see `brand/source/reels/README.md`). Models aren't committed.
 - Reels teach and never ask viewers to open an account (a UK financial promotion); the link in bio and
   the bot do that, with the disclosures. Label AI voices and demo data.
+- The animated founder (`toon/founder.js`) is canonical once Lewis approves the sheet: change his look
+  only on purpose. His reference photos are personal: keep them out of the repo.
 
 ## Where things stand
 

@@ -11,6 +11,10 @@ What's built, what comes next, and the decisions behind it. Updated as work land
   is 14 reels for TikTok and Instagram (the Trading maths series, the terminal, the Playbook, the
   leaderboard, prop challenge maths, the brand sting) and the welcome video, with captions and a two-week plan
   (`brand/video/reels/POSTS.md`) and the profile setup (`community/SOCIAL.md`).
+- **Animated episodes** (`brand/source/reels/toon`, `brand/video/reels/EPISODES.md`): the founder as an
+  animated character, drawn in code so he looks the same in every shot, for the TikTok series in the
+  animated master brief. EP02, *Every Trader Has Done This*, is made in two cuts (TCP's account and the
+  founder's), with its production package. The character sheet waits for Lewis's approval.
 - **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner), and
   the pinned posts for Start here (`community/PINNED.md`).
 - **Onboarding bot:** link in bio → 18+ check → broker → verification → single-use invite, with the
@@ -51,6 +55,9 @@ What's built, what comes next, and the decisions behind it. Updated as work land
   to open a CFD account is a financial promotion. The link in bio leads to the bot, which shows the
   partner disclosure and risk warning first. AI voices are labelled, demo data is labelled, and every
   figure in a reel is worked out.
+- **The animated founder is drawn, not generated.** A character built from fixed shapes can't drift
+  between shots, which AI video still does. Episodes ask viewers to follow, not to join: the Inner Circle
+  needs a broker account, so it isn't advertised as free. Story charts say they're examples.
 
 ## Next, free
 
