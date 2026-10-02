@@ -78,7 +78,8 @@ All of it is free.
    ```
    It shows this bridge's key id and the terminal's, which must match. It also shows how many
    accounts are waiting, whether it can find each MT5, and whether the MT5 package is installed for
-   this Python.
+   this Python. If the terminal turns it away, it says what to fix: most often, the terminal Worker
+   has no D1 database bound as `DB` yet (terminal/SETUP.md, step 4).
 8. Try it with your own account. In the terminal, open **Account → Connect MT5** and enter your
    account number, the server exactly as MT5 shows it (like `PUPrime-Live 3`) and your investor
    password. Then run one pass:

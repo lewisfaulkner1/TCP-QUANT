@@ -66,6 +66,21 @@ class WorkerError(Exception):
         self.code = code
 
 
+# What to do when the terminal turns the bridge away, in the words of terminal/SETUP.md.
+FIXES = {
+    'no_db': 'the terminal has no database yet: in Cloudflare, add a D1 database to the terminal Worker '
+             'as DB (Settings, Bindings), then deploy. terminal/SETUP.md, step 4',
+    'unauthorised': 'the terminal didn\'t accept the bridge\'s token: paste secrets/bridge_token.txt into '
+                    'Cloudflare as the secret BRIDGE_TOKEN again, then deploy',
+    'not_found': 'check that worker_url in config.json is the terminal\'s address, not the bot\'s',
+}
+
+
+def explain(err):
+    fix = FIXES.get(err.code) or (FIXES['not_found'] if err.status == 404 else None)
+    return f'{err}. Fix: {fix}' if fix else str(err)
+
+
 # ------------------------------------------------------------------ the key
 class BridgeKey:
     """The bridge's private key, and its id: the first 16 hex digits of the SHA-256 of the public
@@ -311,7 +326,10 @@ def main(argv=None):
         del passphrase
         log.info('Bridge key %s', key.id)
         if args.check:
-            data = worker.links()
+            try:
+                data = worker.links()
+            except WorkerError as err:
+                raise SetupError(explain(err)) from None
             statuses = {}
             for l in data.get('links', []):
                 statuses[l['status']] = statuses.get(l['status'], 0) + 1
@@ -338,7 +356,9 @@ def main(argv=None):
                 for outcome in outcomes.values():
                     counts[outcome] = counts.get(outcome, 0) + 1
                 log.info('Run done: %s', ', '.join(f'{n} {o}' for o, n in sorted(counts.items())) or 'no accounts connected')
-            except (WorkerError, urllib.error.URLError, OSError) as err:
+            except WorkerError as err:
+                log.warning('%s. Trying again next run', explain(err))
+            except (urllib.error.URLError, OSError) as err:
                 log.warning('Couldn\'t reach the terminal (%s): trying again next run', err)
             if args.once:
                 return 0

@@ -272,6 +272,33 @@ class Setup(unittest.TestCase):
         self.assertIn('MT5 for Vantage: not set up yet, so Vantage accounts wait until it is', text)
         self.assertRegex(text, r'MetaTrader5 package: (\d|installed|not installed for this Python)')
 
+    def test_the_check_says_what_to_fix_when_the_terminal_refuses(self):
+        class Refusing(FakeWorker):
+            def __init__(self, status, code):
+                super().__init__(KEY.id, [])
+                self.status, self.code = status, code
+
+            def links(self):
+                raise WorkerError(self.status, self.code)
+
+        for status, code, words in ((503, 'no_db', 'add a D1 database to the terminal Worker as DB'),
+                                    (401, 'unauthorised', 'BRIDGE_TOKEN again'),
+                                    (404, 'http', 'worker_url in config.json')):
+            with tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, 'config.json')
+                with open(path, 'w', encoding='utf-8') as f:
+                    json.dump({'worker_url': 'https://terminal.example'}, f)
+                with mock.patch.object(tcp_bridge, 'setup_logging'), \
+                        mock.patch.object(tcp_bridge, 'Worker', lambda url, token: Refusing(status, code)), \
+                        mock.patch.object(tcp_bridge.BridgeKey, 'load', return_value=KEY), \
+                        mock.patch.dict(os.environ, {'TCP_BRIDGE_TOKEN': 'token', 'TCP_BRIDGE_PASSPHRASE': 'passphrase'}), \
+                        self.assertLogs('tcp-bridge', level='INFO') as logs:
+                    self.assertEqual(tcp_bridge.main(['--check', '--config', path]), 2, code)
+            text = '\n'.join(logs.output)
+            self.assertIn(f'the terminal answered {status} {code}', text)
+            self.assertIn(words, text)
+            self.assertNotIn('Traceback', text)
+
     def test_config_saved_by_notepad_with_a_byte_order_mark_still_loads(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, 'config.json')
