@@ -26,11 +26,11 @@
 // }
 (function () {
   const C = {
-    line: '#3A2118', lineHair: '#1C120C', lineCloth: '#050505',
+    line: '#3A2118', lineSoft: '#64382A', lineHair: '#1C120C', lineCloth: '#050505',
     skin: '#EEBF9E', skinHi: '#FADDC8', skinMid: '#E0A787', skinShade: '#C8876B', skinDeep: '#A2614B', skinOcc: '#774131', stubble: '#6F5D58',
-    lipLow: '#C98B78', lipLine: '#5E3328', mouthIn: '#3E1612', teeth: '#F4EEE6', tongue: '#B9605A',
-    hair: '#4B3426', hairDark: '#281A12', hairLight: '#9C7459', brow: '#352218',
-    white: '#F2ECE5', whiteShade: '#D3C6BB', iris: '#5E3F2A', irisLight: '#8E6844', irisDark: '#2E1C11', pupil: '#110B08', lash: '#24170F',
+    lipUp: '#B47362', lipLow: '#C7836F', moustache: '#5C3F2A', lipLine: '#5E3328', mouthIn: '#3E1612', teeth: '#F4EEE6', tongue: '#B9605A',
+    hair: '#4A3324', hairDark: '#251810', hairLight: '#7E5C40', hairTip: '#A07C58', brow: '#352218',
+    white: '#F2ECE5', whiteShade: '#D3C6BB', iris: '#4A3020', irisLight: '#7A5434', irisDark: '#22140B', pupil: '#110B08', lash: '#24170F',
     cap: '#1E1E21', capHi: '#36363C', capDark: '#0E0E10', stitch: '#4C4C55', eyelet: '#2C2C31',
     gold: '#D8AD4E', goldHi: '#F8E3A6', goldLo: '#9E7428',
     top: '#211F1E', topHi: '#3A3734', topDark: '#100F0E', stitchTop: '#3C3936',
@@ -130,118 +130,143 @@
     };
   }
 
-  // ------------------------------------------------------------ the eyes
-  // An almond eye under a heavy lid: one clean lid line, no lashes drawn, a small iris tucked under
-  // the lid, one highlight. The near eye's outer corner is on the left; the far eye, beyond the bridge
-  // of the nose, is narrower and partly hidden by it.
+  // ------------------------------------------------------------ the face
+  // His own proportions, taken from photos of him and turned 40° to the right, then stylised: eyes a
+  // little bigger, curves simplified. Head space: eye line at y 0, chin at y 116, nose tip at x 90.
+  // The near eye's outer corner is on the left; the far eye sits between the bridge of the nose and
+  // the far edge of the face. Nothing crosses anything else.
+
+  // Eyes. A and B are the corners, left to right; rise and drop are how far the lids open above and
+  // below the line between them; the shape lists say where along it each lid is fullest.
+  const EYES = {
+    near: { A: [21.5, -1.1], B: [52.9, 1.2], rise: 9.6, drop: 3.7, r: 7, sq: 1,
+      up: [[0, 0], [0.22, 0.5], [0.46, 0.9], [0.66, 1], [0.86, 0.8], [1, 0]],
+      low: [[1, 0], [0.82, 0.6], [0.6, 0.94], [0.4, 1], [0.2, 0.7], [0, 0]] },
+    far: { A: [80.4, 2.1], B: [99.6, 1.2], rise: 7.6, drop: 3.1, r: 5.9, sq: 0.78,
+      up: [[0, 0], [0.14, 0.55], [0.38, 0.9], [0.6, 1], [0.84, 0.84], [1, 0]],
+      low: [[1, 0], [0.88, 0.62], [0.7, 1], [0.48, 0.8], [0.24, 0.36], [0, 0]] },
+  };
   function eye(near, p, id) {
-    const A = near ? [1, 1] : [67, -1.5], B = near ? [44, 2.5] : [86, -3];
+    const E = near ? EYES.near : EYES.far, { A, B } = E;
     const at = (k, dy = 0) => [lerp(A[0], B[0], k), lerp(A[1], B[1], k) + dy];
-    const open = Math.max(0, Math.min(1.3, 1 - Math.max(p.lid, p.blink) * 1.05 + p.wide * 0.45));
-    const rise = (near ? 10.5 : 8.5) * open;
-    const pk = near ? 0.55 : 0.45;
-    const drop = (near ? 4.6 : 3.6) * (0.65 + 0.35 * Math.min(1, open));
+    const open = Math.max(0, Math.min(1.35, 1 - Math.max(p.lid, p.blink) * 1.05 + p.wide * 0.45));
+    const rise = E.rise * open;
+    const drop = E.drop * (0.72 + 0.28 * Math.min(1, open)) + p.wide * 1.4;
     const lineW = near ? 2.7 : 2.3;
-    const outer = near ? A : B, dir = near ? -1 : 1;
-    const tail = [outer[0] + dir * 3.5, outer[1] + 2];
-    const crease = ink([at(0.15, -rise - 4.5 - p.wide * 2), at(pk, -rise - 6 - p.wide * 3), at(0.85, -rise * 0.8 - 4.5 - p.wide * 2)], 1.5, C.skinShade, [0.4, 0.4], 0.6);
+    const taper = near ? [0.3, 0.38] : [0.38, 0.3];             // thins at both corners: no flick
+    const crease = (dy, op) => ink(E.up.slice(1, 5).map(([k, f]) => at(k, -rise * f - dy - p.wide * 2)), 1.6, C.skinShade, [0.45, 0.45], op);
+    const sock = blob([at(-0.08, -1), at(0.18, -rise - 8), at(0.62, -rise - 10), at(1.06, -3), at(0.62, -rise * 0.4), at(0.2, -rise * 0.3)], C.skinShade, 0.46, ` filter="url(#${id}soft)"`)
+      + blob(near ? [[50, -12], [58, -10], [64, -2], [60, 6], [53, 4]] : [[76, -8], [80.5, -6], [81, 2], [78, 6], [75.5, 1]], C.skinShade, 0.4, ` filter="url(#${id}soft)"`);
     if (open < 0.12) {
-      const shut = [A, at(0.35, drop * 0.45), at(0.65, drop * 0.45), B];
-      return `${ink(near ? [tail, ...shut] : [...shut, tail], lineW, C.lash, [0.15, 0.15])}${crease}`;
+      const shut = [A, at(0.3, E.drop * 0.55), at(0.62, E.drop * 0.6), B];
+      return `${sock}${ink(shut, lineW, C.lash, taper)}${crease(4, 0.55)}`;
     }
-    const upper = [A, at(pk * 0.4, -rise * 0.7), at(pk, -rise), at(pk + (1 - pk) * 0.55, -rise * 0.78), B];
-    const lower = [B, at(0.78, drop * 0.8), at(0.46, drop), at(0.16, drop * 0.7), A];
-    const w = B[0] - A[0];
-    const r = near ? 7.4 : 5.9, rx = near ? r : r * 0.78;
-    const ix = (A[0] + B[0]) / 2 + w * 0.03 + p.look[0] * w * 0.2, iy = (A[1] + B[1]) / 2 - 1.2 + p.look[1] * 2.8;
-    const clip = `${id}eye${near ? 'n' : 'f'}`;
+    const up = E.up.map(([k, f]) => at(k, -rise * f));
+    const low = E.low.map(([k, f]) => at(k, drop * f));
+    const r = E.r, rx = r * E.sq;
+    const ix = lerp(A[0], B[0], 0.52) + p.look[0] * (B[0] - A[0]) * 0.17;
+    const iy = lerp(A[1], B[1], 0.52) - 1.3 + p.look[1] * 2.6 - p.wide * 0.6;
+    const clip = `${id}eye${near ? 'n' : 'f'}`, shape = loop(up, low);
     return `
-      <clipPath id="${clip}"><path d="${loop(upper, lower)}"/></clipPath>
-      <path d="${loop(upper, lower)}" fill="url(#${id}sclera)"/>
+      ${sock}
+      <clipPath id="${clip}"><path d="${shape}"/></clipPath>
+      <path d="${shape}" fill="url(#${id}sclera)"/>
       <g clip-path="url(#${clip})">
-        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx)}" ry="${n(r)}" fill="url(#${id}iris)"/>
-        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx * 0.45)}" ry="${n(r * 0.45)}" fill="${C.pupil}"/>
-        ${ink(upper, 7, C.skinOcc, [0, 0], 0.35)}
-        <circle cx="${n(ix + rx * 0.32)}" cy="${n(iy - r * 0.34)}" r="${n(r * 0.22)}" fill="#fff" opacity="0.9"/>
+        <ellipse cx="${n(ix)}" cy="${n(iy)}" rx="${n(rx)}" ry="${n(r)}" fill="url(#${id}iris)" stroke="${C.irisDark}" stroke-width="1"/>
+        <ellipse cx="${n(ix + rx * 0.04)}" cy="${n(iy + r * 0.04)}" rx="${n(rx * 0.44)}" ry="${n(r * 0.44)}" fill="${C.pupil}"/>
+        ${ink(up, 6.5, C.skinOcc, [0, 0], 0.38)}
+        <circle cx="${n(ix + rx * 0.36)}" cy="${n(iy - r * 0.36)}" r="${n(r * 0.24)}" fill="#fff" opacity="0.92"/>
+        <circle cx="${n(ix - rx * 0.34)}" cy="${n(iy + r * 0.34)}" r="${n(r * 0.1)}" fill="#fff" opacity="0.6"/>
       </g>
-      ${ink(lower.slice(near ? 2 : 0, near ? 5 : 3), 1.2, C.skinShade, [0.4, 0.4], 0.5)}
-      ${ink(near ? [tail, ...upper] : [...upper, tail], lineW, C.lash, [0.12, 0.12])}
-      ${crease}`;
+      ${ink(low.slice(1, 5), 1.3, C.skinShade, [0.4, 0.4], 0.55)}
+      ${ink(up, lineW, C.lash, taper)}
+      ${crease(3.1, 0.42)}`;
   }
 
-  // A brow: thick and fairly straight, low over the eye, squared at the head by the nose.
+  // Brows: thick, low and fairly straight, the head squared off by the nose, the tail thinning
+  // towards the temple. Raised, the whole brow lifts and the head arches; lowered, the head drops.
   function brow(near, raise) {
-    const up = -raise * 6, frown = Math.max(0, -raise);
-    const T = near ? [-10, -18.5 + up * 0.8] : [97, -19.5 + up * 0.8];
-    const H = near ? [50 - frown * 3, -22.5 + up + frown * 4.5] : [64 + frown * 3, -24 + up + frown * 4.5];
-    const M = near ? [21, -25.5 + up - Math.max(0, raise) * 1.5] : [81, -26.5 + up];
-    const pts = near ? [T, M, H] : [H, M, T];
+    const up = -Math.max(0, raise) * 7, down = Math.max(0, -raise);
+    const head = (pt, k) => [pt[0] - (near ? 1 : -1) * down * 2 * k, pt[1] + up * (0.6 + 0.4 * k) + down * 5 * k - down * 0.6];
+    // top edge and bottom edge, tail first (near brow) or head first (far brow), with how "head" each point is
+    const N = { top: [[13, -14.2, 0], [23, -20.4, 0.1], [35.5, -23.6, 0.35], [49, -23.4, 0.7], [61, -21.6, 1], [64.4, -18, 1]],
+      bot: [[63.6, -13.6, 1], [50, -16.4, 0.7], [37, -17.2, 0.35], [25.5, -15.4, 0.1], [13, -14.2, 0]] };
+    const F = { top: [[83.2, -16.6, 1], [85.5, -20.8, 1], [94, -22.6, 0.6], [101.5, -22.2, 0.3], [106.5, -18.4, 0]],
+      bot: [[106.5, -18.4, 0], [102, -16.6, 0.3], [94.5, -16.2, 0.6], [85.4, -13, 1]] };
+    const B = near ? N : F;
+    const top = B.top.map(([x, y, k]) => head([x, y], k)), bot = B.bot.map(([x, y, k]) => head([x, y], k));
+    const r = rnd(near ? 5 : 9);
+    const shape = `${smooth(top)} L ${xy(bot[0])} ${smooth(bot).replace(/^M [-\d.]+ [-\d.]+/, '')} Z`;
+    const cid = `brow${near ? 'n' : 'f'}${Math.round(raise * 100)}`;
     let hairs = '';
-    const S = sample(pts, 8);
-    for (let i = 1; i < S.length - 1; i += 1) {
-      const k = i / (S.length - 1);
-      const headness = near ? k : 1 - k;
-      const lat = near ? -1 : 1;
-      const dx = lat * (1 - headness * 0.75), dy = -(0.3 + headness * 0.6);
-      const len = Math.hypot(dx, dy);
-      const [x, y] = S[i];
-      const yo = (i % 3 - 1) * 2;
-      hairs += ink([[x - dx / len * 3, y - dy / len * 3 + yo], [x + dx / len * 4, y + dy / len * 4 + yo]], 1.2, C.lineHair, [0.25, 0.6], 0.8);
-    }
-    return `${ink(pts, near ? 10 : 8.5, C.brow, near ? [0.7, 0.04] : [0.04, 0.7])}${hairs}`;
+    sample(top, 3).forEach(([x, y], i) => {
+      if (i % 2) return;
+      const lean = near ? -1 : 1;
+      hairs += ink([[x + lean * 1.2, y + 5.5 + r()], [x - lean * 1.6, y + 1.4]], 1, C.hairLight, [0.4, 0.4], 0.3);
+    });
+    return `<clipPath id="${cid}"><path d="${shape}"/></clipPath>
+      <path d="${shape}" fill="${C.brow}"/>
+      <g clip-path="url(#${cid})">${hairs}${ink(off(bot, 0, -0.6), 2, C.lineHair, [0.2, 0.2], 0.5)}</g>`;
   }
 
   // ------------------------------------------------------------ nose, mouth, ear
-  // A straight nose: from the dip below the brow its bridge is the edge of the face, down to the tip
-  // and under it to the lip, as in the first sheet. It's filled with the face's own skin, so it
-  // sits in the face rather than on it.
+  // A straight nose with a rounded tip: the bridge's far side is one line from between the brows
+  // down to the tip, the near side is shade, then the tip, the nostril and the curve of its wing.
   function nose(p, id) {
-    const shape = [[96, -12], [99, -3], [104, 8], [109.5, 19], [113.5, 29], [111, 37], [103, 41.5], [94, 42], [87, 39.5], [84, 33.5], [85.5, 24], [87.5, 10], [89, -4], [92, -12]];
     return `
-      <path d="${smooth(shape, true)}" fill="url(#${id}skin)"/>
-      ${blob([[88, -6], [91, 8], [92, 22], [90, 32], [85, 34], [82.5, 25], [84, 10]], C.skinShade, 0.45, ` filter="url(#${id}soft)"`)}
-      ${blob([[80, 42], [92, 43], [101, 45], [93, 50], [82, 48.5]], C.skinShade, 0.4, ` filter="url(#${id}soft)"`)}
-      ${ink([[96, -4], [101, 6], [107, 17]], 2.4, C.skinHi, [0.3, 0.3], 0.6)}
-      ${ink([[96, -12], [99, -3], [104, 8], [109.5, 19], [113.5, 29]], 2, C.line, [0.05, 0.05])}
-      ${ink([[113.5, 29], [111.5, 36], [105, 40.5], [100.5, 43]], 2.3, C.line, [0.05, 0.3])}
-      ${ink([[95.5, -7], [99.5, 2], [104.5, 12.5], [109.5, 22]], 2, p.light.tint, [0.3, 0.3], 0.4 * p.light.rim)}
-      ${blob([[94, 36.5], [99, 37.5], [104, 39.5], [100.5, 41.3], [95, 40.8]], C.skinOcc, 0.85)}
-      ${ink([[87.5, 27], [84, 33], [86, 39], [92, 41.3]], 2, C.line, [0.45, 0.25], 0.85)}
-      <ellipse cx="108" cy="25.5" rx="3" ry="2.1" fill="#fff" opacity="0.45"/>`;
+      ${blob([[73.5, -2], [77.5, 8], [81.5, 18], [84.5, 26], [79, 31], [70, 33.5], [64, 35], [66.5, 26], [70.5, 15], [72, 5]], C.skinShade, 0.42, ` filter="url(#${id}soft)"`)}
+      ${blob([[62, 45.5], [72, 47.5], [82, 47.5], [86, 50.5], [76, 53.5], [64, 51.5]], C.skinDeep, 0.38, ` filter="url(#${id}soft)"`)}
+      ${blob([[59, 37], [64.5, 33.5], [70, 34.5], [68.5, 40], [63, 44.5], [58.5, 43]], C.skinShade, 0.5, ` filter="url(#${id}soft)"`)}
+      ${ink([[78.5, 3], [82.5, 12.5], [86, 22.5]], 2.6, C.skinHi, [0.35, 0.35], 0.75)}
+      ${ink([[74.8, -3], [77.4, 4.5], [81.2, 12.5], [85.2, 19.5], [88.6, 26], [90, 32], [88.6, 37.6], [85, 41.6]], 2.1, C.lineSoft, [0.5, 0.25], 0.95)}
+      ${ink([[85.6, 41.2], [82.6, 43.6], [79.6, 44.8]], 1.6, C.lineSoft, [0.3, 0.5], 0.7)}
+      ${blob([[69.5, 43.6], [74.5, 42.6], [79.4, 44.4], [76.5, 46.4], [71, 46.3]], C.skinOcc, 0.9)}
+      ${ink([[65.5, 35.4], [61, 38.2], [60, 42.2], [62.8, 45.2], [68, 45.8]], 1.8, C.lineSoft, [0.4, 0.3], 0.75)}
+      <ellipse cx="86.2" cy="30.4" rx="2.9" ry="2.2" fill="#fff" opacity="0.5"/>`;
   }
 
-  // A plain mouth: one line, the lower lip in a little shade, no colour to speak of.
+  // Full lips, the lower one fuller: the line of the mouth, the upper lip a shade darker than his skin,
+  // the lower lip catching the light with its shadow under it. A faint moustache above.
   function mouth(p, id) {
     const { open, smile, smirk } = p.mouth;
-    const L = [53, 64.5 - smile * 3 + Math.max(0, -smile) * 1.4];
-    const R = [94, 61.5 - smile * 3.4 - smirk * 6.5];
-    const gap = open > 0.04 ? 2.5 + open * 16 : 0;
-    const line = [L, [63, 64.2 + smile * 0.6], [76, 63.8 + smile * 1.1 - smirk * 1.3], [86, 62.6 - smirk * 3.2], R];
-    const low = line.map(([x, y], i) => [x, y + gap * [0, 0.85, 1, 0.82, 0][i]]);
+    const nearUp = smile * 3.4 - Math.max(0, -smile) * 0.6, farUp = smile * 2.6 + smirk * 6;
+    const gap = open > 0.04 ? 2 + open * 15 : 0;
+    const L = [47.5, 71.8 - nearUp], R = [86.4, 72.4 - farUp];
+    const line = [L, [54, 70.4 - nearUp * 0.4], [62, 69.2 + smile * 0.5], [70, 68.6 + smile * 0.8], [77, 68.8 + smile * 0.6 - smirk * 0.6], [82.5, 69.8 - farUp * 0.45], R];
+    const low = line.map(([x, y], i) => [x, y + gap * [0, 0.55, 0.9, 1, 0.95, 0.6, 0][i]]);
+    const upLip = [L, [52, 68 - nearUp * 0.5], [58, 64.8], [65, 61.6], [72.5, 59.4], [78.6, 61.2], [84.4, 59.8], [87.8, 63.6], [88.4, 68], R];
+    const lowLip = [R, [86.6, 76.4 + gap * 0.7], [83, 81 + gap], [75, 83.4 + gap], [66, 82.2 + gap], [57.5, 78.4 + gap * 0.9], [51, 74.6 + gap * 0.5], L];
     let inside = '';
     if (gap) {
       const hole = loop(line, [...low].reverse());
       inside = `<clipPath id="${id}mouth"><path d="${hole}"/></clipPath>
         <path d="${hole}" fill="${C.mouthIn}"/>
         <g clip-path="url(#${id}mouth)">
-          ${ink(off(line, 0, 2), 7, C.teeth, [0.12, 0.12])}
-          ${[66, 72, 78, 84].map((x) => `<path d="M ${x} ${n(lerp(line[1][1], line[3][1], (x - 63) / 23) + 1)} l 0.5 4" stroke="#C9C0B6" stroke-width="0.8"/>`).join('')}
-          ${open > 0.3 ? `<ellipse cx="76" cy="${n(64 + gap + 1)}" rx="12" ry="${n(4 + open * 3)}" fill="${C.tongue}"/>` : ''}
+          ${ink(off(line, 0, 2.6), 7, C.teeth, [0.15, 0.15])}
+          ${[57, 64, 71, 78].map((x) => `<path d="M ${x} ${n(lerp(69.5, 69, (x - 57) / 21) + 1.4)} l 0.4 4.2" stroke="#C9C0B6" stroke-width="0.8"/>`).join('')}
+          ${open > 0.3 ? `<ellipse cx="69" cy="${n(69 + gap + 1.5)}" rx="12" ry="${n(4 + open * 3)}" fill="${C.tongue}"/>` : ''}
         </g>`;
     }
     return `
-      ${blob([[57, 62.5], [70, 59], [78, 60], [86, 58.5], [92, 61], [86, 62.8], [72, 63.4], [59, 64.4]], C.skinShade, 0.25)}
-      ${blob([[60, 66 + gap], [76, 67 + gap], [88, 65 + gap], [84, 70.5 + gap], [72, 72 + gap], [62, 69.5 + gap]], C.lipLow, 0.3)}
-      ${ink([[64, 75.5 + gap], [75, 77 + gap], [85, 74.5 + gap]], 3.4, C.skinShade, [0.4, 0.4], 0.55, ` filter="url(#${id}soft)"`)}
+      ${blob([[50.5, 63.2], [57, 58.6], [65, 55.4], [73, 53.6], [80.5, 53.8], [86.6, 56.6], [88.4, 60.4], [84, 60.2], [77, 59.8], [70, 59.2], [62, 60.4], [55, 62.6]], C.moustache, 0.34, ` filter="url(#${id}softer)"`)}
+      <path d="${loop(upLip.slice(0, -1), [R, ...[...line].reverse().slice(1)])}" fill="${C.lipUp}" opacity="0.5"/>
+      <path d="${loop(lowLip, low.slice(1))}" fill="${C.lipLow}" opacity="0.16"/>
+      ${ink([[64, 75.4 + gap], [70.5, 76.4 + gap], [76.5, 75.8 + gap]], 2.4, C.skinHi, [0.45, 0.45], 0.5)}
+      ${ink([[56, 85 + gap * 0.9], [67.5, 88.4 + gap], [80, 86.6 + gap]], 6, C.skinShade, [0.45, 0.45], 0.62, ` filter="url(#${id}soft)"`)}
+      ${ink([[61, 85.4 + gap * 0.9], [69.5, 87.4 + gap], [77.5, 86 + gap]], 1.5, C.skinDeep, [0.45, 0.45], 0.6)}
       ${inside}
-      ${ink(line, 2.4, C.lipLine, [0.2, 0.2])}
-      ${gap ? ink(low, 1.6, C.lipLine, [0.3, 0.3], 0.7) : ''}
-      ${ink([[L[0] + 2.5, L[1] - 0.4], L, [L[0] - 2, L[1] + 1.4]], 1.8, C.lipLine, [0.3, 0.6], 0.7)}
-      ${smirk > 0.15 ? ink([[R[0] - 1, R[1]], [R[0] + 3, R[1] - 2.5], [R[0] + 4.5, R[1] - 6.5]], 1.7, C.skinShade, [0.2, 0.6], smirk) : ''}
-      ${smile > 0.35 ? ink([[57, 50], [53, 58], [54, 66]], 1.6, C.skinShade, [0.4, 0.4], (smile - 0.35) * 1.5) : ''}`;
+      ${ink(upLip.slice(2, 8), 1.1, C.lipLine, [0.35, 0.35], 0.22)}
+      ${ink(line, 2.5, C.lipLine, [0.22, 0.22])}
+      ${gap ? ink(low, 1.5, C.lipLine, [0.3, 0.3], 0.7) : ''}
+      ${ink([[L[0] + 2.4, L[1] - 0.6], L, [L[0] - 1.6, L[1] + 1.6]], 1.7, C.lipLine, [0.3, 0.6], 0.6)}
+      ${smirk > 0.15 ? ink([[R[0], R[1]], [R[0] + 3, R[1] - 2.4], [R[0] + 4, R[1] - 6.5]], 1.6, C.skinShade, [0.2, 0.6], smirk) : ''}
+      ${smile > 0.35 ? ink([[46, 56], [42.5, 64], [43.5, 72]], 1.6, C.skinShade, [0.4, 0.4], (smile - 0.35) * 1.5) : ''}`;
   }
 
   function ear(id) {
+    return `<g transform="translate(-34 12) scale(0.88) translate(34 -12)">${earShape(id)}</g>`;
+  }
+  function earShape(id) {
     const rim = [[-33, -17], [-44, -25], [-57, -22], [-65, -10], [-66.5, 6], [-62, 20], [-55, 31], [-48, 40], [-40, 41.5], [-35, 33]];
     return `
       ${blob(rim, C.skinMid)}
@@ -256,27 +281,29 @@
   }
 
   // ------------------------------------------------------------ hair
-  // Short dark-brown hair under the cap: the side above and behind the ear, the sideburn, and the
-  // back falling to the nape in a few flicks. Strands for texture, highlights where the light falls.
+  // His dark-brown hair under the cap, in overlapping locks that sweep back and down to soft points:
+  // longer at the back, shorter over the ear, a sideburn in front of it. Each lock has its own
+  // outline and a streak of light; the ends are lighter where the sun has bleached them.
+  const LOCKS = [
+    { pts: [[-121, -30], [-125, -10], [-127, 7], [-139, 20]], w: 24 },
+    { pts: [[-107, -34], [-109, -12], [-112, 8], [-123, 24]], w: 24 },
+    { pts: [[-93, -37], [-95, -14], [-97, 5], [-107, 20]], w: 22 },
+    { pts: [[-79, -40], [-81, -19], [-83, -1], [-92, 13]], w: 20 },
+    { pts: [[-65, -42], [-67, -25], [-69, -9], [-77, 3]], w: 18 },
+    { pts: [[-51, -44], [-53, -31], [-56, -19], [-63, -11]], w: 15 },
+  ];
   function sideHair(id) {
-    const r = rnd(7);
-    const mass = [[-126, -26], [-84, -37], [-46, -44], [-27, -47], [-22.5, -31], [-23.5, -12], [-27.5, -8], [-31, -18], [-38, -24.5], [-50, -28.5], [-62, -24.5], [-68.5, -11], [-70.5, 3], [-72, 14], [-80, 20], [-88, 18.5], [-96, 23], [-104, 18], [-112, 16], [-118, 6], [-123, -8]];
-    let strands = '', lights = '';
-    for (let i = 0; i < 18; i++) {
-      const k = i / 17;
-      const x0 = lerp(-120, -32, k) + (r() - 0.5) * 3;
-      const y0 = lerp(-28, -44, k) + 2;
-      const len = lerp(40, 26, k) * (0.85 + r() * 0.3);
-      const x1 = x0 - lerp(16, 6, k) - r() * 4, y1 = y0 + len;
-      strands += ink([[x0, y0], [lerp(x0, x1, 0.45) - 1, lerp(y0, y1, 0.5)], [x1, y1]], 1.5 + r() * 0.7, C.hairDark, [0.15, 0.75], 0.8);
-      if (i % 3 === 1) lights += ink([[x0 + 1, y0 + 4], [x0 - 4, y0 + len * 0.45]], 1.6, C.hairLight, [0.3, 0.6], 0.6);
-    }
+    const lock = ({ pts, w }) => `
+      ${ink(pts, w + 3, C.lineHair, [0, 0.95])}
+      ${ink(pts, w, `url(#${id}hairg)`, [0, 0.95])}
+      ${ink(off(pts.slice(0, 3), w * 0.16, 0), w * 0.16, C.hairLight, [0.3, 0.45], 0.6)}
+      ${ink(off(pts, -w * 0.2, 2), w * 0.3, C.hairDark, [0.1, 0.9], 0.45)}`;
     return `
-      ${blob(mass, C.hair)}
-      ${blob([[-70, 0], [-72, 12], [-82, 17], [-96, 19], [-110, 13], [-118, 2], [-104, 4], [-88, 2]], C.hairDark, 0.45)}
-      ${strands}${lights}
-      ${[0, 1, 2, 3].map((i) => ink([[-28 + i * 1.4, -45], [-27.5 + i * 1.2, -28], [-28 + i * 1.1, -12 - i * 2]], 1.1, C.hairDark, [0.2, 0.5], 0.75)).join('')}
-      ${ink(mass.slice(5, 21), 1.5, C.lineHair, [0.1, 0.1], 0.6)}`;
+      ${blob([[-127, -27], [-84, -38], [-46, -44], [-29, -47], [-27, -30], [-34, -18], [-50, -20], [-66, -12], [-82, 2], [-102, 10], [-121, 8]], C.hairDark)}
+      ${LOCKS.map(lock).join('')}
+      ${ink([[-35.5, -46], [-33.5, -28], [-31.4, -10], [-31.6, 4]], 11, C.lineHair, [0, 0.9])}
+      ${ink([[-35.5, -46], [-33.5, -28], [-31.4, -10], [-31.6, 4]], 8.5, C.hair, [0, 0.9])}
+      ${ink([[-34, -40], [-32.6, -24], [-31.4, -12]], 1.6, C.hairLight, [0.3, 0.5], 0.5)}`;
   }
   // The hair on top, when the cap is off or backwards: a textured crop swept towards his face.
   function fringe() {
@@ -370,41 +397,48 @@
       ${ink(CAP_EDGE, 2.2, '#050506', [0.05, 0.05], 0.9)}`;
   }
 
+  // With the cap on backwards his fringe shows under its band, falling onto his forehead.
+  function capFringe(id) {
+    const L = [[[84, -60], [89, -47], [91, -37]], [[70, -58], [75, -44], [78, -29]], [[55, -55], [60, -43], [61, -32]], [[40, -53], [45, -40], [48, -26]], [[25, -50], [30, -39], [31, -30]], [[10, -47], [15, -37], [18, -29]]];
+    return L.map((pts) => `${ink(pts, 21, C.lineHair, [0, 0.92])}${ink(pts, 18, C.hair, [0, 0.92])}${ink(pts.slice(1), 8, C.hairTip, [0.5, 0.92], 0.55)}${ink(off(pts.slice(0, 2), 3, 0), 2.4, C.hairLight, [0.3, 0.5], 0.55)}`).join('');
+  }
+
   // Sunglasses: thin black frames, dark lenses with the screen's light caught in them.
   function shades(p) {
-    const lensL = [[-6, -19], [20, -25], [48, -22], [52, -14], [46, 4], [28, 10], [6, 8], [-5, -4]];
-    const lensR = [[62, -21], [80, -26], [97, -21], [98, -10], [93, 3], [79, 6], [65, 2], [61, -10]];
+    const lensL = [[12, -15], [32, -20], [54, -17], [58, -9], [53, 6], [37, 11], [18, 9], [10, -2]];
+    const lensR = [[75, -16], [88, -19.5], [101, -16], [103, -6], [99.5, 5], [88, 8.5], [77.5, 5], [74, -6]];
     const glint = (x, y, s) => `<path d="M ${x} ${y} l ${n(14 * s)} ${n(-4 * s)} l ${n(3 * s)} ${n(12 * s)} l ${n(-14 * s)} ${n(4 * s)} Z" fill="${p.light.tint}" opacity="0.35"/>`;
     return `
       ${blob(lensL, 'url(#lensg)')}${blob(lensR, 'url(#lensg)')}
-      ${glint(18, -12, 1)}${glint(76, -14, 0.75)}
-      ${ink([[2, -14], [20, -19], [40, -15]], 2.6, '#fff', [0.4, 0.4], 0.3)}
+      ${glint(30, -9, 1)}${glint(85, -10, 0.7)}
+      ${ink([[18, -10], [34, -15], [50, -12]], 2.6, '#fff', [0.4, 0.4], 0.3)}
       ${ink([...lensL, lensL[0]], 2.4, C.lens, [0, 0])}${ink([...lensR, lensR[0]], 2, C.lens, [0, 0])}
-      ${ink([[50, -19], [55, -22], [61, -19]], 3, C.lens, [0.1, 0.1])}
-      ${ink([[-6, -16], [-30, -14], [-46, -11]], 3.6, C.lens, [0.05, 0.3])}`;
+      ${ink([[57, -13], [65, -16], [75, -12]], 3, C.lens, [0.1, 0.1])}
+      ${ink([[11, -10], [-12, -9], [-34, -7]], 3.6, C.lens, [0.05, 0.3])}`;
   }
 
   // ------------------------------------------------------------ the head, three-quarter view
-  const FACE = 'M -98 -48 C -102 -104, -52 -142, 0 -142 C 50 -142, 88 -104, 93 -60 C 96 -44, 101 -34, 101 -24 C 101 -18, 98 -15, 96 -12 C 95 -6, 97 4, 97.5 16 C 98 28, 99 38, 98.5 46 C 98 52, 97 57, 96 62 C 94 76, 93 90, 91 100 C 89 108, 82 115, 68 116.5 C 50 118, 22 112, -8 100 C -24 93, -38 86, -46 74 C -54 58, -84 32, -96 0 Z';
+  // The far edge of the face from under the cap to the chin (brow ridge, temple, cheekbone, then in
+  // to the chin), and the jaw from the chin back to under the ear.
+  const FAR_EDGE = [[92, -62], [95.5, -48], [99.5, -38], [103.5, -28], [106.2, -18], [106.4, -9], [105.6, 0], [104.4, 8], [104, 17], [104, 27], [103.4, 37], [102.4, 47], [100.6, 57], [98.2, 67], [95.8, 77], [93, 86.5], [89.8, 95], [86, 103], [81, 110], [73.6, 114.8], [64, 116.4]];
+  const JAW = [[64, 116.4], [52, 114.8], [40, 110.6], [28.6, 104.8], [17.6, 98], [6.2, 89.4], [-5.2, 79.4], [-15, 67.6], [-22, 56.4], [-26.5, 47]];
+  const FACE = `${smooth([...FAR_EDGE, ...JAW.slice(1), [-40, 50], [-62, 42], [-84, 28], [-96, 0]])} L -98 -48 C -102 -104, -52 -142, 0 -142 C 46 -142, 82 -110, 92 -62 Z`;
   function head34(p, id) {
     const capped = p.cap === 'fwd';
     const tint = p.light.tint, rim = p.light.rim;
     return `
       <path d="${FACE}" fill="url(#${id}skin)"/>
       <g clip-path="url(#${id}faceclip)">
-        ${ink([[80, -56], [88, -24], [90, 8], [92, 38], [88, 68], [82, 96]], 22, C.skinHi, [0.15, 0.15], 0.4, ` filter="url(#${id}soft2)"`)}
-        ${ink([[98, -40], [99, -16], [96, 4], [97, 30], [97, 50], [94, 80]], 6, tint, [0.2, 0.2], 0.3 * rim, ` filter="url(#${id}soft)"`)}
-        ${blob([[-112, -70], [-14, -54], [-12, -22], [-16, 8], [-10, 40], [4, 66], [20, 90], [38, 110], [54, 124], [-40, 134], [-122, 60]], C.skinShade, 0.42, ` filter="url(#${id}soft2)"`)}
-        ${ink([[-30, 46], [-4, 58], [24, 72]], 10, C.skinShade, [0.3, 0.3], 0.3, ` filter="url(#${id}soft2)"`)}
-        ${ink([[-48, 66], [-14, 94], [30, 110], [68, 116]], 12, C.skinDeep, [0.2, 0.2], 0.3, ` filter="url(#${id}soft)"`)}
-        ${ink([[84, 41], [68, 50], [57, 60]], 2.4, C.skinShade, [0.3, 0.5], 0.35, ` filter="url(#${id}soft)"`)}
-        <ellipse cx="30" cy="-9" rx="27" ry="10" fill="${C.skinMid}" opacity="0.55" filter="url(#${id}soft)"/>
-        <ellipse cx="84" cy="-9" rx="11" ry="7" fill="${C.skinMid}" opacity="0.5" filter="url(#${id}soft)"/>
-        <ellipse cx="22" cy="30" rx="19" ry="9" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
-        ${ink([[-40, 70], [-14, 94], [24, 110], [62, 117], [86, 108]], 16, C.stubble, [0.2, 0.2], 0.1, ` filter="url(#${id}soft2)"`)}
-        ${blob([[56, 47], [76, 44.5], [94, 46], [95, 54], [76, 53], [56, 57]], C.stubble, 0.1, ` filter="url(#${id}soft)"`)}
-        <ellipse cx="80" cy="101" rx="9" ry="5" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
-        ${ink([[93, -60], [101, -24], [97, -4], [103, 24], [95, 60], [88, 98]], 8, tint, [0.2, 0.2], 0.45 * rim, ` filter="url(#${id}soft)"`)}
+        ${blob([[-112, -72], [-24, -62], [-8, -24], [-4, 14], [2, 48], [14, 76], [34, 98], [56, 114], [72, 128], [-40, 136], [-124, 60]], C.skinShade, 0.5, ` filter="url(#${id}soft2)"`)}
+        ${ink([[-14, 40], [4, 50], [22, 58], [40, 64]], 11, C.skinShade, [0.35, 0.35], 0.32, ` filter="url(#${id}soft2)"`)}
+        ${blob([[46, 96], [62, 94], [80, 96], [90, 104], [82, 114], [64, 117], [48, 112]], C.stubble, 0.13, ` filter="url(#${id}soft2)"`)}
+        ${ink([[-24, 58], [-6, 82], [20, 100], [48, 114], [72, 118]], 13, C.skinDeep, [0.2, 0.2], 0.32, ` filter="url(#${id}soft)"`)}
+        <ellipse cx="30" cy="23" rx="18" ry="8" fill="${C.skinHi}" opacity="0.42" filter="url(#${id}soft)"/>
+        <ellipse cx="62" cy="-36" rx="24" ry="7" fill="${C.skinHi}" opacity="0.32" filter="url(#${id}soft)"/>
+        <ellipse cx="76" cy="104" rx="8" ry="5" fill="${C.skinHi}" opacity="0.5" filter="url(#${id}soft)"/>
+        ${ink(JAW.slice(0, 8).map(([x, y]) => [x + 2, y - 5]), 12, C.stubble, [0.2, 0.2], 0.07, ` filter="url(#${id}soft2)"`)}
+        ${ink([[57, 47], [52.5, 55], [49.5, 63]], 3, C.skinShade, [0.3, 0.5], 0.45, ` filter="url(#${id}softer)"`)}
+        ${ink(off(FAR_EDGE.slice(1, 20), -4, 0), 8, tint, [0.2, 0.2], 0.42 * rim, ` filter="url(#${id}soft)"`)}
       </g>
       ${sideHair(id)}
       ${ear(id)}
@@ -412,14 +446,11 @@
       ${brow(true, p.brow[0])}${brow(false, p.brow[1])}
       ${nose(p, id)}
       ${mouth(p, id)}
-      ${ink([[-52, 62], [-46, 74], [-30, 88], [-8, 100], [20, 111], [46, 117.5], [68, 116.5], [83, 112], [91, 100]], 3, C.line, [0.12, 0.08])}
-      ${ink([[91, 100], [93, 90], [94.5, 78], [96, 64], [97, 56], [98.5, 48], [100.5, 43]], 2, C.line, [0.05, 0.1])}
-      ${ink([[96, -12], [98.5, -16], [101, -26], [100, -38]], 2, C.line, [0.05, 0.6])}
-      ${capped ? `<path d="M -40 -50 C 0 -56, 60 -62, 108 -66 L 110 -34 C 80 -24, 40 -20, 0 -24 C -20 -28, -34 -36, -40 -50 Z" fill="url(#${id}capshadow)" clip-path="url(#${id}faceclip)" filter="url(#${id}soft)"/>` : ''}
-      ${p.cap === 'fwd' ? capFwd(p, id) : p.cap === 'back' ? capBack(p, id) : fringe()}
+      ${ink([...FAR_EDGE.slice(1), ...JAW.slice(1)], 2.5, C.line, [0.06, 0.1])}
+      ${capped ? `<path d="M -40 -50 C 0 -56, 60 -62, 108 -66 L 110 -32 C 80 -24, 40 -22, 0 -26 C -20 -30, -34 -38, -40 -50 Z" fill="url(#${id}capshadow)" clip-path="url(#${id}faceclip)" filter="url(#${id}soft)"/>` : ''}
+      ${p.cap === 'fwd' ? capFwd(p, id) : p.cap === 'back' ? capFringe(id) + capBack(p, id) : fringe()}
       ${p.shades > 0.01 ? `<g opacity="${n(Math.min(1, p.shades * 1.5))}" transform="translate(0 ${n((1 - p.shades) * -46)})">${shades(p)}</g>` : ''}`;
   }
-
   // ------------------------------------------------------------ the body
   const NECK = 'M -56 50 C -58 92, -62 128, -72 168 L 66 168 C 58 142, 52 120, 54 104 C 30 112, -18 94, -56 50 Z';
   const TOP = 'M -64 156 C -104 158, -156 168, -182 192 C -202 212, -210 270, -204 360 L -192 580 L 132 580 C 142 452, 154 336, 154 264 C 152 214, 118 176, 62 158 C 34 180, -36 180, -64 156 Z';
@@ -496,13 +527,13 @@
         ${ink([[-60, 392], [10, 398], [80, 388]], 2.6, C.topDark, [0.3, 0.3], 0.7)}
         ${ink([[-98, 392], [-40, 410], [60, 404], [122, 388]], 2.4, C.lineCloth, [0.1, 0.1], 0.9)}
         ${ink([[-192, 236], [-212, 300], [-206, 372], [-160, 394]], 2.4, C.lineCloth, [0.05, 0.1], 0.9)}
-        ${cuff([[-128, 350], [-122, 366]])}${cuff([[104, 354], [112, 340]])}
-        ${handShape(-112, 364, -10, 'tuck', id)}
-        ${handShape(116, 344, 160, 'grip', id)}`;
+        ${handShape(-96, 382, 33, 'grip', id, { flip: true, scale: 0.92 })}
+        ${handShape(104, 350, -38, 'grip', id, { scale: 0.88 })}
+        ${cuff([[-92, 368], [-96, 396]])}${cuff([[100, 336], [104, 364]])}`;
     }
     if (p.arms === 'desk') {
       const hx = 196 + p.hand.x, hy = 420 + p.hand.y;
-      if (layer === 'back') return `<path d="M 118 246 C 150 290, 172 352, 188 402 L 242 392 C 218 340, 192 290, 160 244 Z" fill="${C.topDark}"/>${handShape(226, 394, 6, 'keys', id)}`;
+      if (layer === 'back') return `<path d="M 118 246 C 150 290, 172 352, 188 402 L 242 392 C 218 340, 192 290, 160 244 Z" fill="${C.topDark}"/>${handShape(206, 392, 18, 'keys', id, { scale: 0.9 })}<path d="M 186 402 L 230 386" stroke="${C.topDark}" stroke-width="12" stroke-linecap="round"/>`;
       return `
         <path d="M -186 232 C -212 300, -206 380, -162 420 C -102 454, 40 452, ${n(hx - 40)} ${n(hy + 6)} L ${n(hx - 36)} ${n(hy - 44)} C 40 398, -80 400, -126 384 C -150 366, -156 316, -148 254 Z" ${sleeve}/>
         ${ink([[-182, 330], [-170, 382], [-142, 414]], 3.2, C.topDark, [0.3, 0.3], 0.85)}
@@ -510,8 +541,9 @@
         ${ink([[-110, 406], [-40, 414], [40, 416]], 2.4, C.topHi, [0.3, 0.3], 0.5)}
         ${ink([[-60, 438], [0, 444], [60, 438]], 2.6, C.topDark, [0.3, 0.3], 0.6)}
         ${ink([[-186, 232], [-212, 300], [-206, 380], [-162, 420], [-102, 454], [40, 452], [hx - 40, hy + 6]], 2.4, C.lineCloth, [0.05, 0.05], 0.9)}
-        ${cuff([[hx - 42, hy + 2], [hx - 38, hy - 40]])}
-        ${handShape(hx, hy - 16, 0, p.hand.click > 0.5 ? 'mouseDown' : 'mouse', id)}`;
+        <ellipse cx="${n(hx + 30)}" cy="${n(hy - 8)}" rx="38" ry="21" fill="#1C1C1F"/><path d="M ${n(hx + 2)} ${n(hy - 14)} C ${n(hx + 16)} ${n(hy - 24)}, ${n(hx + 46)} ${n(hy - 24)}, ${n(hx + 66)} ${n(hy - 12)}" fill="none" stroke="#45454C" stroke-width="2"/>
+        ${handShape(hx - 37, hy - 19, -3, p.hand.click > 0.5 ? 'mouseDown' : 'mouse', id)}
+        ${cuff([[hx - 42, hy + 2], [hx - 38, hy - 40]])}`;
     }
     if (p.arms === 'phone') {
       if (layer === 'back') return '';
@@ -519,8 +551,11 @@
         <path d="M -186 232 C -212 300, -208 372, -168 398 C -118 424, -40 424, 30 392 L 22 346 C -40 368, -100 368, -130 354 C -150 334, -156 300, -148 254 Z" ${sleeve}/>
         ${ink([[-182, 320], [-170, 370], [-146, 392]], 3.2, C.topDark, [0.3, 0.3], 0.8)}
         ${ink([[-186, 232], [-212, 300], [-208, 372], [-168, 398], [-118, 424], [-40, 424], [30, 392]], 2.4, C.lineCloth, [0.05, 0.05], 0.9)}
-        ${cuff([[26, 394], [20, 348]])}
-        ${handShape(40, 370, -24, 'phone', id)}`;
+        <g transform="translate(90 298) rotate(-12)"><rect x="-25" y="-52" width="50" height="100" rx="9" fill="#18181B" stroke="#3A3A3E" stroke-width="2.2"/>
+          <rect x="-17" y="-44" width="16" height="22" rx="5" fill="#0C0C0E"/><circle cx="-9" cy="-38" r="3.6" fill="#2A2A31"/><circle cx="-9" cy="-28" r="3.6" fill="#2A2A31"/>
+          <path d="M 23 -44 L 23 40" stroke="${p.light.tint}" stroke-width="2" opacity="0.35"/></g>
+        ${handShape(26, 370, -46, 'phoneBack', id)}
+        ${cuff([[26, 394], [20, 348]])}`;
     }
     if (layer === 'back') return '';
     // hanging at his side: the elbow, the forearm a little forward, the hand relaxed
@@ -528,64 +563,126 @@
     const inner = [[-146, 526], [-150, 500], [-158, 432], [-160, 352], [-156, 282], [-146, 238]];
     return `
       ${ink(off(inner, 4, 0), 14, '#000', [0.1, 0.1], 0.35, ` filter="url(#${id}soft)"`)}
+      ${handShape(-168, 518, 90, 'hang', id, { scale: 1.05 })}
       <path d="${loop(outer, inner)}" ${sleeve}/>
       ${ink([[-210, 352], [-190, 372], [-166, 366]], 3, C.topDark, [0.3, 0.3], 0.8)}
       ${ink([[-206, 382], [-186, 396], [-164, 392]], 2.4, C.topDark, [0.3, 0.3], 0.6)}
       ${ink([[-170, 230], [-180, 300], [-182, 340]], 2.6, C.topHi, [0.3, 0.3], 0.45)}
       ${ink(outer, 2.4, C.lineCloth, [0.05, 0.05], 0.9)}${ink(inner, 2, C.lineCloth, [0.05, 0.05], 0.85)}
-      ${cuff([[-190, 512], [-148, 512]])}
-      ${handShape(-170, 546, 0, 'hang', id)}`;
+      ${cuff([[-190, 520], [-148, 520]])}`;
   }
 
-  // Hands: five fingers wherever fingers show, knuckles and nails, shade on the side away from the screen.
-  function handShape(x, y, rot, kind, id) {
-    const skin = `fill="url(#${id}skin)"`;
-    const crease = (pts, op = 0.7) => ink(pts, 1.6, C.skinDeep, [0.3, 0.3], op);
-    const nail = (cx, cy, a) => `<ellipse cx="${cx}" cy="${cy}" rx="4.2" ry="2.8" transform="rotate(${a} ${cx} ${cy})" fill="${C.skinHi}" opacity="0.9"/>`;
-    let body = '';
-    if (kind === 'mouse' || kind === 'mouseDown') {
-      const d = kind === 'mouseDown' ? 3 : 0;
-      body = `
-        <ellipse cx="34" cy="22" rx="35" ry="20" fill="#1C1C1F"/>
-        <path d="M 4 16 C 14 8, 44 6, 66 16" fill="none" stroke="#45454C" stroke-width="2"/>
-        <path d="M -40 -4 C -20 -18, 30 -21, 58 ${-8 + d} C 67 ${-4 + d}, 67 ${8 + d}, 56 ${12 + d} C 30 18, -10 20, -36 16 C -48 12, -50 2, -40 -4 Z" ${skin}/>
-        ${ink([[-38, 12], [-10, 18], [30, 16], [56, 12 + d]], 4, C.skinDeep, [0.3, 0.3], 0.45)}
-        ${crease([[20, -12 + d], [34, -12 + d], [48, -8 + d], [58, -4 + d]])}
-        ${crease([[16, -3 + d], [32, -3 + d], [46, 1 + d], [58, 4 + d]], 0.55)}
-        ${crease([[12, 6], [28, 7], [42, 10], [54, 12]], 0.55)}
-        ${nail(57, -6 + d, 10)}${nail(58, 3 + d, 12)}
-        ${[[4, -14], [14, -15], [24, -14]].map(([a, b]) => `<ellipse cx="${a}" cy="${b}" rx="4" ry="3" fill="${C.skinHi}" opacity="0.55"/>`).join('')}
-        ${ink([[-40, -4], [-20, -18], [30, -21], [58, -8 + d]], 1.7, C.line, [0.1, 0.2], 0.8)}`;
-    } else if (kind === 'phone') {
-      body = `
-        <rect x="-22" y="-96" width="56" height="112" rx="10" fill="#0E0E10" stroke="#3A3A3E" stroke-width="2.4"/>
-        <rect x="-17" y="-90" width="46" height="100" rx="7" fill="#1B2533"/>
-        <path d="M -30 -10 C -36 -4, -36 14, -26 22 C -8 34, 22 34, 36 22 C 42 14, 40 0, 34 -6 L 34 6 C 20 14, -6 14, -22 4 Z" ${skin}/>
-        <path d="M -30 -10 C -40 -20, -40 -40, -32 -50 C -26 -54, -22 -48, -24 -40 C -26 -30, -24 -18, -20 -10 Z" ${skin}/>
-        ${nail(-28, -46, 80)}
-        ${crease([[-22, 12], [0, 18], [26, 16]])}
-        ${ink([[-30, -10], [-36, 4], [-26, 22], [-8, 32], [22, 32], [36, 22]], 1.7, C.line, [0.1, 0.1], 0.8)}`;
-    } else if (kind === 'tuck') {
-      body = `<path d="M -26 -16 C -8 -24, 22 -22, 34 -10 C 38 0, 34 12, 20 14 C 0 16, -20 10, -28 2 Z" ${skin}/>
-        ${crease([[-2, -16], [8, -18], [20, -14], [28, -6]])}${crease([[-6, -6], [6, -8], [18, -4], [26, 2]], 0.5)}
-        ${nail(30, -4, 40)}
-        ${ink([[-26, -16], [-8, -24], [22, -22], [34, -10], [38, 0], [34, 12], [20, 14]], 1.6, C.line, [0.1, 0.1], 0.8)}`;
-    } else if (kind === 'grip') {
-      body = `<path d="M -20 -14 C -4 -22, 20 -18, 28 -6 C 30 4, 24 12, 12 14 C -6 16, -18 8, -22 0 Z" ${skin}/>
-        ${crease([[-6, -12], [4, -14], [14, -10], [20, -4]])}${crease([[-10, -2], [0, -4], [12, 0], [18, 6]], 0.5)}
-        ${nail(22, 4, -30)}
-        ${ink([[-20, -14], [-4, -22], [20, -18], [28, -6], [30, 4], [24, 12], [12, 14]], 1.6, C.line, [0.1, 0.1], 0.8)}`;
-    } else if (kind === 'hang') {
-      body = `<path d="M -20 -30 C -6 -34, 12 -34, 22 -28 C 26 -8, 24 12, 18 26 C 12 38, 0 44, -10 40 C -19 34, -23 18, -24 2 C -25 -12, -24 -22, -20 -30 Z" ${skin}/>
-        <path d="M 16 -16 C 26 -10, 32 4, 30 18 C 28 24, 22 24, 20 18 C 20 8, 18 -2, 12 -10 Z" ${skin}/>
-        ${crease([[-15, 12], [-13, 28], [-9, 37]], 0.6)}${crease([[-5, 14], [-3, 31], [1, 40]], 0.6)}${crease([[5, 12], [7, 28], [9, 34]], 0.5)}
-        ${nail(-8, 36, 80)}${nail(2, 39, 80)}${nail(25, 20, 70)}
-        ${ink([[-20, -30], [-24, 2], [-19, 34], [-10, 40], [0, 44], [12, 38], [18, 26]], 1.6, C.line, [0.1, 0.1], 0.8)}`;
-    } else if (kind === 'keys') {
-      body = `<path d="M -20 -10 C 0 -17, 28 -15, 42 -6 C 48 -2, 48 6, 42 9 C 28 13, 4 13, -16 9 C -26 5, -26 -6, -20 -10 Z" fill="${C.skinShade}"/>
-        ${crease([[16, -12], [24, -10], [32, -6], [38, 0]], 0.5)}${crease([[12, -3], [22, -1], [30, 3], [38, 7]], 0.5)}`;
+  // ------------------------------------------------------------ hands
+  // A hand from its skeleton: a palm and five fingers, each finger a chain of bones with an angle at
+  // every joint. Every part is first stroked wide in the line colour, so the whole hand has one
+  // clean outline; then the fingers are filled back to front with a fine line where one lies over
+  // the next, the palm over their roots, the thumb over the palm, and last the nails, the creases at
+  // the knuckles and the shade on the side away from the light. Five fingers, always.
+  // Hand space: the wrist at 0,0, the fingers towards +x, the thumb on the -y side; head units.
+  const HAND = {
+    palm: [[0, -15.5], [16, -20.5], [36, -22.5], [50.5, -21], [55, -9], [55.5, 3], [52.5, 14], [45.5, 20.5], [30, 21.5], [12, 19], [0, 15]],
+    base: { index: [50, -14.5], middle: [53.5, -4.6], ring: [52.5, 5], little: [47.5, 13.6], thumb: [9, -12.5] },
+    lens: { index: [19.5, 12, 9.5], middle: [21.5, 13, 10], ring: [19.5, 12, 9.5], little: [15, 9.5, 8.5], thumb: [20, 14, 11.5] },
+    w: { index: 11.6, middle: 12.2, ring: 11.4, little: 9.8, thumb: 13.4 },
+  };
+  const rad = (a) => a * Math.PI / 180;
+  // pose: { index: [a1, a2, a3] (degrees, absolute), ..., thumb: [a1, a2, a3], len: { index: k } (foreshortening),
+  //         hide: ['little'] (left out), front: ['thumb'] (drawn over the palm), nails: true, light: 1 | -1 }
+  function handSVG(pose, opt = {}) {
+    const lw = opt.lw ?? 2.3, sep = opt.sep ?? 1.25, cid = `hp${(opt.id || 'h')}${Math.round(Math.random() * 1e6)}`;
+    const skin = opt.skin || C.skin, line = opt.line || C.line;
+    const names = ['little', 'ring', 'middle', 'index', 'thumb'].filter((f) => pose[f] && !(pose.hide || []).includes(f));
+    const chain = {};
+    for (const f of names) {
+      const k = (pose.len && pose.len[f]) || 1;
+      const ks = Array.isArray(k) ? k : [k, k, k];
+      let [x, y] = (pose.basePos && pose.basePos[f]) || HAND.base[f];
+      const pts = [[x, y]];
+      pose[f].forEach((a, i) => { x += Math.cos(rad(a)) * HAND.lens[f][i] * ks[i]; y += Math.sin(rad(a)) * HAND.lens[f][i] * ks[i]; pts.push([x, y]); });
+      chain[f] = pts;
     }
-    return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)})">${body}</g>`;
+    const w = (f, i) => HAND.w[f] * [1, 0.93, 0.86][i];
+    const seg = (f, i, extra, col, op = 1) => `<path d="M ${xy(chain[f][i])} L ${xy(chain[f][i + 1])}" stroke="${col}" stroke-width="${n(w(f, i) + extra)}" stroke-linecap="round"${op < 1 ? ` opacity="${op}"` : ''}/>`;
+    const finger = (f, extra, col, op) => chain[f].slice(0, -1).map((_, i) => seg(f, i, extra, col, op)).join('');
+    const palm = pose.palm === false ? '' : `<path d="${smooth(pose.palmPts || HAND.palm, true)}"`;
+    const front = names.filter((f) => (pose.front || []).includes(f));
+    const backs = names.filter((f) => !front.includes(f));
+    // the shade: a band along each finger's shadow side, and the palm's far edge
+    const sh = pose.light === -1 ? -1 : 1;
+    const shadeOf = (f) => chain[f].slice(0, -1).map((p, i) => {
+      if (f === 'thumb' && i === 0) return '';
+      const q = chain[f][i + 1], dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy) || 1;
+      const o = w(f, i) * 0.26 * sh, ox = -dy / L * o, oy = dx / L * o;
+      return `<path d="M ${xy([p[0] + ox, p[1] + oy])} L ${xy([q[0] + ox, q[1] + oy])}" stroke="${C.skinShade}" stroke-width="${n(w(f, i) * 0.4)}" stroke-linecap="round" opacity="0.36"/>`;
+    }).join('');
+    const nail = (f) => {
+      if (!pose.nails || f === 'thumb' && !pose.thumbNail) return '';
+      const P = chain[f], a = P[P.length - 2], b = P[P.length - 1];
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const ww = w(f, 2);
+      return `<g transform="translate(${xy(b)}) rotate(${n(ang)})"><rect x="${n(-L * 0.55)}" y="${n(-ww * 0.3)}" width="${n(L * 0.55 + ww * 0.12)}" height="${n(ww * 0.6)}" rx="${n(ww * 0.28)}" fill="${C.skinHi}" stroke="${C.skinShade}" stroke-width="${n(lw * 0.39)}"/></g>`;
+    };
+    const creases = (f) => {
+      if (f === 'thumb' || !pose.creases) return '';
+      const P = chain[f];
+      return [1, 2].map((j) => {
+        const a = P[j - 1], b = P[j + 1], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+        const nx = -dy / L, ny = dx / L, hw = w(f, j) * 0.3;
+        return `<path d="M ${xy([P[j][0] + nx * hw, P[j][1] + ny * hw])} Q ${xy([P[j][0] + dx / L * 1.6, P[j][1] + dy / L * 1.6])} ${xy([P[j][0] - nx * hw, P[j][1] - ny * hw])}" fill="none" stroke="${C.skinDeep}" stroke-width="${n(lw * 0.48)}" stroke-linecap="round" opacity="${j === 1 ? 0.35 : 0.55}"/>`;
+      }).join('');
+    };
+    const knuckles = pose.knuckles === false || pose.palm === false ? '' : ['index', 'middle', 'ring', 'little'].filter((f) => chain[f]).map((f) => `<ellipse cx="${n(chain[f][0][0] - 2)}" cy="${n(chain[f][0][1])}" rx="3.4" ry="2.8" fill="${C.skinHi}" opacity="0.18"/>`).join('');
+    return `
+      <g stroke-linejoin="round">
+        ${palm ? (opt.openWrist ? `<path d="${smooth(pose.palmPts || HAND.palm)}" fill="none" stroke="${line}" stroke-width="${n(lw * 2)}"/>` : `${palm} fill="${line}" stroke="${line}" stroke-width="${n(lw * 2)}"/>`) : ''}
+        ${names.map((f) => finger(f, lw * 2, line)).join('')}
+        ${backs.map((f) => finger(f, sep * 2, line, 0.7) + finger(f, 0, skin) + shadeOf(f)).join('')}
+        ${palm ? `${palm} fill="${skin}"/>` : ''}
+        ${palm && pose.palmShade !== false ? `<clipPath id="${cid}">${palm}/></clipPath><path d="${smooth((pose.palmPts || HAND.palm).slice(sh > 0 ? 5 : 0, sh > 0 ? 11 : 5))}" fill="none" stroke="${C.skinShade}" stroke-width="10" opacity="0.45" stroke-linecap="round" clip-path="url(#${cid})"/>` : ''}
+        ${knuckles}
+        ${front.map((f) => chain[f].slice(0, -1).map((_, i) => i === 0 && f === 'thumb' ? '' : seg(f, i, sep * 2, line, 0.85)).join('') + finger(f, 0, skin) + shadeOf(f)).join('')}
+        ${names.map((f) => nail(f) + creases(f)).join('')}
+        ${opt.rim ? `<path d="${smooth((pose.palmPts || HAND.palm).slice(0, 4))}" fill="none" stroke="${opt.rim}" stroke-width="${n(lw * 0.9)}" stroke-linecap="round" opacity="0.5"/>` : ''}
+      </g>`;
+  }
+  // The poses he uses. Angles in degrees in hand space; a positive angle turns towards the little
+  // finger, which is how fingers look as they curl when the back of the hand faces us.
+  const HANDS = {
+    // hanging relaxed at his side, the back of the hand out, the thumb in front
+    hang: { index: [-3, 10, 26], middle: [1, 15, 32], ring: [6, 21, 40], little: [12, 28, 48], thumb: [-46, -20, -2],
+      len: { index: [1, 0.9, 0.85], middle: [1, 0.88, 0.82], ring: [1, 0.86, 0.8], little: [1, 0.85, 0.78] }, nails: true, creases: true, front: ['thumb'] },
+    // on the mouse: index and middle forward on the buttons, ring and little curled at its side
+    mouse: { index: [-5, 2, 14], middle: [0, 5, 18], ring: [6, 18, 40], little: [14, 30, 52], thumb: [-34, -6, 6],
+      len: { index: [1, 0.95, 0.8], middle: [1, 0.95, 0.8], ring: [1, 0.85, 0.7], little: [1, 0.8, 0.65] }, nails: true, creases: true, front: ['thumb'] },
+    // on the keys, fingers curled down onto them
+    keys: { index: [-4, 22, 50], middle: [0, 26, 56], ring: [5, 30, 60], little: [12, 36, 64], thumb: [-30, 0, 10],
+      len: { index: [1, 0.7, 0.55], middle: [1, 0.7, 0.55], ring: [1, 0.7, 0.55], little: [1, 0.7, 0.55] }, nails: false, creases: true, front: ['thumb'] },
+    // holding the phone: fingers wrapped round its back, only their tips show past its edge (drawn
+    // under the phone), the thumb over the front
+    phone: { index: [-10, -60, -110], middle: [-4, -58, -108], ring: [4, -52, -100], little: [12, -44, -90], thumb: [-60, -40, -24],
+      len: { index: [1, 0.8, 0.7], middle: [1, 0.8, 0.7], ring: [1, 0.8, 0.7], little: [1, 0.8, 0.7] }, nails: false, creases: false, front: ['thumb'], thumbNail: true },
+    // gripping the other arm when his arms are folded: the back of the hand on it, the fingers
+    // curling round its far side, the thumb tucked out of sight
+    grip: { index: [-6, 10, 26], middle: [-2, 12, 28], ring: [4, 15, 30], little: [10, 18, 34], thumb: [-40, -10, 10], hide: ['thumb'],
+      len: { index: [1, 0.62, 0.32], middle: [1, 0.62, 0.32], ring: [1, 0.62, 0.32], little: [1, 0.6, 0.3] }, nails: false, creases: true },
+    // holding the phone from behind: the back of the hand on the phone's back, the fingers across it,
+    // their tips curling round its far edge, the thumb on the screen side out of sight
+    phoneBack: { index: [36, 44, 80], middle: [40, 47, 84], ring: [44, 50, 88], little: [50, 56, 92], thumb: [-40, -10, 10], hide: ['thumb'],
+      len: { index: [1, 0.95, 0.75], middle: [1, 0.95, 0.75], ring: [1, 0.95, 0.75], little: [1, 0.95, 0.75] }, nails: true, creases: true },
+    // four fingers over the far upper arm, from under it (arms folded): no palm, no thumb
+    wrap: { index: [0, 16, 42], middle: [2, 18, 44], ring: [4, 20, 46], little: [6, 22, 48], palm: false, knuckles: false,
+      basePos: { index: [0, -15], middle: [1, -4.6], ring: [1, 5.4], little: [0, 15] },
+      len: { index: [0.9, 0.9, 0.8], middle: [0.95, 0.9, 0.8], ring: [0.9, 0.9, 0.8], little: [0.75, 0.85, 0.75] }, nails: true, creases: true },
+  };
+
+  // A hand placed at the wrist: rot turns it, flip mirrors it (index on the other side), and kind
+  // picks the pose. 'mouseDown' presses the index finger.
+  function handShape(x, y, rot, kind, id, o = {}) {
+    const P = { ...HANDS[kind === 'mouseDown' ? 'mouse' : kind] };
+    if (kind === 'mouseDown') P.index = [-5, 9, 26];
+    if (o.only) { P.hide = ['index', 'middle', 'ring', 'little', 'thumb'].filter((f) => !o.only.includes(f)); P.palm = o.only.includes('palm') ? P.palm : false; }
+    if (o.hide) P.hide = [...(P.hide || []), ...o.hide];
+    return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)}) scale(${n(o.flip ? -(o.scale || 1) : (o.scale || 1))} ${n(o.scale || 1)})">${handSVG(P, { id })}</g>`;
   }
 
   // ------------------------------------------------------------ from behind
@@ -629,6 +726,9 @@
       <linearGradient id="${id}skin" gradientUnits="userSpaceOnUse" x1="-100" y1="-40" x2="112" y2="10">
         <stop offset="0" stop-color="${C.skinMid}"/><stop offset="0.45" stop-color="${C.skin}"/><stop offset="1" stop-color="${C.skinHi}"/>
       </linearGradient>
+      <linearGradient id="${id}hairg" gradientUnits="userSpaceOnUse" x1="0" y1="-46" x2="0" y2="28">
+        <stop offset="0" stop-color="${C.hairDark}"/><stop offset="0.3" stop-color="${C.hair}"/><stop offset="0.78" stop-color="${C.hair}"/><stop offset="1" stop-color="${C.hairTip}"/>
+      </linearGradient>
       <linearGradient id="${id}neck" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${C.skinDeep}"/><stop offset="0.45" stop-color="${C.skinShade}"/><stop offset="1" stop-color="${C.skinMid}"/>
       </linearGradient>
@@ -662,6 +762,7 @@
       <linearGradient id="lensg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#2A2A32"/><stop offset="0.5" stop-color="${C.lens}"/><stop offset="1" stop-color="#050506"/>
       </linearGradient>
+      <filter id="${id}softer" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="1.4"/></filter>
       <filter id="${id}soft" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="3"/></filter>
       <filter id="${id}soft2" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="5"/></filter>
       <clipPath id="${id}faceclip"><path d="${FACE}"/></clipPath>
@@ -684,5 +785,5 @@
       <g transform="rotate(${n(p.lean)} 0 520)">${part === 'body' ? body : part === 'arm' ? arm : body + arm}</g></g>`;
   }
 
-  window.Founder = { pose, blendPose, founderSVG, colours: C };
+  window.Founder = { pose, blendPose, founderSVG, handSVG, HANDS, colours: C };
 })();

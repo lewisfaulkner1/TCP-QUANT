@@ -462,18 +462,6 @@
   // button. Five fingers: the thumb along the far side, four on the buttons.
   function mouseHand(id, click, glow) {
     const press = click * 6;
-    const skin = `fill="url(#${id}skinh)" stroke="#3A2118" stroke-width="2.2" stroke-linejoin="round"`;
-    const crease = 'fill="none" stroke="#B57F67" stroke-width="2.6" stroke-linecap="round"';
-    const finger = (x0, y0, x1, y1, w, dip = 0) => {
-      const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
-      const p = (a, b) => `${n(x0 + ux * a + nx * b)} ${n(y0 + uy * a + ny * b + dip * (a / len))}`;
-      const hw = w / 2;
-      return `<path d="M ${p(0, -hw)} L ${p(len - hw, -hw * 0.9)} C ${p(len + hw * 0.35, -hw * 0.85)}, ${p(len + hw * 0.35, hw * 0.85)}, ${p(len - hw, hw * 0.9)} L ${p(0, hw)} Z" ${skin}/>
-        <path d="M ${p(4, hw * 0.55)} L ${p(len - hw, hw * 0.6)} C ${p(len + hw * 0.1, hw * 0.55)}, ${p(len + hw * 0.25, hw * 0.2)}, ${p(len + hw * 0.3, 0)}" fill="none" stroke="#B9836B" stroke-width="5" opacity="0.45" stroke-linecap="round"/>
-        <path d="M ${p(len - hw * 1.6, -hw * 0.5)} C ${p(len - hw * 0.15, -hw * 0.56)}, ${p(len - hw * 0.15, hw * 0.56)}, ${p(len - hw * 1.6, hw * 0.5)} Z" fill="#F8DECF"/>
-        <path d="M ${p(len - hw * 1.4, -hw * 0.3)} L ${p(len - hw * 0.6, -hw * 0.32)}" stroke="#fff" stroke-width="2.4" opacity="0.6" stroke-linecap="round"/>
-        <path d="M ${p(len * 0.5, -hw * 0.55)} Q ${p(len * 0.54, 0)} ${p(len * 0.5, hw * 0.55)}" ${crease} opacity="0.5"/>`;
-    };
     return `
       <ellipse cx="110" cy="46" rx="330" ry="150" fill="#000" opacity="0.5" filter="url(#${id}b20)"/>
       <!-- the mouse -->
@@ -484,31 +472,16 @@
       <rect x="226" y="-11" width="48" height="22" rx="10" fill="#2E2E34"/><path d="M 232 -4 L 268 -4" stroke="#4A4A52" stroke-width="2"/>
       <path d="M 196 -104 C 260 -98, 312 -76, 340 -42" fill="none" stroke="#9A9AA6" stroke-width="3" opacity="0.35" stroke-linecap="round"/>
       <path d="M -40 -96 C 80 -114, 240 -106, 320 -58" fill="none" stroke="${glow}" stroke-width="3" opacity="0.4"/>
-      <!-- the sleeve and wrist -->
+      <!-- the sleeve, the forearm, and the hand drawn like every other hand of his -->
       <path d="M -540 -62 L -250 -66 L -250 94 L -540 108 Z" fill="#141312"/>
       <path d="M -272 -68 L -236 -68 L -236 98 L -272 98 Z" fill="#0B0A09"/>
       ${Array.from({ length: 7 }, (_, i) => `<path d="M ${-270 + i * 5} -62 L ${-270 + i * 5} 92" stroke="#1F1D1B" stroke-width="1.4"/>`).join('')}
       <path d="M -540 -62 L -250 -66" stroke="${glow}" stroke-width="3" opacity="0.3"/>
-      <path d="M -244 -54 C -170 -66, -90 -72, -30 -78 L -24 88 C -90 86, -170 86, -244 86 Z" fill="url(#${id}skinh)"/>
-      <path d="M -240 70 C -170 76, -90 80, -26 84" fill="none" stroke="#A86F58" stroke-width="10" opacity="0.35" stroke-linecap="round"/>
-      <!-- the back of the hand, its knuckles and tendons -->
-      <path d="M -40 -80 C 40 -100, 140 -102, 198 -86 C 216 -40, 216 40, 198 84 C 140 98, 40 100, -36 92 C -62 40, -62 -40, -40 -80 Z" fill="url(#${id}skinh)"/>
-      <path d="M -244 -54 C -170 -66, -90 -72, -40 -80 C 40 -100, 140 -102, 198 -86 M -244 86 C -170 86, -90 86, -36 92 C 40 100, 140 98, 198 84" fill="none" stroke="#3A2118" stroke-width="2.4" stroke-linecap="round"/>
-      <path d="M -30 84 C 40 94, 140 92, 196 80" fill="none" stroke="#A86F58" stroke-width="12" opacity="0.3" stroke-linecap="round"/>
-      <path d="M -10 -56 C 60 -60, 130 -58, 182 -54 M -14 -16 C 60 -16, 130 -12, 188 -10 M -12 24 C 60 26, 130 28, 186 32 M -6 60 C 60 62, 120 64, 176 66" fill="none" stroke="#C99479" stroke-width="2.2" opacity="0.35" stroke-linecap="round"/>
-      ${[-54, -12, 30, 68].map((ky, i) => `<ellipse cx="${190 - (i === 3 ? 8 : 0)}" cy="${ky}" rx="14" ry="16" fill="#F7D9C4" opacity="0.7"/>`).join('')}
-      <!-- the thumb along the far side -->
-      <path d="M 28 -86 C 70 -112, 122 -126, 170 -126 C 194 -126, 202 -110, 188 -100 C 152 -92, 100 -86, 58 -70 Z" ${skin}/>
-      <path d="M 150 -124 C 172 -126, 188 -120, 186 -108 C 172 -110, 160 -112, 150 -114 Z" fill="#F8DECF"/>
-      <path d="M 60 -96 C 96 -112, 136 -120, 168 -122" fill="none" stroke="${glow}" stroke-width="3" opacity="0.45" stroke-linecap="round"/>
-      <!-- the four fingers: index on the left button, then middle, ring, little -->
-      ${finger(186, -56, 332 - press * 2, -46, 40, press)}
-      ${finger(196, -12, 346, -6, 42)}
-      ${finger(194, 30, 328, 36, 40)}
-      ${finger(184, 66, 284, 84, 34)}
-      <path d="M 192 -34 C 230 -32, 280 -28, 330 -26 M 196 10 C 240 12, 290 14, 336 16 M 192 50 C 230 54, 260 60, 290 64" fill="none" stroke="#8E5A47" stroke-width="2.6" opacity="0.5" stroke-linecap="round"/>
-      <!-- the screen's light along the top of the hand -->
-      <path d="M -30 -82 C 50 -102, 140 -104, 198 -88" fill="none" stroke="${glow}" stroke-width="4" opacity="0.45" stroke-linecap="round"/>`;
+      <g transform="translate(-58 -4) scale(3.75)">${window.Founder.handSVG(press > 3 ? { ...window.Founder.HANDS.mouse, index: [-5, 9, 26] } : window.Founder.HANDS.mouse, { id, lw: 0.7, sep: 0.42, openWrist: true, rim: glow })}</g>
+      <path d="M -244 -58 C -180 -62, -110 -64, -50 -62 L -50 52 C -110 60, -180 76, -244 86 Z" fill="#EDBB98"/>
+      <path d="M -240 72 C -170 76, -100 70, -52 50" fill="none" stroke="#A86F58" stroke-width="12" opacity="0.3" stroke-linecap="round"/>
+      <path d="M -244 -58 C -180 -62, -110 -64, -50 -62 M -244 86 C -180 76, -110 60, -50 52" fill="none" stroke="#3A2118" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M -244 -60 C -180 -64, -110 -66, -52 -64" fill="none" stroke="${glow}" stroke-width="3" opacity="0.4" stroke-linecap="round"/>`;
   }
 
   // ------------------------------------------------------------ the kinds
@@ -566,21 +539,34 @@
     },
   };
 
-  // The real app in a phone in his right hand: thumb over the right edge, fingertips round the left.
+  // The real app in a phone in his right hand, seen as he sees it: four fingertips curling round the
+  // left edge from behind, the thumb up the right edge with its nail towards us, the heel of the hand
+  // under the phone. Phone space: the phone is 604 x 1260.
   KINDS.handPhone = {
     make(s, root) {
       KINDS.phone.make(s, root);
-      const skin = 'fill="#EDBB98" stroke="#3A2118" stroke-width="3" stroke-linejoin="round"';
-      const tip = (x, y, r) => `<path d="M ${x} ${y - 30} C ${x - 34} ${y - 30}, ${x - 36} ${y + 30}, ${x} ${y + 30} Z" ${skin}/><path d="M ${x - 4} ${y - 22} C ${x - 22} ${y - 20}, ${x - 22} ${y + 20}, ${x - 4} ${y + 22} Z" fill="#F7DCCB" opacity="0.8"/>`;
+      const line = 'stroke="#3A2118" stroke-width="4" stroke-linejoin="round"';
+      // a fingertip from behind the phone: the pad round the edge, its crease, shade under it, light on top
+      const tip = (y, h) => {
+        const r = h / 2;
+        return `<path d="M 18 ${y - r * 0.7} C 18 ${y - r * 1.02}, -30 ${y - r * 1.04}, -62 ${y - r * 0.9} C -80 ${y - r * 0.6}, -80 ${y + r * 0.6}, -62 ${y + r * 0.9} C -30 ${y + r * 1.04}, 18 ${y + r * 1.02}, 18 ${y + r * 0.7} C 26 ${y + r * 0.3}, 26 ${y - r * 0.3}, 18 ${y - r * 0.7} Z" fill="#EDBB98" ${line}/>
+          <path d="M -8 ${y + r * 0.95} C 6 ${y + r * 0.9}, 16 ${y + r * 0.6}, 19 ${y + r * 0.3}" fill="none" stroke="#C48E77" stroke-width="10" opacity="0.5" stroke-linecap="round"/>
+          <path d="M -44 ${y - r * 0.62} C -24 ${y - r * 0.82}, -2 ${y - r * 0.8}, 10 ${y - r * 0.6}" fill="none" stroke="#F8DCC8" stroke-width="7" opacity="0.7" stroke-linecap="round"/>
+          <path d="M -26 ${y - r * 0.8} C -14 ${y - r * 0.3}, -14 ${y + r * 0.3}, -26 ${y + r * 0.8}" fill="none" stroke="#B57F67" stroke-width="3.2" opacity="0.55" stroke-linecap="round"/>`;
+      };
       const back = `<svg class="hand" style="left:-260px;top:0;width:1124px;height:1900px" viewBox="-260 0 1124 1900">
-        <path d="M 360 1150 C 470 1080, 650 1100, 700 1220 C 760 1360, 740 1560, 700 1900 L 330 1900 C 340 1700, 320 1400, 360 1150 Z" ${skin}/>
-        <path d="M 330 1700 L 720 1700 L 700 1900 L 320 1900 Z" fill="#141312"/>
-        <path d="M 326 1690 L 724 1690 L 722 1720 L 324 1720 Z" fill="#0B0A09"/></svg>`;
+        <path d="M 250 1190 C 380 1150, 600 1140, 716 1200 C 812 1260, 806 1480, 776 1900 L 276 1900 C 262 1640, 236 1380, 250 1190 Z" fill="#EDBB98" ${line}/>
+        <path d="M 270 1240 C 260 1450, 270 1700, 290 1900" fill="none" stroke="#C48E77" stroke-width="40" opacity="0.4"/>
+        <path d="M 262 1700 L 790 1700 L 776 1900 L 276 1900 Z" fill="#141312"/>
+        <path d="M 258 1688 L 792 1688 L 790 1722 L 260 1722 Z" fill="#0B0A09"/></svg>`;
       const front = `<svg class="hand" style="left:-260px;top:0;width:1124px;height:1900px" viewBox="-260 0 1124 1900">
-        ${tip(18, 870, 0)}${tip(14, 990, 0)}${tip(16, 1105, 0)}
-        <path d="M 640 1240 C 610 1150, 590 1060, 600 980 C 606 944, 640 940, 650 972 C 668 1040, 690 1120, 712 1210 Z" ${skin}/>
-        <path d="M 600 984 C 604 958, 626 950, 638 966 C 626 976, 612 984, 600 990 Z" fill="#F7DCCB" opacity="0.85"/>
-        <path d="M 610 1080 C 630 1074, 650 1078, 664 1090" fill="none" stroke="#C99479" stroke-width="3" opacity="0.6" stroke-linecap="round"/></svg>`;
+        ${tip(704, 110)}${tip(805, 112)}${tip(903, 106)}${tip(994, 92)}
+        <path d="M 610 1330 C 586 1210, 556 1080, 552 980 C 550 914, 598 878, 646 902 C 690 926, 706 1010, 718 1090 C 732 1180, 748 1260, 770 1330 Z" fill="#EDBB98" ${line}/>
+        <path d="M 704 1060 C 716 1150, 732 1240, 750 1320" fill="none" stroke="#C48E77" stroke-width="18" opacity="0.45" stroke-linecap="round"/>
+        <ellipse cx="604" cy="936" rx="34" ry="27" transform="rotate(-14 604 936)" fill="#F8DECF" stroke="#C48E77" stroke-width="2.6"/>
+        <path d="M 586 926 C 596 918, 612 916, 622 920" fill="none" stroke="#fff" stroke-width="3.4" opacity="0.7" stroke-linecap="round"/>
+        <path d="M 572 1056 C 598 1046, 628 1048, 652 1062" fill="none" stroke="#B57F67" stroke-width="3.6" opacity="0.6" stroke-linecap="round"/>
+        <path d="M 576 1072 C 600 1066, 624 1068, 644 1078" fill="none" stroke="#B57F67" stroke-width="2.6" opacity="0.4" stroke-linecap="round"/></svg>`;
       s.phone.insertAdjacentHTML('afterbegin', back);
       s.phone.insertAdjacentHTML('beforeend', front);
     },
