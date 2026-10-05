@@ -212,6 +212,9 @@ Never name a prop firm in these: the presets are typical rules, not any one firm
 A new account grows on consistency: post every day at the same times. UK times that suit traders are
 07:30 (before London), 12:30 and 19:30.
 
+**First comes EP02**, the animated episode (`EPISODES.md`, section P): TCP's account on Monday
+5 October at 19:30, the founder's on Tuesday 6 October at 19:30. Day 1 below is Tuesday 6 October.
+
 | Day | 07:30 | 19:30 |
 |---|---|---|
 | 1 | 1. Brand sting | 2. Win rate (maths 01) |

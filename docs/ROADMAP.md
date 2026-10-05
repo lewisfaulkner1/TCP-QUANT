@@ -14,7 +14,8 @@ What's built, what comes next, and the decisions behind it. Updated as work land
 - **Animated episodes** (`brand/source/reels/toon`, `brand/video/reels/EPISODES.md`): the founder as an
   animated character, drawn in code so he looks the same in every shot, for the TikTok series in the
   animated master brief. EP02, *Every Trader Has Done This*, is made in two cuts (TCP's account and the
-  founder's), with its production package. The character sheet waits for Lewis's approval.
+  founder's), with its production package and posting times. Lewis approved character sheet V6 on
+  5 October 2026.
 - **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner), and
   the pinned posts for Start here (`community/PINNED.md`).
 - **Onboarding bot:** link in bio → 18+ check → broker → verification → single-use invite, with the
@@ -75,6 +76,8 @@ What's built, what comes next, and the decisions behind it. Updated as work land
    history, with sample sizes.
 7. **The website:** the same terminal in a normal browser with Telegram Login (free), then installable
    on phones as an app from the website (a PWA, free).
+8. **More animated episodes:** the rest of the master brief, made with the approved founder, one idea
+   each.
 
 ## When there's a budget
 

@@ -30,9 +30,8 @@ the real Quant Terminal in demo mode, labelled DEMO PRICES.
 | `tcp-<episode>-personal-music.mp4`, `-personal-sfx.mp4` | The same two, cut for the founder's account |
 | `tcp-<episode>-cover.jpg`, `-personal-cover.jpg` | The cover frames |
 
-**The character sheet** (`tcp-founder-character-sheet.png`) is the canonical look. Approve it before
-more episodes are made. After that, changes to his face or clothes happen only when a script calls
-for them.
+**The character sheet** (`tcp-founder-character-sheet.png`, V6) is the canonical look: Lewis approved
+it on 5 October 2026. Changes to his face or clothes happen only when a script calls for them.
 
 ---
 
@@ -176,8 +175,10 @@ In my defence, it looked like a breakout. 😐
 
 What I wait for now: the trap, the structure, then the pullback.
 
+Tell me I'm not the only one 👇
+
 #trading #daytrader #tradinglife #forex
-Education, not financial advice. Trading carries risk. Example chart, not real trades.
+Education, not financial advice. Trading carries risk. Example chart, not real trades. App shown with demo prices.
 ```
 
 ### K. TCP account version
@@ -190,10 +191,12 @@ Education, not financial advice. Trading carries risk. Example chart, not real t
 ```
 Every trader has done this. Twice.
 
-The trap, the structure, the pullback. One idea per episode, made by TCP.
+Be honest: how many times have you? 👇
+
+The trap, the structure, then the pullback. One lesson an episode, from TCP.
 
 #trading #daytrading #tradingtips #forextrader #xauusd
-Education, not financial advice. Trading carries risk. Example chart, not real trades.
+Education, not financial advice. Trading carries risk. Example chart, not real trades. App shown with demo prices.
 ```
 
 ### L. QA
@@ -226,5 +229,25 @@ In J and K. Keep the risk line last.
 
 - **Made here:** script, character, sets, animation, chart, captions, music and effects, both cuts,
   covers, captions for posting.
-- **You:** approve the character sheet; choose a trending sound if you want one (use the `-sfx`
-  file); post each cut to its account at a different time; tell me what the comments say.
+- **You:** choose a trending sound if you want one (use the `-sfx` file); post each cut to its
+  account at the times in P; tell me what the comments say.
+
+### P. Posting
+
+UK times. The two accounts post a day apart, so the same story never goes out twice in one day.
+
+| When | Account | File | Where |
+|---|---|---|---|
+| Mon 5 Oct, 19:30 | TCP | `tcp-ep02-every-trader-music.mp4` | TikTok, caption K |
+| Mon 5 Oct, 20:00 | TCP | the same file | Instagram Reels, caption K |
+| Tue 6 Oct, 19:30 | Founder | `tcp-ep02-every-trader-personal-music.mp4` | TikTok, caption J |
+| Tue 6 Oct, 20:00 | Founder | the same file | Instagram Reels, caption J |
+
+- **Cover:** the frame at 0.9 s (`-cover.jpg`); if TikTok asks for cover text, *every trader has done
+  this*.
+- **Pin** it to the founder's profile; on TCP's, it joins the three pins in `POSTS.md` once batch 1 is
+  up.
+- **No AI label needed:** no AI voice and no AI imagery. With a trending sound, use the `-sfx` file
+  and keep the original sound at about 50%.
+- **The first hour:** answer the early comments, ideally with a short video reply; TikTok pushes
+  replies. Note the three-second hold rate after a day.

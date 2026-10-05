@@ -60,8 +60,9 @@ dashboard. Always run `npm test` (it builds first) and commit the rebuilt `dist/
   model comes from an npm package (see `brand/source/reels/README.md`). Models aren't committed.
 - Reels teach and never ask viewers to open an account (a UK financial promotion); the link in bio and
   the bot do that, with the disclosures. Label AI voices and demo data.
-- The animated founder (`toon/founder.js`) is canonical once Lewis approves the sheet: change his look
-  only on purpose. His reference photos are personal: keep them out of the repo.
+- The animated founder (`toon/founder.js`) is canonical: Lewis approved character sheet V6 on
+  5 October 2026. Change his look only on purpose. His reference photos are personal: keep them out
+  of the repo.
 
 ## Where things stand
 
