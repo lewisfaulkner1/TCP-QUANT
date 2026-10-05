@@ -232,9 +232,9 @@
       <linearGradient id="${id}slat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C1611"/><stop offset="0.6" stop-color="#2C2219"/><stop offset="1" stop-color="#5A4128"/></linearGradient>
       <linearGradient id="${id}chair" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0E0D0C"/><stop offset="0.6" stop-color="#1A1816"/><stop offset="1" stop-color="#2A2622"/></linearGradient>
       <linearGradient id="${id}glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.07"/><stop offset="0.56" stop-color="#fff" stop-opacity="0"/></linearGradient>
-      <filter id="${id}b2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2"/></filter>
-      <filter id="${id}b8" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
-      <filter id="${id}b20" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20"/></filter>
+      <filter color-interpolation-filters="sRGB" id="${id}b2" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2"/></filter>
+      <filter color-interpolation-filters="sRGB" id="${id}b8" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
+      <filter color-interpolation-filters="sRGB" id="${id}b20" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20"/></filter>
     </defs>`;
   }
   function bokeh(x0, y0, w, h, count, seed, sizes = [3, 12]) {
