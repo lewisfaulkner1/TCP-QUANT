@@ -37,7 +37,7 @@
     cap: '#1E1E21', capHi: '#36363C', capDark: '#0E0E10', stitch: '#4C4C55', eyelet: '#2C2C31',
     gold: '#D8AD4E', goldHi: '#F8E3A6', goldLo: '#9E7428',
     top: '#211F1E', topHi: '#3A3734', topDark: '#100F0E', stitchTop: '#3C3936',
-    pearl: '#EFEBE3', pearlShade: '#ADA597', lens: '#0B0B0E',
+    pearl: '#EFEBE3', pearlShade: '#ADA597', lens: '#0B0B0E', print: '#E6DECD',
   };
   const n = (v) => Math.round(v * 100) / 100;
   const lerp = (a, b, k) => a + (b - a) * k;
@@ -743,11 +743,11 @@
   // the collar: a ribbed band round the base of his neck, its front lower than its back; outer is
   // the edge lying on his shoulders, inner the edge against his neck
   const collarPt = (th, outer) => (outer
-    ? [74 * Math.sin(th), -4 - 22 * Math.cos(th), 72 * Math.cos(th) - 4]
-    : [57 * Math.sin(th), 8 - 22 * Math.cos(th), 58 * Math.cos(th) - 4]);
+    ? [78 * Math.sin(th), -4 - 22 * Math.cos(th), 76 * Math.cos(th) - 4]
+    : [61 * Math.sin(th), 8 - 22 * Math.cos(th), 62 * Math.cos(th) - 4]);
   // the chain: around the back of his neck on the collar, then off it at his collarbones and down
   // his chest to a low point over his sternum
-  const CHAIN = { R: [66, 65], LIFT: 0, OFF: 0.98, LOW: -118, ZLOW: 115, BEAD: 3.1 };
+  const CHAIN = { R: [70, 69], LIFT: 0, OFF: 0.98, LOW: -118, ZLOW: 115, BEAD: 3.1 };
   function chainPath() {
     const pts = [];
     // round the back it lies on the collar band, halfway between its edges
@@ -802,7 +802,7 @@
   function neckSVG(p, id, M) {
     const ring = M.front.map((f) => f.n);
     const L = ring[0], R = ring[ring.length - 1];
-    const d = `M -60 58 C -61 88, -61 118, ${xy(L)} L ${ring.slice(1).map(xy).join(' L ')} C ${n(R[0] - 1)} ${n(R[1] - 22)}, 49 132, 52 112 L 52 86 C 20 74, -30 58, -60 58 Z`;
+    const d = `M -63 58 C -64 88, -65 118, ${xy(L)} L ${ring.slice(1).map(xy).join(' L ')} C ${n(R[0] - 1)} ${n(R[1] - 22)}, 52 132, 54 112 L 54 86 C 20 74, -30 58, -63 58 Z`;
     return `
       <clipPath id="${id}neckc"><path d="${d}"/></clipPath>
       <path d="${d}" fill="url(#${id}neck)"/>
@@ -840,34 +840,81 @@
       <circle cx="${n(b.p[0] + 0.9)}" cy="${n(b.p[1] - 1.1)}" r="0.9" fill="#fff" opacity="0.95"/>`).join('')}`;
   }
 
-  // The crewneck's outline: from the collar over his near shoulder, down his near side, along the
-  // bottom, up his far side and over his far shoulder to behind his neck.
-  const SHOULDER_NEAR = [[-79.4, 153.4], [-97, 160], [-119, 171], [-139, 187], [-154, 207], [-163, 230]];
-  const SIDE_NEAR = [[-163, 230], [-170, 262], [-173, 320], [-174, 420], [-173, 520], [-172, 600]];
-  const SIDE_FAR = [[162, 600], [164, 520], [166, 420], [165, 335], [161, 285], [152, 248], [137, 222]];
-  const SHOULDER_FAR = [[137, 222], [118, 202], [94, 186], [72, 177], [50, 171]];
-  const TORSO = `${smooth([...SHOULDER_NEAR, ...SIDE_NEAR.slice(1)])} L 162 600 ${smooth([...SIDE_FAR, ...SHOULDER_FAR.slice(1)]).replace(/^M/, 'L')} L 31 161.5 L 0.8 153.4 L -30 148 L -52.9 147 L -70 149 Z`;
+  // The crewneck's outline round his body; his arms are drawn over it. From the collar down the
+  // slope of his near trapezius to his shoulder, under his near arm and down his side, along the
+  // bottom, up his far side and round the edge of his far chest (his far arm is behind it), over his
+  // far trapezius to the collar, and round the back of the collar. Broad shoulders and a deep chest,
+  // narrowing to the waist.
+  const TORSO_NEAR = [[-83.8, 155.1], [-100, 161.5], [-114, 169.5], [-127, 179], [-140, 191], [-151, 210], [-157, 240], [-158, 290], [-152, 350], [-143, 420], [-136, 490], [-133, 600]];
+  const TORSO_FAR = [[124, 600], [126, 520], [131, 450], [139, 385], [146, 333], [148, 298], [145, 268], [137, 242], [124, 217], [108, 199], [89, 188], [70.6, 182.9]];
+  const COLLAR_BACK = (() => {
+    const cam = cam3(...BODY_VIEWS['34']);
+    return Array.from({ length: 18 }, (_, i) => cam.at(collarPt((55 + (i * 172) / 17) * RAD, true)));
+  })();
+  const TORSO = `${smooth(TORSO_NEAR)} L 124 600 ${smooth(TORSO_FAR).replace(/^M/, 'L')} L ${COLLAR_BACK.map(xy).join(' L ')} Z`;
+  // The AMIRI wordmark printed across his chest: each letter laid on the curve of his chest at its own
+  // place and turned with it, so the word wraps round him like a real print, foreshortening on the far
+  // side. Letter shapes from Liberation Serif (SIL Open Font License), cap height 1, baseline at 0.
+  const GLYPHS = {"A":{"d":"M0.344 -0.04V0H0.015V-0.04L0.128 -0.06L0.469 -1.008H0.611L0.965 -0.06L1.092 -0.04V0H0.669V-0.04L0.803 -0.06L0.704 -0.348H0.31L0.21 -0.06ZM0.504 -0.901 0.333 -0.415H0.681Z","adv":1.1029},"M":{"d":"M0.643 0H0.617L0.251 -0.86V-0.06L0.385 -0.04V0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.347L0.672 -0.239L1.027 -1H1.313V-0.96L1.185 -0.941V-0.06L1.313 -0.04V0H0.908V-0.04L1.042 -0.06V-0.86Z","adv":1.3579},"I":{"d":"M0.327 -0.06 0.455 -0.04V0H0.055V-0.04L0.183 -0.06V-0.941L0.055 -0.96V-1H0.455V-0.96L0.327 -0.941Z","adv":0.5086},"R":{"d":"M0.316 -0.438V-0.06L0.468 -0.04V0H0.054V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.476Q0.664 -1 0.753 -0.937Q0.843 -0.873 0.843 -0.733Q0.843 -0.633 0.788 -0.56Q0.734 -0.488 0.638 -0.459L0.908 -0.06L1.016 -0.04V0H0.777L0.496 -0.438ZM0.694 -0.723Q0.694 -0.837 0.639 -0.885Q0.583 -0.933 0.444 -0.933H0.316V-0.506H0.448Q0.582 -0.506 0.638 -0.555Q0.694 -0.605 0.694 -0.723Z","adv":1.0186}};
+  const WORDMARK = { text: 'AMIRI', h: 29, track: 0.34, y: -153, W: 215, D: 118, c: 2 };
+  // When he faces the other way the whole drawing is mirrored, but a print never is: then the
+  // letters go in the other order, each mirrored back.
+  const wordmarkCache = {};
+  function wordmark(flip) {
+    if (wordmarkCache[flip]) return wordmarkCache[flip];
+    const g = WORDMARK, cam = cam3(...BODY_VIEWS['34']);
+    const text = flip ? [...g.text].reverse().join('') : g.text;
+    const adv = [...text].map((ch) => GLYPHS[ch].adv);
+    const total = adv.reduce((s, a) => s + a, 0) + g.track * (g.text.length - 1);
+    // an arc length round his chest from its middle, to the angle there
+    const arcTo = (s) => {
+      let th = 0, run = 0;
+      const step = 0.001 * Math.sign(s);
+      while (Math.abs(run) < Math.abs(s)) { run += Math.hypot(g.W * Math.cos(th), g.D * Math.sin(th)) * Math.abs(step); th += step; }
+      return th;
+    };
+    let pos = -total / 2;
+    const letters = [...text].map((ch, i) => {
+      const mid = (pos + adv[i] / 2) * g.h;
+      pos += adv[i] + g.track;
+      const th = arcTo(mid);
+      const P = [g.W * Math.sin(th), g.y, g.c + g.D * Math.cos(th)];
+      const t = unit3([g.W * Math.cos(th), 0, -g.D * Math.sin(th)]);
+      const O = cam.at(P), U = cam.at([P[0] + t[0], P[1], P[2] + t[2]]), V = cam.at([P[0], P[1] - 1, P[2]]);
+      const u = [(U[0] - O[0]) * g.h, (U[1] - O[1]) * g.h], v = [(V[0] - O[0]) * g.h, (V[1] - O[1]) * g.h];
+      return `<path transform="matrix(${n(u[0])} ${n(u[1])} ${n(v[0])} ${n(v[1])} ${n(O[0])} ${n(O[1])})${flip ? ' scale(-1 1)' : ''} translate(${n(-adv[i] / 2)} 0.5)" d="${GLYPHS[ch].d}"/>`;
+    }).join('');
+    wordmarkCache[flip] = letters;
+    return letters;
+  }
   function torso34(p, id) {
     const tint = p.light.tint, rim = p.light.rim;
     const M = bodyModel('34');
+    const f = (k) => ` filter="url(#${id}${k})"`;
     return `
       <path d="${TORSO}" fill="${C.top}"/>
       <g clip-path="url(#${id}topclip)">
-        ${blob([[-180, 228], [-146, 236], [-122, 320], [-118, 620], [-190, 620]], C.topDark, 0.7, ` filter="url(#${id}soft2)"`)}
-        ${blob([[30, 196], [118, 204], [158, 272], [154, 620], [70, 620], [40, 390]], C.topHi, 0.38, ` filter="url(#${id}soft2)"`)}
-        ${ink(off(M.front.map((f) => f.o), 0, 7), 10, C.topDark, [0.15, 0.15], 0.6, ` filter="url(#${id}soft)"`)}
-        ${ink(off(SHOULDER_NEAR.slice(1), 4, 9), 9, C.topHi, [0.3, 0.3], 0.22, ` filter="url(#${id}soft)"`)}
-        ${ink(off(SHOULDER_FAR.slice(0, 4), -4, 9), 9, C.topHi, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}
-        ${ink([[-112, 318], [-84, 352], [-52, 384], [-30, 418]], 3.2, C.topDark, [0.4, 0.4], 0.55)}
-        ${ink([[-106, 312], [-78, 344], [-50, 374]], 1.8, C.topHi, [0.4, 0.4], 0.35)}
-        ${ink([[124, 300], [118, 360], [116, 430], [120, 520]], 3, C.topDark, [0.4, 0.4], 0.5)}
-        ${ink([[132, 306], [127, 362], [125, 428]], 1.6, C.topHi, [0.4, 0.4], 0.32)}
-        ${ink([[-28, 470], [-22, 540], [-20, 610]], 2.6, C.topDark, [0.4, 0.2], 0.4)}
-        ${ink(off(SIDE_FAR.slice(1).reverse(), -3, 0), 7, tint, [0.15, 0.3], 0.38 * rim, ` filter="url(#${id}softer)"`)}
+        ${blob([[-180, 176], [-118, 196], [-98, 300], [-92, 620], [-190, 620]], C.topDark, 0.62, f('soft2'))}
+        ${blob([[78, 206], [128, 218], [150, 292], [142, 430], [104, 430], [86, 300]], C.topHi, 0.3, f('soft2'))}
+        <g fill="#000" opacity="0.35" transform="translate(${p.flip ? -0.8 : 0.8} 1)">${wordmark(!!p.flip)}</g>
+        <g fill="${C.print}">${wordmark(!!p.flip)}</g>
+        ${ink(off(M.front.map((q) => q.o), 0, 7), 10, C.topDark, [0.15, 0.15], 0.6, f('soft'))}
+        ${ink(off(TORSO_NEAR.slice(1, 5), 3, 9), 12, C.topHi, [0.3, 0.3], 0.26, f('soft'))}
+        ${ink(off(TORSO_FAR.slice(7, 11).reverse(), -3, 9), 10, C.topHi, [0.3, 0.3], 0.3, f('soft'))}
+        ${ink([[-112, 302], [-60, 338], [0, 354], [62, 352], [110, 338], [146, 314]], 16, C.topDark, [0.2, 0.25], 0.55, f('soft2'))}
+        ${ink([[-80, 286], [-20, 296], [40, 298], [100, 290], [136, 278]], 14, C.topHi, [0.3, 0.3], 0.1, f('soft2'))}
+        ${ink([[-100, 250], [-40, 262], [30, 268]], 24, C.topHi, [0.3, 0.3], 0.1, f('soft2'))}
+        ${ink([[88, 248], [118, 260], [140, 282]], 16, C.topHi, [0.3, 0.3], 0.2, f('soft2'))}
+        ${ink([[69, 238], [70, 280], [69, 330]], 5, C.topDark, [0.3, 0.3], 0.2, f('soft'))}
+        ${ink([[-96, 300], [-74, 314], [-50, 322]], 2.4, C.topDark, [0.4, 0.4], 0.45)}
+        ${ink([[-94, 293], [-72, 306]], 1.3, C.topHi, [0.4, 0.4], 0.28)}
+        ${ink([[146, 332], [130, 344], [112, 350]], 2.2, C.topDark, [0.4, 0.4], 0.4)}
+        ${ink([[-110, 542], [-40, 558], [50, 554], [112, 542]], 2.4, C.topDark, [0.3, 0.3], 0.3)}
+        ${ink([[-90, 530], [-20, 542]], 1.3, C.topHi, [0.3, 0.3], 0.2)}
+        ${ink(off(TORSO_FAR.slice(2, 8), -9, 0), 16, tint, [0.25, 0.3], 0.12 * rim, f('soft2'))}
       </g>
-      <path d="${smooth([[137, 222], [146, 252], [151, 286]])}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>
-      ${ink([...SHOULDER_NEAR, ...SIDE_NEAR.slice(1)], 2.4, C.lineCloth, [0.03, 0.03], 0.92)}
-      ${ink([...SIDE_FAR, ...SHOULDER_FAR.slice(1)], 2.2, C.lineCloth, [0.03, 0.12], 0.88)}
+      ${ink(TORSO_NEAR, 2.4, C.lineCloth, [0.03, 0.03], 0.92)}
+      ${ink(TORSO_FAR, 2.2, C.lineCloth, [0.03, 0.12], 0.88)}
       ${collarSVG(M, 'back')}
       ${chainSVG(M, id, 'back')}
       ${neckSVG(p, id, M)}
@@ -875,9 +922,10 @@
       ${chainSVG(M, id, 'front')}`;
   }
 
-  // A sleeve from its two edges, shoulder (or wherever it comes into view) to cuff: one outline,
-  // the side away from the light in shade, folds where it bends, the fabric gathered above a ribbed
-  // cuff. out and inn run from the top to the cuff; the cuff is the last stretch of each.
+  // A sleeve from its two edges, shoulder to cuff: one outline, the side away from the light in
+  // shade, the muscle under it modelled in light and shadow, creases where it bends, the fabric
+  // gathered above a ribbed cuff. out and inn run from the top to the cuff; the cuff is the last
+  // stretch of each; the seam closes the top, from the end of inn to the start of out.
   function sleeve(id, s, light = 1) {
     const out = s.out, inn = s.inn, cuffK = s.cuff ?? 16;
     const shape = `${smooth(out)} L ${xy(inn[inn.length - 1])} ${smooth(inn.slice().reverse()).replace(/^M [-\d.]+ [-\d.]+/, '')}${s.seam ? ` ${smooth(s.seam).replace(/^M [-\d.]+ [-\d.]+/, '')}` : ''} Z`;
@@ -894,28 +942,33 @@
     const o1 = out[out.length - 1], i1 = inn[inn.length - 1], o0 = back(out, cuffK), i0 = back(inn, cuffK);
     const o2 = back(out, cuffK + 10), i2 = back(inn, cuffK + 10), o3 = back(out, cuffK + 22), i3 = back(inn, cuffK + 22);
     let ribs = '';
-    for (let k = 1; k < 9; k++) {
-      const t = k / 9;
+    for (let k = 1; k < 11; k++) {
+      const t = k / 11;
       ribs += `<path d="M ${xy([lerp(o0[0], i0[0], t), lerp(o0[1], i0[1], t)])} L ${xy([lerp(o1[0], i1[0], t), lerp(o1[1], i1[1], t)])}" stroke="${C.topHi}" stroke-width="0.9" opacity="0.4"/>`;
     }
     const mid = (a, b, t, bow) => {
       const m = [lerp(a[0], b[0], t), lerp(a[1], b[1], t)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
       return [m[0] + (-dy / L) * bow, m[1] + (dx / L) * bow];
     };
-    const lit = light > 0 ? s.litEdge || 'inn' : s.litEdge === 'inn' ? 'out' : 'inn';
+    const litEdge = s.litEdge || 'inn';
+    const lit = light > 0 ? litEdge : litEdge === 'inn' ? 'out' : 'inn';
     const litPts = lit === 'inn' ? inn : out, darkPts = lit === 'inn' ? out : inn;
     const fx = id.replace(/[^\w]/g, '');
     return {
       body: `
       <defs><filter color-interpolation-filters="sRGB" id="${fx}x" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
         <filter color-interpolation-filters="sRGB" id="${fx}y" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+        <filter color-interpolation-filters="sRGB" id="${fx}z" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4"/></filter>
         <clipPath id="${id}"><path d="${shape}"/></clipPath></defs>
       <path d="${shape}" fill="${C.top}"/>
       <g clip-path="url(#${id})">
-        ${ink(darkPts, 16, C.topDark, [0.1, 0.1], 0.75, ` filter="url(#${fx}x)"`)}
-        ${ink(litPts, 9, C.topHi, [0.15, 0.15], 0.4, ` filter="url(#${fx}y)"`)}
-        ${(s.folds || []).map((f) => `${ink(f, 2.8, C.topDark, [0.4, 0.4], 0.6)}${ink(off(f, -1.5, -1.8), 1.4, C.topHi, [0.4, 0.4], 0.32)}`).join('')}
-        ${ink([o3, mid(o3, i3, 0.5, 2.5), i3], 2.2, C.topDark, [0.3, 0.3], 0.55)}${ink([o2, mid(o2, i2, 0.5, 2), i2], 2.2, C.topDark, [0.3, 0.3], 0.5)}
+        ${ink(darkPts, 22, C.topDark, [0.1, 0.1], 0.75, ` filter="url(#${fx}x)"`)}
+        ${ink(litPts, 10, C.topHi, [0.15, 0.15], 0.42, ` filter="url(#${fx}y)"`)}
+        ${s.shade ? s.shade(fx) : ''}
+        ${s.rim ? ink(litPts, 7, s.rim.colour, [0.1, 0.2], s.rim.op, ` filter="url(#${fx}z)"`) : ''}
+        ${(s.folds || []).map((f) => `${ink(f, 2.6, C.topDark, [0.4, 0.4], 0.55)}${ink(off(f, -1.4, -1.7), 1.3, C.topHi, [0.4, 0.4], 0.3)}`).join('')}
+        ${ink([o3, mid(o3, i3, 0.5, 3), i3], 2.2, C.topDark, [0.3, 0.3], 0.5)}${ink([o2, mid(o2, i2, 0.5, 2.4), i2], 2.2, C.topDark, [0.3, 0.3], 0.5)}
+        ${ink(off([o3, mid(o3, i3, 0.5, 3), i3], 0, -2), 1.2, C.topHi, [0.3, 0.3], 0.25)}
       </g>
       ${s.seam ? `<path d="${smooth(s.seam)}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>` : ''}
       ${ink(out, 2.4, C.lineCloth, [s.outTaper ?? 0.03, 0.03], 0.92)}
@@ -929,167 +982,377 @@
     };
   }
 
-  // The arms for each pose. The hands keep the places the sets rely on (the mouse, the keyboard, the
-  // phone); the sleeves come down from his dropped shoulders to them. The far arm is drawn only where
-  // it shows past his body.
+  // Each arm is three joints in the picture, S the shoulder, E the elbow and W the wrist (body space),
+  // placed where his arm would be seen from this angle, so the upper arm and forearm keep their
+  // lengths, shortening only as they come towards us. T is the top of his shoulder, where the sleeve
+  // leaves the line of his trapezius, Td the way that line runs there. The sleeve follows the muscle
+  // under it: the deltoid capping the shoulder, the biceps in front of the upper arm and the triceps
+  // behind, the forearm thick below the elbow and narrowing into the cuff; the point of the elbow
+  // rounds the outside of the bend, the inside creases. Radii in body units along each bone, from the
+  // joint above (0) to the joint below (1).
+  const MUSCLE = {
+    upper: { back: [[0, 46], [0.25, 47], [0.45, 44], [0.62, 47.5], [0.82, 44], [1, 37]], front: [[0, 40], [0.25, 44], [0.55, 51], [0.75, 47], [0.92, 39], [1, 35]] },
+    fore: { back: [[0, 37], [0.15, 42], [0.35, 40], [0.65, 32], [1, 26]], front: [[0, 35], [0.2, 44], [0.4, 40], [0.7, 31], [1, 26]] },
+  };
+  // the deltoid rounding out over the top of the upper arm, more on its outer side
+  const deltoid = (t, amp) => amp * Math.exp(-(((t - 0.17) / 0.15) ** 2));
+  const radius = (k, t) => {
+    for (let i = 1; i < k.length; i++) {
+      if (t <= k[i][0]) { const u = (t - k[i - 1][0]) / (k[i][0] - k[i - 1][0]); return lerp(k[i - 1][1], k[i][1], u * u * (3 - 2 * u)); }
+    }
+    return k[k.length - 1][1];
+  };
+  // where two segments cross, if they do
+  function crossing(a, b, c, d) {
+    const r = [b[0] - a[0], b[1] - a[1]], s = [d[0] - c[0], d[1] - c[1]], den = r[0] * s[1] - r[1] * s[0];
+    if (Math.abs(den) < 1e-9) return null;
+    const t = ((c[0] - a[0]) * s[1] - (c[1] - a[1]) * s[0]) / den, u = ((c[0] - a[0]) * r[1] - (c[1] - a[1]) * r[0]) / den;
+    return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? [a[0] + r[0] * t, a[1] + r[1] * t] : null;
+  }
+  // The sleeve's edges for an arm: out the side away from his body (with the deltoid's cap), inn the
+  // side towards it (from the armpit), the seam between, its creases and its modelling.
+  function armSleeve(J) {
+    const { S, E, W, T, Td } = J;
+    const u = [E[0] - S[0], E[1] - S[1]], f = [W[0] - E[0], W[1] - E[1]];
+    const Lu = Math.hypot(u[0], u[1]), Lf = Math.hypot(f[0], f[1]);
+    const NU = [-u[1] / Lu, u[0] / Lu], NF = [-f[1] / Lf, f[0] / Lf];
+    // side A is to the left of the bone going down the arm as the picture has it (+1), side B to the
+    // right (-1); the point of the elbow, and the triceps above it, are on the outside of the bend
+    const bend = u[0] * f[1] - u[1] * f[0], sgBack = (J.backA ?? bend < 0) ? 1 : -1, sgFront = -sgBack;
+    const N = 12;
+    const U = (t, r) => [S[0] + u[0] * t + NU[0] * r, S[1] + u[1] * t + NU[1] * r];
+    const F = (t, r) => [E[0] + f[0] * t + NF[0] * r, E[1] + f[1] * t + NF[1] * r];
+    const sgOut = J.outer === 'A' ? 1 : -1;
+    const edge = (sg) => {
+      const ku = sg === sgBack ? MUSCLE.upper.back : MUSCLE.upper.front, kf = sg === sgBack ? MUSCLE.fore.back : MUSCLE.fore.front;
+      const up = [], fo = [], amp = sg === sgOut ? 12 : 3;
+      for (let i = 0; i <= N; i++) up.push(U(i / N, (radius(ku, i / N) + deltoid(i / N, amp)) * sg));
+      for (let i = 0; i <= N; i++) fo.push(F(i / N, radius(kf, i / N) * sg));
+      if ((sg > 0) === (bend < 0)) {
+        const a = up[N], b = fo[0], a0 = Math.atan2(a[1] - E[1], a[0] - E[0]);
+        let da = Math.atan2(b[1] - E[1], b[0] - E[0]) - a0;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const r0 = Math.hypot(a[0] - E[0], a[1] - E[1]), r1 = Math.hypot(b[0] - E[0], b[1] - E[1]);
+        const k = Math.max(1, Math.ceil(Math.abs(da) / 0.25)), arc = [];
+        for (let i = 1; i < k; i++) { const t = i / k, r = lerp(r0, r1, t) * (1 + 0.05 * Math.sin(Math.PI * t)); arc.push([E[0] + Math.cos(a0 + da * t) * r, E[1] + Math.sin(a0 + da * t) * r]); }
+        return { pts: [...up, ...arc, ...fo.slice(1)], crease: null, nUp: up.length + arc.length };
+      }
+      for (let i = N; i > N / 2; i--) {
+        for (let j = 0; j < N / 2; j++) {
+          const X = crossing(up[i - 1], up[i], fo[j], fo[j + 1]);
+          if (X) return { pts: [...up.slice(0, i), X, ...fo.slice(j + 1)], crease: X, nUp: i + 1 };
+        }
+      }
+      return { pts: [...up, ...fo.slice(1)], crease: [(up[N][0] + fo[0][0]) / 2, (up[N][1] + fo[0][1]) / 2], nUp: up.length };
+    };
+    const O = edge(sgOut), I = edge(-sgOut);
+    // the deltoid: from the top of the shoulder, round, to its widest, and on down the outer edge
+    const k = 2, P1 = O.pts[k], P0 = O.pts[k - 1], P2 = O.pts[k + 1];
+    const dl = Math.hypot(P2[0] - P0[0], P2[1] - P0[1]), d1 = [(P2[0] - P0[0]) / dl, (P2[1] - P0[1]) / dl];
+    const L = Math.hypot(P1[0] - T[0], P1[1] - T[1]);
+    const c1 = [T[0] + Td[0] * L * 0.55, T[1] + Td[1] * L * 0.55], c2 = [P1[0] - d1[0] * L * 0.55, P1[1] - d1[1] * L * 0.55];
+    const cap = [];
+    for (let i = 0; i < 7; i++) {
+      const t = i / 7, m = 1 - t;
+      cap.push([0, 1].map((q) => m * m * m * T[q] + 3 * m * m * t * c1[q] + 3 * m * t * t * c2[q] + t * t * t * P1[q]));
+    }
+    const out = [...cap, ...O.pts.slice(k)];
+    const inn = I.pts.slice(3);
+    const nOut = [NU[0] * sgOut, NU[1] * sgOut];
+    const seam = [inn[0], [lerp(inn[0][0], T[0], 0.5) + nOut[0] * 9, lerp(inn[0][1], T[1], 0.5) + nOut[1] * 9], T];
+    // the creases inside the elbow, fanning out from where the edges meet
+    const inside = O.crease ? O : I, sgIn = O.crease ? sgOut : -sgOut, X = inside.crease;
+    const uh = [u[0] / Lu, u[1] / Lu], fh = [f[0] / Lf, f[1] / Lf], nIn = [NU[0] * sgIn, NU[1] * sgIn], nInF = [NF[0] * sgIn, NF[1] * sgIn];
+    const P = (p, a, ka, b, kb) => [p[0] + a[0] * ka + b[0] * kb, p[1] + a[1] * ka + b[1] * kb];
+    const sharp = Math.min(1, Math.abs(bend) / (Lu * Lf * 0.5));
+    const folds = sharp > 0.2 ? [
+      [P(X, uh, -16, nIn, -3), P(X, uh, -7, nIn, -16), P(X, uh, 2, nIn, -30)],
+      [P(X, fh, 10, nInF, -3), P(X, fh, 7, nInF, -15), P(X, fh, 9, nInF, -27)],
+      [P(X, uh, -30, nIn, -6), P(X, uh, -24, nIn, -16)],
+    ] : [
+      [P(X, uh, -14, nIn, -4), P(X, uh, -2, nIn, -14), P(X, fh, 10, nIn, -22)],
+      [P(X, fh, 16, nInF, -4), P(X, fh, 24, nInF, -14)],
+    ];
+    const rf = (t) => radius(MUSCLE.upper.front, t), rff = (t) => radius(MUSCLE.fore.front, t);
+    const shade = (fx) => `
+        ${ink([...cap.slice(1), ...O.pts.slice(k, k + 3)].map((p) => [lerp(p[0], S[0], 0.3), lerp(p[1], S[1], 0.3)]), 16, C.topHi, [0.3, 0.3], 0.2, ` filter="url(#${fx}y)"`)}
+        ${ink([U(0.36, 56 * sgOut), U(0.43, 40 * sgOut), U(0.5, 22 * sgOut)], 5, C.topDark, [0.3, 0.3], 0.3, ` filter="url(#${fx}z)"`)}
+        ${ink([U(0.34, rf(0.34) * sgFront * 0.92), U(0.42, rf(0.42) * sgFront * 0.5), U(0.5, rf(0.5) * sgFront * 0.1)], 4.5, C.topDark, [0.3, 0.3], 0.32, ` filter="url(#${fx}z)"`)}
+        ${ink([U(0.38, rf(0.38) * sgFront * 0.5), U(0.52, rf(0.52) * sgFront * 0.52), U(0.66, rf(0.66) * sgFront * 0.48)], 18, C.topHi, [0.3, 0.3], 0.15, ` filter="url(#${fx}y)"`)}
+        ${ink([U(0.8, rf(0.8) * sgFront * 0.8), U(0.88, rf(0.88) * sgFront * 0.55), U(0.95, rf(0.95) * sgFront * 0.25)], 9, C.topDark, [0.3, 0.3], 0.32, ` filter="url(#${fx}z)"`)}
+        ${ink([F(0.08, rff(0.08) * sgFront * 0.5), F(0.24, rff(0.24) * sgFront * 0.5), F(0.4, rff(0.4) * sgFront * 0.45)], 14, C.topHi, [0.3, 0.3], 0.13, ` filter="url(#${fx}y)"`)}`;
+    return { out, inn, seam, folds, shade, litEdge: J.lit || 'inn', cuff: 16, crease: X, outUpper: out.slice(0, cap.length + O.nUp - k) };
+  }
+
+  // The arms in each pose, as joints. Both shoulders stay where his body puts them; the hands keep
+  // the places the sets rely on (the mouse, the keyboard, the phone). His far arm is behind his body,
+  // seen only past its far side, except where it crosses in front (arms folded). Hands are turned
+  // from the line of the forearm by rot degrees.
+  const SHOULDERS = {
+    near: { S: [-128, 225], T: [-127, 179], Td: [-0.8, 0.6], outer: 'A', lit: 'inn' },
+    far: { S: [119, 228], T: [92, 189.4], Td: [0.94, 0.34], outer: 'B', lit: 'out' },
+  };
+  const HAND_SCALE = 1.45;
   const ARMS = {
     rest: {
-      near: { out: [[-163, 230], [-175, 262], [-183, 310], [-187, 370], [-188, 430], [-188, 480], [-191, 520]],
-        inn: [[-128, 300], [-136, 340], [-141, 400], [-143, 450], [-143, 490], [-144, 520]],
-        seam: [[-128, 300], [-140, 262], [-163, 230]], innTaper: 0.35,
-        folds: [[[-180, 352], [-168, 368], [-152, 372]], [[-182, 384], [-166, 396], [-150, 398]]] },
-      hands: [{ x: -168, y: 520, rot: 90, kind: 'hang', o: { scale: 1.3 } }],
+      far: { E: [128, 450], W: [146, 640] },
+      near: { E: [-146, 448], W: [-128, 640], hand: { kind: 'hang', rot: 5 } },
     },
     desk: {
-      near: { out: [[-163, 230], [-176, 262], [-185, 315], [-188, 370], [-182, 412], [-160, 440], [-110, 456], [-30, 460], [60, 450], [120, 436], [157, 425]],
-        inn: [[-128, 300], [-136, 335], [-140, 368], [-130, 392], [-90, 404], [-20, 408], [60, 400], [120, 388], [159, 379]],
-        seam: [[-128, 300], [-140, 262], [-163, 230]], innTaper: 0.3,
-        folds: [[[-152, 376], [-140, 392], [-124, 398]], [[-170, 400], [-154, 414], [-136, 418]], [[-60, 412], [-40, 432], [-30, 452]]] },
-      far: { out: [[150, 244], [196, 274], [242, 310], [284, 348], [308, 368]], inn: [[160, 312], [204, 336], [246, 366], [294, 398]],
-        cuff: 12, clipFar: true, outTaper: 0.2, innTaper: 0.2 },
-      hands: [{ x: 302, y: 382, rot: 12, kind: 'keys', o: { scale: 1.15 }, far: true }, { mouse: true }],
+      far: { E: [205, 390], W: [305, 380], hand: { kind: 'keys', rot: 4 } },
+      near: { E: [-66, 400], W: [98, 408], hand: { kind: 'mouse', rot: -6 }, mouse: true },
     },
     fold: {
-      near: { out: [[-163, 230], [-178, 265], [-186, 320], [-182, 368], [-160, 395], [-100, 410], [0, 410], [70, 392], [107, 367]],
-        inn: [[-128, 300], [-138, 330], [-140, 352], [-110, 362], [-40, 366], [40, 354], [98, 336]],
-        seam: [[-128, 300], [-140, 262], [-163, 230]], innTaper: 0.3,
-        folds: [[[-150, 356], [-140, 372], [-124, 378]], [[-30, 368], [-20, 386], [-14, 404]]] },
-      far: { out: [[150, 248], [162, 290], [166, 340], [158, 384], [130, 402], [60, 412], [-20, 410], [-80, 398], [-97, 396]],
-        inn: [[140, 300], [138, 336], [120, 360], [60, 372], [-20, 376], [-76, 372], [-93, 368]], outTaper: 0.2, innTaper: 0.25,
-        folds: [[[128, 362], [134, 380], [128, 396]], [[20, 378], [28, 394], [24, 410]]] },
-      order: ['near', 'far'],
-      hands: [{ x: -96, y: 382, rot: 33, kind: 'grip', o: { flip: true, scale: 1.12 } }, { x: 104, y: 350, rot: -38, kind: 'grip', o: { scale: 1.1 } }],
+      far: { E: [206, 448], W: [16, 442], hand: { kind: 'grip', rot: 15, flip: true }, cross: true },
+      near: { E: [-135, 410], W: [62, 356], hand: { kind: 'grip', rot: -2 } },
     },
     phone: {
-      near: { out: [[-163, 230], [-178, 265], [-186, 320], [-182, 372], [-160, 400], [-110, 418], [-40, 416], [28, 395]],
-        inn: [[-128, 300], [-138, 330], [-140, 352], [-110, 362], [-50, 366], [20, 348]],
-        seam: [[-128, 300], [-140, 262], [-163, 230]], innTaper: 0.3,
-        folds: [[[-150, 356], [-140, 372], [-124, 378]]] },
-      hands: [{ x: 26, y: 370, rot: -46, kind: 'phoneBack', o: { scale: 1.15 } }],
-      phone: true,
+      far: { E: [128, 450], W: [146, 640] },
+      near: { E: [-120, 410], W: [40, 350], hand: { kind: 'phoneBack', rot: -29 }, phone: true },
     },
   };
-  // the part of the picture to the right of his body's far side, for the far arm
-  const FAR_CLIP = `M ${[...SIDE_FAR.slice().reverse(), ...SHOULDER_FAR.slice(1)].map(xy).join(' L ')} L 50 100 L 420 100 L 420 640 L 162 640 Z`;
+  // the part of the picture past his body's far side, for his far arm (just outside the line round
+  // his body, so that line stays whole)
+  const FAR_CLIP = (() => {
+    const pts = sample(TORSO_FAR, 10), edge = [];
+    pts.forEach((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+      edge.push([p[0] - (dy / L) * 1.2, p[1] + (dx / L) * 1.2]);
+    });
+    return `M ${edge.map(xy).join(' L ')} L 70 90 L 560 90 L 560 760 L ${n(edge[0][0])} 760 Z`;
+  })();
+  const armCache = {};
+  function armOf(pose, part, hx = 0, hy = 0) {
+    const key = `${pose}|${part}|${hx}|${hy}`;
+    if (armCache[key]) return armCache[key];
+    const A = ARMS[pose][part], J = { ...SHOULDERS[part], ...A };
+    if (A.mouse) { J.W = [A.W[0] + hx, A.W[1] + hy]; J.E = [A.E[0] + hx * 0.35, A.E[1] + hy * 0.35]; }
+    const s = armSleeve(J);
+    const ang = Math.atan2(J.W[1] - J.E[1], J.W[0] - J.E[0]) / RAD;
+    const res = { s, J, ang };
+    armCache[key] = res;
+    return res;
+  }
   function arms34(p, id, layer) {
     if (layer === 'back') return '';
-    const A = ARMS[p.arms] || ARMS.rest;
+    const pose = ARMS[p.arms] ? p.arms : 'rest', A = ARMS[pose];
     const key = p.light.key < 0 ? -1 : 1;
-    const hand = (h) => handShape(h.x, h.y, h.rot, h.kind, id, h.o);
-    // the mouse hand can move: the end of the sleeve follows it
     const hx = p.hand.x || 0, hy = p.hand.y || 0;
-    const follow = (pts) => pts.map(([x, y], i) => { const k = Math.max(0, 1 - (pts.length - 1 - i) * 0.35); return [x + hx * k, y + hy * k]; });
-    const spec = (part) => (A[part] && A.hands.some((h) => h.mouse) && part === 'near'
-      ? { ...A[part], out: follow(A[part].out), inn: follow(A[part].inn) }
-      : A[part]);
-    const S = {};
-    for (const part of ['far', 'near']) if (A[part]) S[part] = sleeve(`${id}sl${part}`, spec(part), key);
-    const handsOf = (part) => A.hands.filter((h) => !h.mouse && (part === 'far' ? !!h.far : !h.far)).map(hand).join('');
-    let out = '';
-    if (A.phone) {
-      out += `<g transform="translate(90 298) rotate(-12)"><rect x="-25" y="-52" width="50" height="100" rx="9" fill="#18181B" stroke="#3A3A3E" stroke-width="2.2"/>
+    const far = armOf(pose, 'far'), near = armOf(pose, 'near', hx, hy);
+    const SF = sleeve(`${id}slfar`, { ...far.s, rim: { colour: p.light.tint, op: 0.4 * p.light.rim } }, key), SN = sleeve(`${id}slnear`, near.s, key);
+    const handOf = (arm, part) => {
+      const h = A[part].hand;
+      if (!h) return '';
+      const kind = h.kind === 'mouse' && p.hand.click > 0.5 ? 'mouseDown' : h.kind;
+      const rot = (h.flip ? arm.ang + 180 : arm.ang) + h.rot;
+      return handShape(arm.J.W[0], arm.J.W[1], rot, kind, id, { scale: HAND_SCALE, flip: !!h.flip, key });
+    };
+    // his far arm, behind his body; when his arms are folded its forearm crosses in front, so the
+    // sleeve is split by a line across the elbow: the upper arm behind, the forearm in front
+    let out = `<clipPath id="${id}farc"><path d="${FAR_CLIP}"/></clipPath>`;
+    let farArm = `<g clip-path="url(#${id}farc)">${SF.body}${handOf(far, 'far')}${SF.cuff}</g>`;
+    let farFore = '', nearHand = '';
+    if (A.far.cross) {
+      // the split runs from the crease inside his elbow through the joint, so the forearm comes out
+      // in front with its own edges whole
+      const { E, W } = far.J, X = far.s.crease, c = [E[0] - X[0], E[1] - X[1]], cl = Math.hypot(c[0], c[1]), ch = [c[0] / cl, c[1] / cl];
+      const f = [W[0] - E[0], W[1] - E[1]], L = Math.hypot(f[0], f[1]), t = [f[0] / L, f[1] / L], nn = [-t[1], t[0]];
+      const a = [X[0] - ch[0] * 1500, X[1] - ch[1] * 1500], b = [E[0] + ch[0] * 1500, E[1] + ch[1] * 1500];
+      const q = (P, k) => xy([P[0] + t[0] * k, P[1] + t[1] * k]);
+      out += `<clipPath id="${id}farup"><path d="M ${xy(a)} L ${xy(b)} L ${q(b, -3000)} L ${q(a, -3000)} Z"/></clipPath>
+        <clipPath id="${id}farfo"><path d="M ${xy(a)} L ${xy(b)} L ${q(b, L + 120)} L ${q(a, L + 120)} Z"/></clipPath>`;
+      farArm = `<g clip-path="url(#${id}farc)"><g clip-path="url(#${id}farup)">${SF.body}</g></g>`;
+      // his hands tucked: the near one under his far arm (out of sight past the edge of his chest, the
+      // line of which is drawn again over it), the far one behind his near elbow
+      farFore = `<g clip-path="url(#${id}farfo)">${SF.body}</g>${handOf(far, 'far')}${SF.cuff}`;
+      const contour = sample(TORSO_FAR, 10).filter((q) => q[1] > 232 && q[1] < 404);
+      nearHand = `<g clip-path="url(#${id}topclip)">${handOf(near, 'near')}</g>${ink(contour, 2.2, C.lineCloth, [0.15, 0.15], 0.88)}`;
+    }
+    let mouse = '';
+    if (A.near.mouse) {
+      // the mouse: a low dome under his palm, its side showing below his hand, the screen's light
+      // along its top, its shadow on the desk
+      const W = near.J.W, m = [W[0] + 86, W[1] + 24];
+      const dome = `M ${n(m[0] - 54)} ${n(m[1] + 8)} C ${n(m[0] - 56)} ${n(m[1] - 14)}, ${n(m[0] - 20)} ${n(m[1] - 24)}, ${n(m[0] + 14)} ${n(m[1] - 22)} C ${n(m[0] + 44)} ${n(m[1] - 20)}, ${n(m[0] + 58)} ${n(m[1] - 8)}, ${n(m[0] + 56)} ${n(m[1] + 6)} C ${n(m[0] + 54)} ${n(m[1] + 18)}, ${n(m[0] - 52)} ${n(m[1] + 22)}, ${n(m[0] - 54)} ${n(m[1] + 8)} Z`;
+      mouse = `<ellipse cx="${n(m[0] + 2)}" cy="${n(m[1] + 18)}" rx="60" ry="9" fill="#000" opacity="0.45" filter="url(#${id}soft)"/>
+        <path d="${dome}" fill="#1D1D21" stroke="#0A0A0C" stroke-width="2"/>
+        <path d="M ${n(m[0] - 50)} ${n(m[1] + 10)} C ${n(m[0] - 20)} ${n(m[1] + 16)}, ${n(m[0] + 30)} ${n(m[1] + 14)}, ${n(m[0] + 52)} ${n(m[1] + 6)}" fill="none" stroke="#2C2C32" stroke-width="3" opacity="0.8"/>
+        <path d="M ${n(m[0] - 30)} ${n(m[1] - 17)} C ${n(m[0] - 6)} ${n(m[1] - 23)}, ${n(m[0] + 30)} ${n(m[1] - 21)}, ${n(m[0] + 50)} ${n(m[1] - 9)}" fill="none" stroke="${p.light.tint}" stroke-width="2.4" opacity="${n(0.5 * p.light.rim)}"/>`;
+    }
+    let phone = '';
+    if (A.near.phone) {
+      phone = `<g transform="translate(96 262) rotate(-12) scale(1.26)"><rect x="-25" y="-52" width="50" height="100" rx="9" fill="#18181B" stroke="#3A3A3E" stroke-width="2.2"/>
           <rect x="-17" y="-44" width="16" height="22" rx="5" fill="#0C0C0E"/><circle cx="-9" cy="-38" r="3.6" fill="#2A2A31"/><circle cx="-9" cy="-28" r="3.6" fill="#2A2A31"/>
           <path d="M 23 -44 L 23 40" stroke="${p.light.tint}" stroke-width="2" opacity="0.35"/></g>`;
     }
-    if (A.hands.some((h) => h.mouse)) {
-      const mx = 196 + hx, my = 420 + hy;
-      out += `<ellipse cx="${n(mx + 30)}" cy="${n(my - 8)}" rx="38" ry="21" fill="#1C1C1F"/><path d="M ${n(mx + 2)} ${n(my - 14)} C ${n(mx + 16)} ${n(my - 24)}, ${n(mx + 46)} ${n(my - 24)}, ${n(mx + 66)} ${n(my - 12)}" fill="none" stroke="#45454C" stroke-width="2"/>
-        ${handShape(mx - 37, my - 19, -3, p.hand.click > 0.5 ? 'mouseDown' : 'mouse', id, { scale: 1.15 })}`;
-    }
-    if (p.arms === 'fold') return out + S.near.body + S.far.body + A.hands.map(hand).join('') + S.near.cuff + S.far.cuff;
-    for (const part of ['far', 'near']) {
-      if (!S[part]) continue;
-      const body = A[part].clipFar ? `<clipPath id="${id}farc"><path d="${FAR_CLIP}"/></clipPath><g clip-path="url(#${id}farc)">${S[part].body}</g>` : S[part].body;
-      out += handsOf(part) + body + S[part].cuff;
+    if (A.far.cross) {
+      // arms folded: his near forearm on top, in front; his far forearm below it, nearer his body
+      out += `${farArm}${farFore}${SN.body}${nearHand}${SN.cuff}`;
+    } else {
+      out += `${farArm}${phone}${mouse}${SN.body}${handOf(near, 'near')}${SN.cuff}`;
     }
     return out;
   }
 
   // ------------------------------------------------------------ hands
-  // A hand from its skeleton: a palm and five fingers, each finger a chain of bones with an angle at
-  // every joint. Every part is first stroked wide in the line colour, so the whole hand has one
-  // clean outline; then the fingers are filled back to front with a fine line where one lies over
-  // the next, the palm over their roots, the thumb over the palm, and last the nails, the creases at
-  // the knuckles and the shade on the side away from the light. Five fingers, always.
+  // A hand drawn from its skeleton, to real proportions: a palm and five fingers, each finger a chain
+  // of three bones with an angle at every joint. Each finger is one smooth shape that follows its
+  // bones, a touch wider over each joint than along the bone, rounding off at the tip; the fingers
+  // have the wrinkles over their joints and real nails, and the back of the hand its knuckles and the
+  // tendons running to them. Everything is first drawn a little larger in the line colour, so the
+  // hand has one fine outline; then the fingers are filled back to front with a finer line where one
+  // lies over the next, the palm over their roots, the thumb over the palm. The light falls from the
+  // side it comes from in the shot. Five fingers, always.
   // Hand space: the wrist at 0,0, the fingers towards +x, the thumb on the -y side; head units.
   const HAND = {
-    palm: [[0, -15.5], [16, -20.5], [36, -22.5], [50.5, -21], [55, -9], [55.5, 3], [52.5, 14], [45.5, 20.5], [30, 21.5], [12, 19], [0, 15]],
-    base: { index: [50, -14.5], middle: [53.5, -4.6], ring: [52.5, 5], little: [47.5, 13.6], thumb: [9, -12.5] },
-    lens: { index: [19.5, 12, 9.5], middle: [21.5, 13, 10], ring: [19.5, 12, 9.5], little: [15, 9.5, 8.5], thumb: [20, 14, 11.5] },
-    w: { index: 11.6, middle: 12.2, ring: 11.4, little: 9.8, thumb: 13.4 },
+    palm: [[0, -15.5], [14, -19.5], [30, -21.5], [44, -21], [51.5, -18], [54.5, -9], [55, 2], [52.5, 12.5], [47.5, 19], [36, 21], [20, 19.5], [8, 17], [0, 15.5]],
+    base: { index: [50.5, -14], middle: [53, -4.4], ring: [51.5, 5.4], little: [47, 14.2], thumb: [8, -12.5] },
+    lens: { index: [20.8, 12.4, 9], middle: [23, 14, 9.8], ring: [21.6, 13.4, 9.4], little: [16.8, 10, 8.4], thumb: [19, 14.5, 12] },
+    w: { index: 11, middle: 11.5, ring: 10.7, little: 9.4, thumb: 11.2 },
   };
   const rad = (a) => a * Math.PI / 180;
+  const SKIN = { nail: '#EDBCA9', nailEdge: '#F5DCCF', nailMoon: '#F2CDBE', crease: '#B07058' };
+  // One finger (or the thumb) as a closed outline along its bones P (knuckle, two joints, tip), w
+  // wide at the knuckle. Returns the outline and, for each joint, where it is and which way it runs.
+  function fingerOutline(P, w, thumb = false) {
+    const S = sample(P, 8), L = [0];
+    for (let i = 1; i < S.length; i++) L.push(L[i - 1] + Math.hypot(S[i][0] - S[i - 1][0], S[i][1] - S[i - 1][1]));
+    const tot = L[L.length - 1] || 1, seg = [0];
+    for (let i = 1; i < P.length; i++) seg.push(seg[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+    const J1 = seg[1] / seg[3], J2 = seg[2] / seg[3];
+    const prof = thumb
+      ? [[0, 1.25], [J1 / 2, 1.08], [J1, 0.98], [(J1 + J2) / 2, 0.9], [J2, 0.9], [(J2 + 1) / 2, 0.84], [1, 0.8]]
+      : [[0, 1], [J1 / 2, 0.93], [J1, 0.96], [(J1 + J2) / 2, 0.875], [J2, 0.885], [(J2 + 1) / 2, 0.845], [1, 0.82]];
+    const wAt = (u) => {
+      for (let i = 1; i < prof.length; i++) if (u <= prof[i][0]) { const [a, wa] = prof[i - 1], [b, wb] = prof[i]; return w * (wa + (wb - wa) * (u - a) / ((b - a) || 1)); }
+      return w * 0.82;
+    };
+    const left = [], right = [], dir = [];
+    S.forEach((p, i) => {
+      const q0 = S[Math.max(0, i - 1)], q1 = S[Math.min(S.length - 1, i + 1)];
+      let dx = q1[0] - q0[0], dy = q1[1] - q0[1];
+      const l = Math.hypot(dx, dy) || 1;
+      dx /= l; dy /= l;
+      const h = wAt(L[i] / tot) / 2;
+      left.push([p[0] - dy * h, p[1] + dx * h]);
+      right.push([p[0] + dy * h, p[1] - dx * h]);
+      dir.push([dx, dy]);
+    });
+    // the tip: rounded, a little squared off where the nail ends
+    const end = S[S.length - 1], [dx, dy] = dir[dir.length - 1], h = wAt(1) / 2, cap = [];
+    for (let k = 1; k < 12; k++) {
+      const t = Math.PI / 2 - (k / 12) * Math.PI;
+      const along = Math.pow(Math.max(0, Math.cos(t)), 0.7) * h * 1.04, across = Math.sin(t) * h;
+      cap.push([end[0] + dx * along - dy * across, end[1] + dy * along + dx * across]);
+    }
+    const k1 = L.findIndex((v) => v / tot >= J1);
+    return { outline: [...left, ...cap, ...right.slice().reverse()], left, right, cap, k1, S, dir, w: wAt };
+  }
   // pose: { index: [a1, a2, a3] (degrees, absolute), ..., thumb: [a1, a2, a3], len: { index: k } (foreshortening),
-  //         hide: ['little'] (left out), front: ['thumb'] (drawn over the palm), nails: true, light: 1 | -1 }
+  //         hide: ['little'] (left out), front: ['thumb'] (drawn over the palm), nails: true }
+  // opt: { lw, sep (line widths), id, openWrist (no line across the wrist), rim (colour of a rim of
+  //        light along the top), light: [x, y] (towards the light, in hand space) }
   function handSVG(pose, opt = {}) {
-    const lw = opt.lw ?? 2.3, sep = opt.sep ?? 1.25, cid = `hp${(opt.id || 'h')}${Math.round(Math.random() * 1e6)}`;
+    const lw = opt.lw ?? 1.2, sep = opt.sep ?? 0.7, cid = `hp${(opt.id || 'h')}${Math.round(Math.random() * 1e6)}`;
     const skin = opt.skin || C.skin, line = opt.line || C.line;
+    const light = opt.light ? opt.light : [0.6, -0.8];
     const names = ['little', 'ring', 'middle', 'index', 'thumb'].filter((f) => pose[f] && !(pose.hide || []).includes(f));
-    const chain = {};
+    const chain = {}, shape = {};
     for (const f of names) {
-      const k = (pose.len && pose.len[f]) || 1;
-      const ks = Array.isArray(k) ? k : [k, k, k];
+      const k = (pose.len && pose.len[f]) || 1, ks = Array.isArray(k) ? k : [k, k, k];
       let [x, y] = (pose.basePos && pose.basePos[f]) || HAND.base[f];
       const pts = [[x, y]];
       pose[f].forEach((a, i) => { x += Math.cos(rad(a)) * HAND.lens[f][i] * ks[i]; y += Math.sin(rad(a)) * HAND.lens[f][i] * ks[i]; pts.push([x, y]); });
       chain[f] = pts;
+      shape[f] = fingerOutline(pts, HAND.w[f], f === 'thumb');
     }
-    const w = (f, i) => HAND.w[f] * [1, 0.93, 0.86][i];
-    const seg = (f, i, extra, col, op = 1) => `<path d="M ${xy(chain[f][i])} L ${xy(chain[f][i + 1])}" stroke="${col}" stroke-width="${n(w(f, i) + extra)}" stroke-linecap="round"${op < 1 ? ` opacity="${op}"` : ''}/>`;
-    const finger = (f, extra, col, op) => chain[f].slice(0, -1).map((_, i) => seg(f, i, extra, col, op)).join('');
-    const palm = pose.palm === false ? '' : `<path d="${smooth(pose.palmPts || HAND.palm, true)}"`;
-    const front = names.filter((f) => (pose.front || []).includes(f));
-    const backs = names.filter((f) => !front.includes(f));
-    // the shade: a band along each finger's shadow side, and the palm's far edge
-    const sh = pose.light === -1 ? -1 : 1;
-    const shadeOf = (f) => chain[f].slice(0, -1).map((p, i) => {
-      if (f === 'thumb' && i === 0) return '';
-      const q = chain[f][i + 1], dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy) || 1;
-      const o = w(f, i) * 0.26 * sh, ox = -dy / L * o, oy = dx / L * o;
-      return `<path d="M ${xy([p[0] + ox, p[1] + oy])} L ${xy([q[0] + ox, q[1] + oy])}" stroke="${C.skinShade}" stroke-width="${n(w(f, i) * 0.4)}" stroke-linecap="round" opacity="0.36"/>`;
-    }).join('');
-    const nail = (f) => {
-      if (!pose.nails || f === 'thumb' && !pose.thumbNail) return '';
-      const P = chain[f], a = P[P.length - 2], b = P[P.length - 1];
-      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, L = Math.hypot(b[0] - a[0], b[1] - a[1]);
-      const ww = w(f, 2);
-      return `<g transform="translate(${xy(b)}) rotate(${n(ang)})"><rect x="${n(-L * 0.55)}" y="${n(-ww * 0.3)}" width="${n(L * 0.55 + ww * 0.12)}" height="${n(ww * 0.6)}" rx="${n(ww * 0.28)}" fill="${C.skinHi}" stroke="${C.skinShade}" stroke-width="${n(lw * 0.39)}"/></g>`;
+    const palmPts = pose.palmPts || HAND.palm;
+    const palmD = smooth(palmPts, true), hasPalm = pose.palm !== false;
+    const front = names.filter((f) => (pose.front || []).includes(f)), backs = names.filter((f) => !front.includes(f));
+    const P = (q) => `M ${q.map(xy).join(' L ')} Z`;
+    const lit = (d) => (-d[1] * light[0] + d[0] * light[1] > 0 ? 1 : -1);      // which side of a bone faces the light
+    // the shade and light down each finger, the wrinkles over its joints, the nail, inside its outline
+    const detail = (f) => {
+      const F = shape[f], ch = chain[f], s = F.S;
+      const mid = Math.floor(s.length / 2), side = lit(F.dir[mid]);
+      const along = (o, a, b) => s.slice(a, b).map((p, i) => { const d = F.dir[a + i], hw = F.w(0.5) * o; return [p[0] - d[1] * hw * side, p[1] + d[0] * hw * side]; });
+      let out = `<clipPath id="${cid}${f}"><path d="${P(F.outline)}"/></clipPath><g clip-path="url(#${cid}${f})">`;
+      out += ink(along(-0.36, f === 'thumb' ? F.k1 : 1, s.length), HAND.w[f] * 0.5, C.skinShade, [0.15, 0.15], 0.55, ` filter="url(#${cid}b)"`);
+      out += ink(along(0.3, f === 'thumb' ? F.k1 : 2, s.length - 2), HAND.w[f] * 0.2, C.skinHi, [0.3, 0.3], 0.5, ` filter="url(#${cid}b)"`);
+      if (pose.creases && f === 'thumb') {
+        const a = ch[1], b = ch[3], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, hw = HAND.w[f] * 0.26, c = ch[2];
+        out += `<path d="M ${xy([c[0] - uy * hw, c[1] + ux * hw])} Q ${xy([c[0] + ux * 1.6, c[1] + uy * 1.6])} ${xy([c[0] + uy * hw, c[1] - ux * hw])}" fill="none" stroke="${SKIN.crease}" stroke-width="${n(lw * 0.42)}" stroke-linecap="round" opacity="0.32"/>`;
+      }
+      if (pose.creases && f !== 'thumb') {
+        // over the middle joint: three short wrinkles; over the last joint: two
+        [[1, [-0.9, 0.9], 0.27, [0.28, 0.36]], [2, [0.2], 0.2, [0.26]]].forEach(([j, offs, span, ops]) => {
+          const a = ch[j - 1], b = ch[j + 1], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+          const hw = HAND.w[f] * span;
+          offs.forEach((o, i) => {
+            const c = [ch[j][0] + ux * o, ch[j][1] + uy * o];
+            const bow = 1.6 + i * 0.5, hw2 = hw * (i % 2 ? 0.8 : 1);
+            out += `<path d="M ${xy([c[0] - uy * hw2 - ux * 0.4, c[1] + ux * hw2 - uy * 0.4])} Q ${xy([c[0] + ux * bow, c[1] + uy * bow])} ${xy([c[0] + uy * hw2 * 0.9 - ux * 0.2, c[1] - ux * hw2 * 0.9 - uy * 0.2])}" fill="none" stroke="${SKIN.crease}" stroke-width="${n(lw * 0.42)}" stroke-linecap="round" opacity="${ops[i]}"/>`;
+          });
+        });
+        // a little light on the middle knuckle
+        out += `<ellipse cx="${n(ch[1][0])}" cy="${n(ch[1][1])}" rx="${n(HAND.w[f] * 0.32)}" ry="${n(HAND.w[f] * 0.22)}" fill="${C.skinHi}" opacity="0.35" filter="url(#${cid}b)"/>`;
+      }
+      if (pose.nails && (f !== 'thumb' || pose.thumbNail)) {
+        const a = ch[2], b = ch[3], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+        const ang = Math.atan2(dy, dx) * 180 / Math.PI, len = L * 0.62, wid = F.w(1) * (f === 'thumb' ? 0.46 : 0.66);   // the thumb's nail is seen from the side
+        const cx = a[0] + dx / L * (L * 0.66), cy = a[1] + dy / L * (L * 0.66);
+        out += `<g transform="translate(${n(cx)} ${n(cy)}) rotate(${n(ang)})">
+          <rect x="${n(-len / 2)}" y="${n(-wid / 2)}" width="${n(len)}" height="${n(wid)}" rx="${n(wid * 0.46)}" fill="${SKIN.nail}" stroke="${C.skinShade}" stroke-width="${n(lw * 0.36)}" stroke-opacity="0.8"/>
+          <rect x="${n(len * 0.3)}" y="${n(-wid / 2 + 0.3)}" width="${n(len * 0.2)}" height="${n(wid - 0.6)}" rx="${n(wid * 0.4)}" fill="${SKIN.nailEdge}" opacity="0.85"/>
+          <ellipse cx="${n(-len * 0.34)}" cy="0" rx="${n(len * 0.12)}" ry="${n(wid * 0.3)}" fill="${SKIN.nailMoon}" opacity="0.8"/>
+          <ellipse cx="${n(-len * 0.06)}" cy="${n(-wid * 0.2 * side)}" rx="${n(len * 0.2)}" ry="${n(wid * 0.09)}" fill="#fff" opacity="0.35"/>
+          <path d="M ${n(-len / 2 - 0.4)} ${n(-wid * 0.42)} Q ${n(-len / 2 - 1.3)} 0 ${n(-len / 2 - 0.4)} ${n(wid * 0.42)}" fill="none" stroke="${C.skinShade}" stroke-width="${n(lw * 0.45)}" opacity="0.6"/></g>`;
+      }
+      return out + '</g>';
     };
-    const creases = (f) => {
-      if (f === 'thumb' || !pose.creases) return '';
-      const P = chain[f];
-      return [1, 2].map((j) => {
-        const a = P[j - 1], b = P[j + 1], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
-        const nx = -dy / L, ny = dx / L, hw = w(f, j) * 0.3;
-        return `<path d="M ${xy([P[j][0] + nx * hw, P[j][1] + ny * hw])} Q ${xy([P[j][0] + dx / L * 1.6, P[j][1] + dy / L * 1.6])} ${xy([P[j][0] - nx * hw, P[j][1] - ny * hw])}" fill="none" stroke="${C.skinDeep}" stroke-width="${n(lw * 0.48)}" stroke-linecap="round" opacity="${j === 1 ? 0.35 : 0.55}"/>`;
-      }).join('');
+    // the back of the hand: shade towards the edge away from the light and the wrist, the knuckles,
+    // and the tendons running from them towards the wrist
+    const palmDetail = () => {
+      if (!hasPalm) return '';
+      const sideY = light[1] > 0 ? -1 : 1;
+      const knuck = ['index', 'middle', 'ring', 'little'].filter((f) => chain[f] && pose.knuckles !== false);
+      return `<clipPath id="${cid}p"><path d="${palmD}"/></clipPath><g clip-path="url(#${cid}p)">
+        ${ink([[2, 18 * sideY], [24, 21 * sideY], [46, 18 * sideY]], 12, C.skinShade, [0.2, 0.2], 0.45, ` filter="url(#${cid}b2)"`)}
+        ${ink([[0, -14], [0, 0], [0, 14]], 10, C.skinShade, [0.2, 0.2], 0.3, ` filter="url(#${cid}b2)"`)}
+        ${knuck.map((f) => { const b = HAND.base[f]; return ink([[b[0] - 6, b[1] * 0.96], [26, b[1] * 0.62], [10, b[1] * 0.4]], 2.6, C.skinHi, [0.3, 0.6], 0.18, ` filter="url(#${cid}b2)"`); }).join('')}
+        ${knuck.map((f) => { const b = chain[f][0]; return `<ellipse cx="${n(b[0] - 1.5)}" cy="${n(b[1])}" rx="3.4" ry="2.7" fill="${C.skinHi}" opacity="0.26" filter="url(#${cid}b)"/>`; }).join('')}
+        ${knuck.slice(1).map((f, i) => { const a = chain[knuck[i]][0], b = chain[f][0]; return `<ellipse cx="${n((a[0] + b[0]) / 2 - 5)}" cy="${n((a[1] + b[1]) / 2)}" rx="5" ry="1.2" fill="${C.skinShade}" opacity="0.14" filter="url(#${cid}b)"/>`; }).join('')}
+      </g>`;
     };
-    const knuckles = pose.knuckles === false || pose.palm === false ? '' : ['index', 'middle', 'ring', 'little'].filter((f) => chain[f]).map((f) => `<ellipse cx="${n(chain[f][0][0] - 2)}" cy="${n(chain[f][0][1])}" rx="3.4" ry="2.8" fill="${C.skinHi}" opacity="0.18"/>`).join('');
+    const fill = (f, withSep) => `${withSep ? (f === 'thumb'
+      ? `<path d="M ${[...shape[f].left.slice(shape[f].k1), ...shape[f].cap, ...shape[f].right.slice(shape[f].k1).reverse()].map(xy).join(' L ')}" fill="none" stroke="${line}" stroke-width="${n(sep * 2)}" opacity="0.8"/>`
+      : `<path d="${P(shape[f].outline)}" fill="none" stroke="${line}" stroke-width="${n(sep * 2)}" opacity="0.75"/>`) : ''}
+      <path d="${P(shape[f].outline)}" fill="${skin}"/>${detail(f)}`;
     return `
+      <defs><filter color-interpolation-filters="sRGB" id="${cid}b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1"/></filter>
+        <filter color-interpolation-filters="sRGB" id="${cid}b2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.6"/></filter></defs>
       <g stroke-linejoin="round">
-        ${palm ? (opt.openWrist ? `<path d="${smooth(pose.palmPts || HAND.palm)}" fill="none" stroke="${line}" stroke-width="${n(lw * 2)}"/>` : `${palm} fill="${line}" stroke="${line}" stroke-width="${n(lw * 2)}"/>`) : ''}
-        ${names.map((f) => finger(f, lw * 2, line)).join('')}
-        ${backs.map((f) => finger(f, sep * 2, line, 0.7) + finger(f, 0, skin) + shadeOf(f)).join('')}
-        ${palm ? `${palm} fill="${skin}"/>` : ''}
-        ${palm && pose.palmShade !== false ? `<clipPath id="${cid}">${palm}/></clipPath><path d="${smooth((pose.palmPts || HAND.palm).slice(sh > 0 ? 5 : 0, sh > 0 ? 11 : 5))}" fill="none" stroke="${C.skinShade}" stroke-width="10" opacity="0.45" stroke-linecap="round" clip-path="url(#${cid})"/>` : ''}
-        ${knuckles}
-        ${front.map((f) => chain[f].slice(0, -1).map((_, i) => i === 0 && f === 'thumb' ? '' : seg(f, i, sep * 2, line, 0.85)).join('') + finger(f, 0, skin) + shadeOf(f)).join('')}
-        ${names.map((f) => nail(f) + creases(f)).join('')}
-        ${opt.rim ? `<path d="${smooth((pose.palmPts || HAND.palm).slice(0, 4))}" fill="none" stroke="${opt.rim}" stroke-width="${n(lw * 0.9)}" stroke-linecap="round" opacity="0.5"/>` : ''}
+        ${hasPalm ? (opt.openWrist ? `<path d="${smooth(palmPts)}" fill="none" stroke="${line}" stroke-width="${n(lw * 2)}"/>` : `<path d="${palmD}" fill="${line}" stroke="${line}" stroke-width="${n(lw * 2)}"/>`) : ''}
+        ${names.map((f) => `<path d="${P(shape[f].outline)}" fill="${line}" stroke="${line}" stroke-width="${n(lw * 2)}"/>`).join('')}
+        ${backs.map((f) => fill(f, true)).join('')}
+        ${hasPalm ? `<path d="${palmD}" fill="${skin}"/>${palmDetail()}` : ''}
+        ${opt.rim ? `<path d="${smooth(palmPts.slice(0, 5))}" fill="none" stroke="${opt.rim}" stroke-width="${n(lw * 1.4)}" stroke-linecap="round" opacity="0.4" clip-path="url(#${cid}p)"/>` : ''}
+        ${front.map((f) => fill(f, true)).join('')}
       </g>`;
   }
   // The poses he uses. Angles in degrees in hand space; a positive angle turns towards the little
   // finger, which is how fingers look as they curl when the back of the hand faces us.
   const HANDS = {
     // hanging relaxed at his side, the back of the hand out, the thumb in front
-    hang: { index: [-3, 10, 26], middle: [1, 15, 32], ring: [6, 21, 40], little: [12, 28, 48], thumb: [-46, -20, -2],
-      len: { index: [1, 0.9, 0.85], middle: [1, 0.88, 0.82], ring: [1, 0.86, 0.8], little: [1, 0.85, 0.78] }, nails: true, creases: true, front: ['thumb'] },
+    hang: { index: [-2, 9, 20], middle: [1, 12, 24], ring: [4.5, 15.5, 28], little: [8, 19.5, 34], thumb: [-36, -14, 0],
+      len: { index: [1, 0.92, 0.88], middle: [1, 0.9, 0.86], ring: [1, 0.88, 0.84], little: [1, 0.88, 0.82] }, nails: true, creases: true, front: ['thumb'], thumbNail: true },
     // on the mouse: index and middle forward on the buttons, ring and little curled at its side
-    mouse: { index: [-5, 2, 14], middle: [0, 5, 18], ring: [6, 18, 40], little: [14, 30, 52], thumb: [-34, -6, 6],
-      len: { index: [1, 0.95, 0.8], middle: [1, 0.95, 0.8], ring: [1, 0.85, 0.7], little: [1, 0.8, 0.65] }, nails: true, creases: true, front: ['thumb'] },
+    mouse: { index: [-5, 2, 10], middle: [0, 4, 12], ring: [6, 14, 30], little: [13, 24, 42], thumb: [-34, -8, 2],
+      len: { index: [1, 0.97, 0.9], middle: [1, 0.97, 0.9], ring: [1, 0.88, 0.78], little: [1, 0.84, 0.72] }, nails: true, creases: true, front: ['thumb'], thumbNail: true },
     // on the keys, fingers curled down onto them
-    keys: { index: [-4, 22, 50], middle: [0, 26, 56], ring: [5, 30, 60], little: [12, 36, 64], thumb: [-30, 0, 10],
-      len: { index: [1, 0.7, 0.55], middle: [1, 0.7, 0.55], ring: [1, 0.7, 0.55], little: [1, 0.7, 0.55] }, nails: false, creases: true, front: ['thumb'] },
+    keys: { index: [-4, 20, 46], middle: [0, 24, 52], ring: [5, 28, 56], little: [11, 33, 60], thumb: [-30, -2, 8],
+      len: { index: [1, 0.74, 0.6], middle: [1, 0.74, 0.6], ring: [1, 0.74, 0.6], little: [1, 0.74, 0.6] }, nails: false, creases: true, front: ['thumb'] },
     // holding the phone: fingers wrapped round its back, only their tips show past its edge (drawn
     // under the phone), the thumb over the front
     phone: { index: [-10, -60, -110], middle: [-4, -58, -108], ring: [4, -52, -100], little: [12, -44, -90], thumb: [-60, -40, -24],
@@ -1097,26 +1360,25 @@
     // gripping the other arm when his arms are folded: the back of the hand on it, the fingers
     // curling round its far side, the thumb tucked out of sight
     grip: { index: [-6, 10, 26], middle: [-2, 12, 28], ring: [4, 15, 30], little: [10, 18, 34], thumb: [-40, -10, 10], hide: ['thumb'],
-      len: { index: [1, 0.62, 0.32], middle: [1, 0.62, 0.32], ring: [1, 0.62, 0.32], little: [1, 0.6, 0.3] }, nails: false, creases: true },
+      len: { index: [1, 0.64, 0.34], middle: [1, 0.64, 0.34], ring: [1, 0.64, 0.34], little: [1, 0.62, 0.32] }, nails: false, creases: true },
     // holding the phone from behind: the back of the hand on the phone's back, the fingers across it,
     // their tips curling round its far edge, the thumb on the screen side out of sight
-    phoneBack: { index: [36, 44, 80], middle: [40, 47, 84], ring: [44, 50, 88], little: [50, 56, 92], thumb: [-40, -10, 10], hide: ['thumb'],
-      len: { index: [1, 0.95, 0.75], middle: [1, 0.95, 0.75], ring: [1, 0.95, 0.75], little: [1, 0.95, 0.75] }, nails: true, creases: true },
-    // four fingers over the far upper arm, from under it (arms folded): no palm, no thumb
-    wrap: { index: [0, 16, 42], middle: [2, 18, 44], ring: [4, 20, 46], little: [6, 22, 48], palm: false, knuckles: false,
-      basePos: { index: [0, -15], middle: [1, -4.6], ring: [1, 5.4], little: [0, 15] },
-      len: { index: [0.9, 0.9, 0.8], middle: [0.95, 0.9, 0.8], ring: [0.9, 0.9, 0.8], little: [0.75, 0.85, 0.75] }, nails: true, creases: true },
+    phoneBack: { index: [36, 44, 74], middle: [40, 47, 78], ring: [44, 50, 82], little: [50, 56, 86], thumb: [-40, -10, 10], hide: ['thumb'],
+      len: { index: [1, 0.95, 0.8], middle: [1, 0.95, 0.8], ring: [1, 0.95, 0.8], little: [1, 0.95, 0.8] }, nails: true, creases: true },
   };
-
-  // A hand placed at the wrist: rot turns it, flip mirrors it (index on the other side), and kind
-  // picks the pose. 'mouseDown' presses the index finger.
+  // A hand placed in the body's drawing: its wrist at x, y, turned rot degrees, flipped for a left
+  // hand. The wrist always goes into a cuff, so it has no line across it. key is the side the screen's
+  // light comes from (1 right, -1 left).
   function handShape(x, y, rot, kind, id, o = {}) {
     const P = { ...HANDS[kind === 'mouseDown' ? 'mouse' : kind] };
-    if (kind === 'mouseDown') P.index = [-5, 9, 26];
+    if (kind === 'mouseDown') P.index = [-5, 9, 22];
     if (o.only) { P.hide = ['index', 'middle', 'ring', 'little', 'thumb'].filter((f) => !o.only.includes(f)); P.palm = o.only.includes('palm') ? P.palm : false; }
     if (o.hide) P.hide = [...(P.hide || []), ...o.hide];
-    // the wrist always goes into a cuff, so it has no line across it
-    return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)}) scale(${n(o.flip ? -(o.scale || 1) : (o.scale || 1))} ${n(o.scale || 1)})">${handSVG(P, { id, openWrist: true })}</g>`;
+    const r = rad(rot), Lx = 0.75 * (o.key || 1), Ly = -0.66;
+    let lx = Lx * Math.cos(r) + Ly * Math.sin(r), ly = -Lx * Math.sin(r) + Ly * Math.cos(r);
+    if (o.flip) lx = -lx;
+    const s = o.scale || 1;
+    return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)}) scale(${n(o.flip ? -s : s)} ${n(s)})">${handSVG(P, { id, openWrist: true, light: [lx, ly] })}</g>`;
   }
 
   // ------------------------------------------------------------ from behind
@@ -1143,10 +1405,11 @@
       ${ink(S2([[-77, -16.5], [-83.5, -10], [-85, 4], [-83, 19], [-78.5, 29.5]]), 1.8, C.skinDeep, [0.3, 0.4], 0.6)}
       ${ink(pts.slice(1, 8), 1.9, C.line, [0.15, 0.3])}`;
   }
-  // The crewneck from behind: dropped shoulders rounding into the sleeves, the collar's back
-  // standing up round his neck with the chain lying on it, his back in shade with the screen's light
-  // round its edges.
-  const BACK_SIDE = 'C -110 156, -150 170, -178 196 C -196 214, -203 246, -204 290 L -206 580 L 206 580 L 204 290 C 203 246, 196 214, 178 196 C 150 170, 110 156';
+  // The crewneck from behind: his trapezius sloping from his neck to round deltoids, his arms down
+  // his sides, his back broad under them and narrowing to the waist; the collar's back standing up
+  // round his neck with the chain lying on it, his back in shade with the screen's light round its
+  // edges.
+  const BACK_EDGE = [[-104, 152], [-136, 162], [-166, 179], [-193, 197], [-212, 220], [-220, 250], [-220, 290], [-214, 340], [-206, 390], [-193, 440], [-180, 500], [-172, 580]];
   function backTorso(p, id) {
     const M = bodyModel('back');
     const tint = p.light.tint, rim = p.light.rim;
@@ -1157,21 +1420,23 @@
     const C2 = { front: run };
     const rimArc = run.map((f) => f.o).sort((a, b) => b[0] - a[0]);
     const R0 = rimArc[0], L0 = rimArc[rimArc.length - 1];
-    const BACK_TOP = `M ${xy(L0)} ${BACK_SIDE} ${xy(R0)} L ${rimArc.slice(1).map(xy).join(' L ')} Z`;
-    const edgeL = [[-74, 149], [-110, 156], [-150, 170], [-178, 196], [-196, 214], [-203, 246], [-204, 290], [-206, 580]];
-    const edgeR = edgeL.map(([x, y]) => [-x, y]);
+    const edgeL = [L0, ...BACK_EDGE], edgeR = edgeL.map(([x, y]) => [-x, y]);
+    const BACK_TOP = `${smooth(edgeL)} L ${xy(edgeR[edgeR.length - 1])} ${smooth(edgeR.slice().reverse()).replace(/^M [-\d.]+ [-\d.]+/, '')} L ${rimArc.slice(1).map(xy).join(' L ')} Z`;
     return `
       <clipPath id="${id}btop"><path d="${BACK_TOP}"/></clipPath>
       <path d="${BACK_TOP}" fill="${C.top}"/>
       <g clip-path="url(#${id}btop)">
-        ${blob([[-150, 240], [-60, 220], [0, 260], [60, 220], [150, 240], [140, 620], [-140, 620]], C.topDark, 0.55, ` filter="url(#${id}soft2)"`)}
-        ${ink(off(edgeL.slice(0, 6), 4, 7), 9, C.topHi, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}${ink(off(edgeR.slice(0, 6), -4, 7), 9, C.topHi, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}
-        ${ink(off(edgeL.slice(2), 3, 0), 6, tint, [0.2, 0.3], 0.3 * rim, ` filter="url(#${id}softer)"`)}${ink(off(edgeR.slice(2), -3, 0), 6, tint, [0.2, 0.3], 0.3 * rim, ` filter="url(#${id}softer)"`)}
-        ${ink([[-92, 250], [-84, 330], [-88, 420]], 3, C.topDark, [0.4, 0.4], 0.5)}${ink([[96, 250], [88, 330], [90, 430]], 3, C.topDark, [0.4, 0.4], 0.5)}
-        ${ink([[-8, 300], [0, 400], [4, 520]], 2.6, C.topDark, [0.4, 0.3], 0.35)}
+        ${blob([[-160, 300], [-60, 290], [0, 320], [60, 290], [160, 300], [150, 620], [-150, 620]], C.topDark, 0.55, ` filter="url(#${id}soft2)"`)}
+        ${ink(off(edgeL.slice(1, 7), 4, 9), 13, C.topHi, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}${ink(off(edgeR.slice(1, 7), -4, 9), 13, C.topHi, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}
+        ${blob([[-130, 214], [-60, 212], [-40, 260], [-70, 300], [-126, 290]], C.topHi, 0.12, ` filter="url(#${id}soft2)"`)}${blob([[130, 214], [60, 212], [40, 260], [70, 300], [126, 290]], C.topHi, 0.12, ` filter="url(#${id}soft2)"`)}
+        ${ink(off(edgeL.slice(5), 3, 0), 6, tint, [0.2, 0.3], 0.3 * rim, ` filter="url(#${id}softer)"`)}${ink(off(edgeR.slice(5), -3, 0), 6, tint, [0.2, 0.3], 0.3 * rim, ` filter="url(#${id}softer)"`)}
+        ${ink([[-160, 262], [-164, 330], [-172, 410]], 3, C.topDark, [0.3, 0.4], 0.5)}${ink([[160, 262], [164, 330], [172, 410]], 3, C.topDark, [0.3, 0.4], 0.5)}
+        ${ink([[-156, 266], [-159, 320]], 1.4, C.topHi, [0.3, 0.4], 0.25)}${ink([[156, 266], [159, 320]], 1.4, C.topHi, [0.3, 0.4], 0.25)}
+        ${ink([[-120, 330], [-80, 342], [-40, 336]], 10, C.topDark, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}${ink([[120, 330], [80, 342], [40, 336]], 10, C.topDark, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}
+        ${ink([[0, 214], [-1, 300], [0, 400], [2, 540]], 6, C.topDark, [0.3, 0.3], 0.3, ` filter="url(#${id}soft)"`)}
       </g>
-      <path d="${smooth([[-178, 196], [-160, 236], [-150, 290]])}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>
-      <path d="${smooth([[178, 196], [160, 236], [150, 290]])}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>
+      <path d="${smooth([[-166, 179], [-150, 222], [-148, 262]])}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>
+      <path d="${smooth([[166, 179], [150, 222], [148, 262]])}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>
       ${ink(edgeL, 2.4, C.lineCloth, [0.05, 0.03], 0.9)}${ink(edgeR, 2.4, C.lineCloth, [0.05, 0.03], 0.9)}
       <clipPath id="${id}bnotneck"><path d="M -300 -100 H 300 V 700 H -300 Z ${BACK_NECK}" clip-rule="evenodd"/>
         <path d="M ${[...M.front.map((f) => f.o), ...M.front.map((f) => f.n).reverse()].map(xy).join(' L ')} Z"/></clipPath>

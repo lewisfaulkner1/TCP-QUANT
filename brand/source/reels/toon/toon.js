@@ -377,11 +377,11 @@
       <path d="M -300 1600 L 1400 1600 L 1400 2400 L -300 2400 Z" fill="url(#${id}front)"/>
       <path d="M -300 1600 L 1400 1600" stroke="#5A4A3A" stroke-width="4"/><path d="M -300 1604 L 1400 1604" stroke="#000" stroke-width="3" opacity="0.5"/>
       <!-- the keyboard under his far hand, the mug and its steam -->
-      <path d="M 610 1474 L 880 1468 L 896 1508 L 618 1516 Z" fill="#141416"/>
-      <path d="M 624 1480 L 870 1475 L 882 1502 L 630 1508 Z" fill="#202024"/>
-      ${Array.from({ length: 3 }, (_, rr) => Array.from({ length: 12 }, (__, c) => `<rect x="${n(630 + c * 20.5 + rr * 3)}" y="${n(1482 + rr * 8 - c * 0.4)}" width="16" height="5" rx="1" fill="#2E2E34"/>`).join('')).join('')}
-      <g transform="translate(1010 1540)"><ellipse cx="0" cy="8" rx="44" ry="8" fill="#000" opacity="0.4"/><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#141312"/><rect x="-38" y="-86" width="14" height="94" rx="7" fill="#fff" opacity="0.05"/><path d="M 38 -66 C 66 -66, 66 -18, 38 -18" fill="none" stroke="#141312" stroke-width="12"/><ellipse cx="0" cy="-86" rx="38" ry="7" fill="#0A0908"/><ellipse cx="0" cy="-85" rx="32" ry="5" fill="#2A1A10"/>${crown(0, -40, 0.17)}</g>
-      ${steam(1010, 1446, t, id)}
+      <path d="M 740 1474 L 1010 1468 L 1026 1508 L 748 1516 Z" fill="#141416"/>
+      <path d="M 754 1480 L 1000 1475 L 1012 1502 L 760 1508 Z" fill="#202024"/>
+      ${Array.from({ length: 3 }, (_, rr) => Array.from({ length: 12 }, (__, c) => `<rect x="${n(760 + c * 20.5 + rr * 3)}" y="${n(1482 + rr * 8 - c * 0.4)}" width="16" height="5" rx="1" fill="#2E2E34"/>`).join('')).join('')}
+      <g transform="translate(1100 1540)"><ellipse cx="0" cy="8" rx="44" ry="8" fill="#000" opacity="0.4"/><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#141312"/><rect x="-38" y="-86" width="14" height="94" rx="7" fill="#fff" opacity="0.05"/><path d="M 38 -66 C 66 -66, 66 -18, 38 -18" fill="none" stroke="#141312" stroke-width="12"/><ellipse cx="0" cy="-86" rx="38" ry="7" fill="#0A0908"/><ellipse cx="0" cy="-85" rx="32" ry="5" fill="#2A1A10"/>${crown(0, -40, 0.17)}</g>
+      ${steam(1100, 1446, t, id)}
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>
       <!-- the screen's light on him and the desk, and the room falling off -->
       <ellipse cx="860" cy="980" rx="560" ry="620" fill="url(#${id}glow)" style="mix-blend-mode:screen"/>
