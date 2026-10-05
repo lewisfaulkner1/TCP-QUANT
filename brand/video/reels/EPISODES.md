@@ -422,8 +422,11 @@ In J and K. Keep the risk line last.
 
 ### P. Posting
 
-UK times. TCP's account has batch 1 at 07:30 and 19:30 each day from Tuesday, so EP08 takes
-Thursday's 19:30 slot and that day's reel (6. 10 losses) moves to 12:30.
+**On hold: don't post this cut.** Lewis doesn't want the episode to say he just marks highs and lows;
+his indicator does much more. The ending (from 12.5 s) will be redone once he decides how to show
+it, and this section updated with the new files and times.
+
+The plan below was for the first cut:
 
 | When | Account | File | Where |
 |---|---|---|---|
@@ -431,3 +434,172 @@ Thursday's 19:30 slot and that day's reel (6. 10 losses) moves to 12:30.
 | Thu 8 Oct, 20:00 | TCP | the same file | Instagram Reels, caption K |
 | Fri 9 Oct, 19:30 | Founder | `tcp-ep08-27-indicators-personal-music.mp4` | TikTok, caption J |
 | Fri 9 Oct, 20:00 | Founder | the same file | Instagram Reels, caption J |
+
+---
+
+## This week: one episode a day
+
+Five new episodes, made from the approved founder, the sets and the real app, for Tuesday 6 to
+Saturday 10 October. EP08 follows once its new ending is made. Each one has the same files as the
+others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the covers).
+
+| Day | Episode | TCP account | Founder's account |
+|---|---|---|---|
+| Tue 6 Oct | EP11 · The Market Is Not Your Enemy | TikTok 19:30, Instagram 20:00 | TikTok 21:00, Instagram 21:30 |
+| Wed 7 Oct | EP12 · One Trade Is Not a Personality Test | the same | the same |
+| Thu 8 Oct | EP13 · The App Inside Telegram | the same | the same |
+| Fri 9 Oct | EP14 · POV: You Finally Stop Chasing Candles | the same | the same |
+| Sat 10 Oct | EP15 · The Market Keeps Calling Me | the same | the same |
+| Sun 11 Oct | EP08 · The Day I Deleted 27 Indicators, with its new ending | the same | the same |
+
+UK times. On TCP's account each episode takes the day's 19:30 slot and that day's batch 1 reel moves
+to 12:30. Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
+
+Every episode is checked frame by frame before it ships. The founder is drawn from the approved sheet
+(V6), there are no AI voices, charts are labelled examples and the app runs on demo prices. No episode
+shows a trading result, and none asks viewers to open an account.
+
+### EP11 · The Market Is Not Your Enemy (21 s)
+
+`specs/ep11-not-your-enemy.js`. A stop-out lands and he takes it personally: *it knew*, *it waits for
+me*, *every. single. time.* Then the market replies: *GOLD · sorry, who's this?* Silence, the side-eye,
+then *fair.* Price doesn't know your entry or your stop, so stop making it personal: *plan it → place
+it → leave it*. The chart on his monitor is EP02's example.
+
+**TCP account (K):**
+```
+The market took my stop. So it must be personal. 😤
+
+It's not. Price doesn't know your entry or your stop. Plan the trade, place it, then let it play out.
+
+Ever taken a stop-out personally? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+**Founder's account (J):**
+```
+Took it personally. The market didn't even know I was there. 😂
+
+Plan it. Place it. Leave it.
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+### EP12 · One Trade Is Not a Personality Test (21 s)
+
+`specs/ep12-one-trade.js`. One trade closes at the stop and he spirals: *so obviously… I'm a terrible
+trader. my strategy's broken. I should quit.* Silence, then *it was 1 trade.* *Trade 1 of 100: the
+other 99 haven't happened yet.* *A loss is a cost. Not a verdict.* *Judge the 100, not the 1.* No win
+rate or record is shown.
+
+**TCP account (K):**
+```
+Lost 1 trade. Decided I was a terrible trader. 🙃
+
+One loss is a cost, not a verdict. Judge 100 trades, not 1.
+
+What's the most you've read into one trade? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+**Founder's account (J):**
+```
+1 loss and I was ready to quit. 😅
+
+It was 1 trade. Judge the next 100.
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+### EP13 · The App Inside Telegram (24 s)
+
+`specs/ep13-app-inside-telegram.js`. He picks up his phone; from his point of view, the real Quant
+Terminal on demo prices, a screen every 3.5 s: *the market, at a glance* (Markets), *the odds on every
+level* (odds), *your lot size, worked out* (Risk), *a brief before each session* (the session brief),
+*and a prop challenge simulator*. Then: *all in the chat app you already use.*
+
+**TCP account (K):**
+```
+A trading terminal that lives inside Telegram. 📱
+
+The market at a glance, the odds on every level, your lot size, a brief before each session and a prop challenge simulator.
+
+What should we add next? 👇
+
+#trading #daytrading #tradingtools #forextrader #xauusd
+Education, not financial advice. Trading carries risk. App shown with demo prices.
+```
+
+**Founder's account (J):**
+```
+We built a trading terminal inside Telegram. 🛠️
+
+Odds on every level, lot sizes, session briefs and a prop challenge simulator, in the chat app you already use.
+
+What would you add? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. App shown with demo prices.
+```
+
+### EP14 · POV: You Finally Stop Chasing Candles (19 s)
+
+`specs/ep14-stop-chasing.js`. EP02's mistake, avoided. A breakout runs: *it's breaking out… and I
+don't click.* It tops out (*that would've been me*) and keeps falling (*still not in*). Then it turns,
+and he clicks on the pullback: *now I let price come to me.* *trap → structure → pullback*. The chart is
+EP08's clean example with no trades drawn on it, and no result is shown.
+
+**TCP account (K):**
+```
+POV: the breakout runs and you don't click. 🧘
+
+It tops out. It falls. Then it turns, and you take the pullback instead. Let price come to you.
+
+Be honest: would you have clicked? 👇
+
+#trading #daytrading #tradingtips #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+**Founder's account (J):**
+```
+Every trader has done this. Part 2: this time I didn't click. 😌
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+### EP15 · The Market Keeps Calling Me (20 s)
+
+`specs/ep15-keeps-calling.js`. He leans back while the market rings: *GOLD · incoming call…*, *not
+now.* Again (*declined.*), then Bitcoin, then *GOLD · big move. you in?* *Every move wants an answer.
+You don't have to pick up every time. I only answer the calls I planned for.* *plan → wait → answer*.
+
+**TCP account (K):**
+```
+The market calls every 5 minutes. You don't have to pick up. 📵
+
+Every move wants an answer. Plan your trade, then only answer the calls you planned for.
+
+Which market calls you the most? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+**Founder's account (J):**
+```
+Gold called. Then again. Then Bitcoin. 📵
+
+I only answer the calls I planned for.
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
