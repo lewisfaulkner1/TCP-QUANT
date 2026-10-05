@@ -2,8 +2,12 @@
 // two tones of shade with soft edges, the screen's light in front of him, and detailed eyes. One
 // drawing built from parameters, so his face, cap, chain and clothes are the same in every shot.
 // His cap, collar and pearl chain are small 3D models turned to his angle and projected, so they sit
-// in true perspective from the front, turned and from behind. Every blur works in sRGB: Chromium's
-// default (linear light) leaves hard steps in soft shading on black cloth.
+// in true perspective from the front, turned and from behind. He is built strong: a thick neck, round
+// shoulders, a deep chest narrowing to the waist; each arm is a shoulder, elbow and wrist placed as
+// it would be seen from this angle, its sleeve following the muscle under it. His hands are drawn
+// from their bones to real proportions. His black crewneck carries an AMIRI wordmark wrapped round
+// his chest (a print stays readable when he faces the other way). Every blur works in sRGB:
+// Chromium's default (linear light) leaves hard steps in soft shading on black cloth.
 //
 // founderSVG(pose, id, part) returns an SVG <g> in the character's own space: the head's centre near
 // 0,0, the cap's top at about y -142, the chin at about y 116, the torso down to y 580. A shot places
@@ -927,7 +931,7 @@
   // gathered above a ribbed cuff. out and inn run from the top to the cuff; the cuff is the last
   // stretch of each; the seam closes the top, from the end of inn to the start of out.
   function sleeve(id, s, light = 1) {
-    const out = s.out, inn = s.inn, cuffK = s.cuff ?? 16;
+    const out = s.out, inn = s.inn, cuffK = s.cuff ?? 16, lw = s.lw ?? 1;
     const shape = `${smooth(out)} L ${xy(inn[inn.length - 1])} ${smooth(inn.slice().reverse()).replace(/^M [-\d.]+ [-\d.]+/, '')}${s.seam ? ` ${smooth(s.seam).replace(/^M [-\d.]+ [-\d.]+/, '')}` : ''} Z`;
     // the cuff: the ends of both edges, cuffK back from the end
     const back = (pts, d) => {
@@ -944,7 +948,7 @@
     let ribs = '';
     for (let k = 1; k < 11; k++) {
       const t = k / 11;
-      ribs += `<path d="M ${xy([lerp(o0[0], i0[0], t), lerp(o0[1], i0[1], t)])} L ${xy([lerp(o1[0], i1[0], t), lerp(o1[1], i1[1], t)])}" stroke="${C.topHi}" stroke-width="0.9" opacity="0.4"/>`;
+      ribs += `<path d="M ${xy([lerp(o0[0], i0[0], t), lerp(o0[1], i0[1], t)])} L ${xy([lerp(o1[0], i1[0], t), lerp(o1[1], i1[1], t)])}" stroke="${C.topHi}" stroke-width="${n(0.9 * lw)}" opacity="0.4"/>`;
     }
     const mid = (a, b, t, bow) => {
       const m = [lerp(a[0], b[0], t), lerp(a[1], b[1], t)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
@@ -971,14 +975,14 @@
         ${ink(off([o3, mid(o3, i3, 0.5, 3), i3], 0, -2), 1.2, C.topHi, [0.3, 0.3], 0.25)}
       </g>
       ${s.seam ? `<path d="${smooth(s.seam)}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>` : ''}
-      ${ink(out, 2.4, C.lineCloth, [s.outTaper ?? 0.03, 0.03], 0.92)}
-      ${ink(inn, 2.1, C.lineCloth, [s.innTaper ?? 0.2, 0.03], 0.88)}`,
+      ${ink(out, 2.4 * lw, C.lineCloth, [s.outTaper ?? 0.03, 0.03], 0.92)}
+      ${ink(inn, 2.1 * lw, C.lineCloth, [s.innTaper ?? 0.2, 0.03], 0.88)}`,
       cuff: `
       <path d="M ${xy(o0)} L ${xy(o1)} L ${xy(i1)} L ${xy(i0)} Z" fill="${mixC(C.top, C.topDark, 0.35)}"/>
       ${ribs}
-      ${ink([o0, mid(o0, i0, 0.5, 1.5), i0], 1.4, C.lineCloth, [0.1, 0.1], 0.7)}
-      ${ink([o0, o1], 2.4, C.lineCloth, [0.05, 0.05], 0.92)}${ink([i0, i1], 2.1, C.lineCloth, [0.05, 0.05], 0.88)}
-      ${ink([o1, mid(o1, i1, 0.5, 2), i1], 2.1, C.lineCloth, [0.05, 0.05], 0.92)}`,
+      ${ink([o0, mid(o0, i0, 0.5, 1.5), i0], 1.4 * lw, C.lineCloth, [0.1, 0.1], 0.7)}
+      ${ink([o0, o1], 2.4 * lw, C.lineCloth, [0.05, 0.05], 0.92)}${ink([i0, i1], 2.1 * lw, C.lineCloth, [0.05, 0.05], 0.88)}
+      ${ink([o1, mid(o1, i1, 0.5, 2), i1], 2.1 * lw, C.lineCloth, [0.05, 0.05], 0.92)}`,
     };
   }
 
@@ -1109,7 +1113,7 @@
     },
     phone: {
       far: { E: [128, 450], W: [146, 640] },
-      near: { E: [-120, 410], W: [40, 350], hand: { kind: 'phoneBack', rot: -29 }, phone: true },
+      near: { E: [-120, 412], W: [38, 352], hand: { kind: 'phoneBack', rot: -29 }, phone: true },
     },
   };
   // the part of the picture past his body's far side, for his far arm (just outside the line round
@@ -1180,17 +1184,22 @@
         <path d="M ${n(m[0] - 50)} ${n(m[1] + 10)} C ${n(m[0] - 20)} ${n(m[1] + 16)}, ${n(m[0] + 30)} ${n(m[1] + 14)}, ${n(m[0] + 52)} ${n(m[1] + 6)}" fill="none" stroke="#2C2C32" stroke-width="3" opacity="0.8"/>
         <path d="M ${n(m[0] - 30)} ${n(m[1] - 17)} C ${n(m[0] - 6)} ${n(m[1] - 23)}, ${n(m[0] + 30)} ${n(m[1] - 21)}, ${n(m[0] + 50)} ${n(m[1] - 9)}" fill="none" stroke="${p.light.tint}" stroke-width="2.4" opacity="${n(0.5 * p.light.rim)}"/>`;
     }
-    let phone = '';
+    // the phone, its back to us, lying in his palm: the back of his hand over its lower half, his
+    // fingers across it and round its far edge, out of sight past it
+    let phone = '', phoneClip = '';
     if (A.near.phone) {
-      phone = `<g transform="translate(96 262) rotate(-12) scale(1.26)"><rect x="-25" y="-52" width="50" height="100" rx="9" fill="#18181B" stroke="#3A3A3E" stroke-width="2.2"/>
+      const place = 'translate(88 300) rotate(-14) scale(1.26)';
+      phone = `<g transform="${place}"><rect x="-25" y="-52" width="50" height="100" rx="9" fill="#18181B" stroke="#3A3A3E" stroke-width="2.2"/>
           <rect x="-17" y="-44" width="16" height="22" rx="5" fill="#0C0C0E"/><circle cx="-9" cy="-38" r="3.6" fill="#2A2A31"/><circle cx="-9" cy="-28" r="3.6" fill="#2A2A31"/>
           <path d="M 23 -44 L 23 40" stroke="${p.light.tint}" stroke-width="2" opacity="0.35"/></g>`;
+      phoneClip = `<clipPath id="${id}phc"><rect x="-500" y="-500" width="${500 + 24}" height="1000" transform="${place}"/></clipPath>`;
     }
     if (A.far.cross) {
       // arms folded: his near forearm on top, in front; his far forearm below it, nearer his body
       out += `${farArm}${farFore}${SN.body}${nearHand}${SN.cuff}`;
     } else {
-      out += `${farArm}${phone}${mouse}${SN.body}${handOf(near, 'near')}${SN.cuff}`;
+      const nh = A.near.phone ? `${phoneClip}<g clip-path="url(#${id}phc)">${handOf(near, 'near')}</g>` : handOf(near, 'near');
+      out += `${farArm}${phone}${mouse}${SN.body}${nh}${SN.cuff}`;
     }
     return out;
   }
@@ -1525,5 +1534,5 @@
       <g transform="rotate(${n(p.lean)} 0 520)">${part === 'body' ? body : part === 'arm' ? arm : body + arm}</g></g>`;
   }
 
-  window.Founder = { pose, blendPose, founderSVG, handSVG, HANDS, colours: C };
+  window.Founder = { pose, blendPose, founderSVG, handSVG, HANDS, HAND_SCALE, sleeveSVG: sleeve, colours: C };
 })();

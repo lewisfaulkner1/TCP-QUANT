@@ -459,11 +459,23 @@
   };
 
   // His right hand on the mouse, seen from above, fingers to the right; click 0..1 presses the left
-  // button. Five fingers: the thumb along the far side, four on the buttons.
+  // button. Five fingers: the thumb along the far side, four on the buttons. His forearm is the same
+  // sleeve as in every other shot, zoomed in: the muscle under black jersey, gathered above a ribbed
+  // cuff at his wrist, the hand coming out of it. The sleeve is in his body's units (the wrist at 0,
+  // the elbow off to the left), scaled so the hand keeps its size against it.
+  const FOREARM = {
+    out: [[-210, -44], [-160, -45.5], [-110, -42], [-66, -36.5], [-34, -32], [-18, -28.5], [0, -26.5]],
+    inn: [[-210, 40], [-160, 40.5], [-110, 38], [-66, 34.5], [-34, 30.5], [-18, 27.5], [0, 26.5]],
+    folds: [[[-150, -22], [-118, -27], [-88, -24]], [[-128, 14], [-100, 8], [-74, 11]], [[-58, -18], [-48, -6], [-52, 8]]],
+    cuff: 16, litEdge: 'out', lw: 0.62,
+  };
   function mouseHand(id, click, glow) {
     const press = click * 6;
+    const F = window.Founder, k = 3.75 / F.HAND_SCALE;
+    const sl = F.sleeveSVG(`${id}fa`, { ...FOREARM, rim: { colour: glow, op: 0.42 } }, 1);
     return `
       <ellipse cx="110" cy="46" rx="330" ry="150" fill="#000" opacity="0.5" filter="url(#${id}b20)"/>
+      <ellipse cx="-330" cy="70" rx="320" ry="120" fill="#000" opacity="0.45" filter="url(#${id}b20)"/>
       <!-- the mouse -->
       <path d="M -60 -98 C 70 -120, 250 -114, 332 -52 C 368 -22, 368 24, 332 54 C 250 116, 70 122, -60 100 C -132 86, -132 -86, -60 -98 Z" fill="url(#${id}mouse)"/>
       <path d="M 150 0 L 354 0" stroke="#060607" stroke-width="3"/>
@@ -472,16 +484,10 @@
       <rect x="226" y="-11" width="48" height="22" rx="10" fill="#2E2E34"/><path d="M 232 -4 L 268 -4" stroke="#4A4A52" stroke-width="2"/>
       <path d="M 196 -104 C 260 -98, 312 -76, 340 -42" fill="none" stroke="#9A9AA6" stroke-width="3" opacity="0.35" stroke-linecap="round"/>
       <path d="M -40 -96 C 80 -114, 240 -106, 320 -58" fill="none" stroke="${glow}" stroke-width="3" opacity="0.4"/>
-      <!-- the sleeve, the forearm, and the hand drawn like every other hand of his -->
-      <path d="M -540 -62 L -250 -66 L -250 94 L -540 108 Z" fill="#141312"/>
-      <path d="M -272 -68 L -236 -68 L -236 98 L -272 98 Z" fill="#0B0A09"/>
-      ${Array.from({ length: 7 }, (_, i) => `<path d="M ${-270 + i * 5} -62 L ${-270 + i * 5} 92" stroke="#1F1D1B" stroke-width="1.4"/>`).join('')}
-      <path d="M -540 -62 L -250 -66" stroke="${glow}" stroke-width="3" opacity="0.3"/>
-      <g transform="translate(-58 -4) scale(3.75)">${window.Founder.handSVG(press > 3 ? { ...window.Founder.HANDS.mouse, index: [-5, 9, 26] } : window.Founder.HANDS.mouse, { id, lw: 0.7, sep: 0.42, openWrist: true, rim: glow })}</g>
-      <path d="M -244 -58 C -180 -62, -110 -64, -50 -62 L -50 52 C -110 60, -180 76, -244 86 Z" fill="#EDBB98"/>
-      <path d="M -240 72 C -170 76, -100 70, -52 50" fill="none" stroke="#A86F58" stroke-width="12" opacity="0.3" stroke-linecap="round"/>
-      <path d="M -244 -58 C -180 -62, -110 -64, -50 -62 M -244 86 C -180 76, -110 60, -50 52" fill="none" stroke="#3A2118" stroke-width="2.6" stroke-linecap="round"/>
-      <path d="M -244 -60 C -180 -64, -110 -66, -52 -64" fill="none" stroke="${glow}" stroke-width="3" opacity="0.4" stroke-linecap="round"/>`;
+      <!-- his forearm in its sleeve, the hand drawn like every other hand of his, the cuff over the wrist -->
+      <g transform="translate(-58 -4) scale(${n(k)})">${sl.body}</g>
+      <g transform="translate(-58 -4) scale(3.75)">${F.handSVG(press > 3 ? { ...F.HANDS.mouse, index: [-5, 9, 26] } : F.HANDS.mouse, { id, lw: 0.7, sep: 0.42, openWrist: true, rim: glow })}</g>
+      <g transform="translate(-58 -4) scale(${n(k)})">${sl.cuff}</g>`;
   }
 
   // ------------------------------------------------------------ the kinds
@@ -542,33 +548,172 @@
   // The real app in a phone in his right hand, seen as he sees it: four fingertips curling round the
   // left edge from behind, the thumb up the right edge with its nail towards us, the heel of the hand
   // under the phone. Phone space: the phone is 604 x 1260.
+  // His right hand holding the phone, as he sees it (the shot is his point of view): the phone lies in
+  // his palm, his fingers wrapped round its left edge with their tips and nails over it, his thumb up
+  // its right side onto the screen, the heel of his hand and his wrist below it going into the cuff
+  // of his sleeve. Drawn like his other hands, to a real hand's size against the phone (the phone is
+  // 604 by 1260 here, 7.1 cm wide). Returns the part behind the phone and the part in front of it.
+  function povHand(F, id) {
+    const C = F.colours, NAIL = { nail: '#EDBCA9', edge: '#F5DCCF', moon: '#F2CDBE', crease: '#B07058' };
+    const n = (v) => Math.round(v * 10) / 10, xy = (p) => `${n(p[0])} ${n(p[1])}`;
+    const LW = 4.2;
+    const smooth = (pts, closed) => {
+      const P = closed ? [pts[pts.length - 1], ...pts, pts[0], pts[1]] : [pts[0], ...pts, pts[pts.length - 1]];
+      let d = `M ${xy(P[1])}`;
+      for (let i = 1; i < P.length - 2; i++) {
+        const [p0, p1, p2, p3] = [P[i - 1], P[i], P[i + 1], P[i + 2]];
+        d += ` C ${xy([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6])}, ${xy([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6])}, ${xy(p2)}`;
+      }
+      return closed ? d + ' Z' : d;
+    };
+    const stroke = (pts, w, col, op = 1, extra = '') => `<path d="${smooth(pts)}" fill="none" stroke="${col}" stroke-width="${n(w)}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"${extra}/>`;
+    const blur = (k) => ` filter="url(#${id}pb${k})"`;
+    const defs = `<defs>${[3, 7, 14, 24].map((k) => `<filter id="${id}pb${k}" filterUnits="userSpaceOnUse" x="-600" y="-600" width="2400" height="3400" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${k}"/></filter>`).join('')}</defs>`;
+    // a nail, its length along the finger: the plate, the pale crescent of its free edge at the tip,
+    // the half-moon at its root, a gleam, the cuticle
+    const nailSVG = (c, ang, nl, nw, gleamSide = -1) => {
+      const a = nl / 2, b = nw / 2;
+      const plate = `M ${n(-a)} ${n(-b * 0.82)} C ${n(-a * 0.4)} ${n(-b * 1.04)}, ${n(a * 0.5)} ${n(-b * 1.04)}, ${n(a * 0.86)} ${n(-b * 0.78)} C ${n(a * 1.08)} ${n(-b * 0.4)}, ${n(a * 1.08)} ${n(b * 0.4)}, ${n(a * 0.86)} ${n(b * 0.78)} C ${n(a * 0.5)} ${n(b * 1.04)}, ${n(-a * 0.4)} ${n(b * 1.04)}, ${n(-a)} ${n(b * 0.82)} C ${n(-a * 1.1)} ${n(b * 0.3)}, ${n(-a * 1.1)} ${n(-b * 0.3)}, ${n(-a)} ${n(-b * 0.82)} Z`;
+      const edge = `M ${n(a * 0.5)} ${n(-b * 0.98)} C ${n(a * 0.28)} ${n(-b * 0.4)}, ${n(a * 0.28)} ${n(b * 0.4)}, ${n(a * 0.5)} ${n(b * 0.98)} C ${n(a * 0.9)} ${n(b * 0.7)}, ${n(a * 1.06)} ${n(b * 0.36)}, ${n(a * 1.06)} 0 C ${n(a * 1.06)} ${n(-b * 0.36)}, ${n(a * 0.9)} ${n(-b * 0.7)}, ${n(a * 0.5)} ${n(-b * 0.98)} Z`;
+      return `<g transform="translate(${xy(c)}) rotate(${n(ang)})">
+        <path d="${plate}" fill="${NAIL.nail}" stroke="${C.skinShade}" stroke-width="2.2" stroke-opacity="0.75"/>
+        <path d="${edge}" fill="${NAIL.edge}" opacity="0.9"/>
+        <ellipse cx="${n(-a * 0.7)}" cy="0" rx="${n(a * 0.2)}" ry="${n(b * 0.52)}" fill="${NAIL.moon}" opacity="0.75"/>
+        <ellipse cx="${n(-a * 0.05)}" cy="${n(b * 0.36 * gleamSide)}" rx="${n(a * 0.5)}" ry="${n(b * 0.14)}" fill="#fff" opacity="0.4"/>
+        <path d="M ${n(-a - 2)} ${n(-b * 0.8)} Q ${n(-a * 1.25 - 4)} 0 ${n(-a - 2)} ${n(b * 0.8)}" fill="none" stroke="${C.skinShade}" stroke-width="2.8" opacity="0.6"/></g>`;
+    };
+
+    // A finger where it wraps round the phone's left edge, seen from the front: on the left the bend
+    // of its last joint turning away behind the phone, then the tip lying over the edge with its nail.
+    // at: the middle of the bend; ang: the way it points (degrees); len: bend to tip; w: width.
+    const finger = (at, ang, len, w, k, nailOn = true) => {
+      const a = ang * Math.PI / 180, u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
+      const P = (s, t) => [at[0] + u[0] * s + v[0] * t, at[1] + u[1] * s + v[1] * t];
+      const h0 = w / 2, h1 = w * 0.44;
+      const top = [P(0, -h0), P(len * 0.3, -h0 * 0.985), P(len * 0.55, -h0 * 0.95), P(len * 0.8, -h1 * 1.02), P(len - h1 * 0.9, -h1)];
+      const tip = [];
+      for (let i = 1; i < 14; i++) { const th = -Math.PI / 2 + (i / 14) * Math.PI, c = Math.cos(th); tip.push(P(len - h1 * 0.9 + Math.pow(c, 0.7) * h1 * 0.98, Math.sin(th) * h1)); }
+      const bot = [P(len - h1 * 0.9, h1), P(len * 0.8, h1 * 1.02), P(len * 0.55, h0 * 0.95), P(len * 0.3, h0 * 0.985), P(0, h0)];
+      const bend = [];
+      for (let i = 1; i < 14; i++) { const th = Math.PI / 2 + (i / 14) * Math.PI; bend.push(P(Math.cos(th) * h0 * 0.62, Math.sin(th) * h0)); }
+      const outline = [...top, ...tip, ...bot, ...bend];
+      const d = `M ${outline.map(xy).join(' L ')} Z`, cid = `${id}f${k}`;
+      const nl = Math.min(len * 0.46, w * 0.62), nw = w * 0.5;
+      const crease = (s, span, bow, op) => `<path d="M ${xy(P(s, -h0 * span))} Q ${xy(P(s + bow, 0))} ${xy(P(s, h0 * span * 0.9))}" fill="none" stroke="${NAIL.crease}" stroke-width="2.6" stroke-linecap="round" opacity="${op}"/>`;
+      return {
+        shadow: `<path d="${d}" transform="translate(12 18)" fill="#000" opacity="0.45"${blur(7)}/>`,
+        line: `<path d="${d}" fill="${C.line}" stroke="${C.line}" stroke-width="${LW * 2}" stroke-linejoin="round"/>`,
+        body: `<clipPath id="${cid}"><path d="${d}"/></clipPath>
+          <path d="${d}" fill="${C.skin}"/>
+          <g clip-path="url(#${cid})">
+            ${stroke([P(-h0, h0 * 0.8), P(len * 0.4, h0 * 0.86), P(len, h1 * 0.9)], w * 0.42, C.skinShade, 0.55, blur(7))}
+            ${stroke([P(-h0 * 0.4, -h0 * 1.1), P(-h0 * 0.7, 0), P(-h0 * 0.4, h0 * 1.1)], w * 0.42, C.skinDeep, 0.5, blur(14))}
+            ${stroke([P(len * 0.1, -h0 * 0.52), P(len * 0.45, -h0 * 0.55), P(len * 0.8, -h1 * 0.5)], w * 0.14, C.skinHi, 0.65, blur(3))}
+            ${crease(len * 0.22, 0.6, 8, 0.38)}${crease(len * 0.22 + 10, 0.46, 7, 0.3)}${crease(len * 0.22 - 9, 0.4, 6, 0.22)}
+            ${nailOn ? nailSVG(P(len - nl * 0.5 - 4, -w * 0.03), ang, nl, nw) : ''}
+          </g>`,
+      };
+    };
+
+    // The thumb from the ball of his hand at the phone's bottom corner, the back of it towards us, up
+    // the right edge and onto the screen: the joint's wrinkles, the nail.
+    const thumb = (() => {
+      const B = [742, 1312], J = [664, 1094], T = [602, 902];
+      const lerp2 = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+      const dir = (p, q) => { const dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy); return [dx / L, dy / L]; };
+      const d1 = dir(B, J), d2 = dir(J, T), n1 = [-d1[1], d1[0]], n2 = [-d2[1], d2[0]];
+      const nJ = [(n1[0] + n2[0]) / 2, (n1[1] + n2[1]) / 2];
+      const at = (p, nn, h) => [p[0] + nn[0] * h, p[1] + nn[1] * h];
+      // n points to the thumb's right going up it (towards the screen's middle is its left)
+      const L = [at(lerp2(B, J, -0.8), n1, -112), at(lerp2(B, J, -0.35), n1, -104), at(B, n1, -100), at(lerp2(B, J, 0.5), n1, -88), at(J, nJ, -82), at(lerp2(J, T, 0.5), n2, -76), at(T, n2, -70)];
+      const R = [at(lerp2(B, J, -0.8), n1, 118), at(lerp2(B, J, -0.35), n1, 112), at(B, n1, 104), at(lerp2(B, J, 0.5), n1, 90), at(J, nJ, 84), at(lerp2(J, T, 0.5), n2, 76), at(T, n2, 70)];
+      const h = 70, cap = [];
+      for (let i = 1; i < 14; i++) { const th = -Math.PI / 2 + (i / 14) * Math.PI, c = Math.cos(th); cap.push([T[0] + d2[0] * Math.pow(c, 0.7) * h * 1.02 + n2[0] * Math.sin(th) * h, T[1] + d2[1] * Math.pow(c, 0.7) * h * 1.02 + n2[1] * Math.sin(th) * h]); }
+      const side = (pts) => smooth(pts).replace(/^M [-\d.]+ [-\d.]+/, '');
+      const d = `${smooth(L)} L ${cap.map(xy).join(' L ')} L ${xy(R[R.length - 1])}${side(R.slice().reverse())} Z`;
+      // its outline: up the side towards the screen from where it leaves the ball of the hand, round the
+      // tip, and down the outer side into the hand's edge
+      const open = `${smooth(L.slice(3))} L ${cap.map(xy).join(' L ')} L ${xy(R[R.length - 1])}${side(R.slice().reverse())}`;
+      const cid = `${id}th`, ang = Math.atan2(d2[1], d2[0]) * 180 / Math.PI;
+      const cr = (t, span, bow, op) => { const c = lerp2(J, T, t); return `<path d="M ${xy(at(c, nJ, -84 * span))} Q ${xy([c[0] + d2[0] * bow, c[1] + d2[1] * bow])} ${xy(at(c, nJ, 84 * span * 0.9))}" fill="none" stroke="${NAIL.crease}" stroke-width="2.8" stroke-linecap="round" opacity="${op}"/>`; };
+      // it fades into the ball of the hand below its base
+      const f0 = lerp2(B, J, 0.3), f1 = lerp2(B, J, -0.45);
+      const fade = `<linearGradient id="${cid}fg" gradientUnits="userSpaceOnUse" x1="${n(f0[0])}" y1="${n(f0[1])}" x2="${n(f1[0])}" y2="${n(f1[1])}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+        <mask id="${cid}m" maskUnits="userSpaceOnUse" x="-600" y="-600" width="2400" height="3400"><rect x="-600" y="-600" width="2400" height="3400" fill="url(#${cid}fg)"/></mask>`;
+      return {
+        fade, mask: `mask="url(#${cid}m)"`,
+        shadow: `<path d="${d}" transform="translate(-16 20)" fill="#000" opacity="0.42"${blur(14)}/>`,
+        line: `<path d="${open}" fill="none" stroke="${C.line}" stroke-width="${LW * 2}" stroke-linejoin="round"/>`,
+        body: `<clipPath id="${cid}"><path d="${d}"/></clipPath>
+          <path d="${d}" fill="${C.skin}"/>
+          <g clip-path="url(#${cid})">
+            ${stroke(R.slice(2).map((p, i) => at(p, i < 3 ? n1 : n2, -30)), 74, C.skinShade, 0.5, blur(14))}
+            ${stroke(L.slice(2, 7).map((p, i) => at(p, i < 2 ? n1 : n2, 30)), 28, C.skinHi, 0.5, blur(7))}
+            <ellipse cx="${n(J[0] - 6)}" cy="${n(J[1] + 4)}" rx="46" ry="32" fill="${C.skinHi}" opacity="0.32"${blur(7)}/>
+            ${cr(0.06, 0.4, 9, 0.42)}${cr(0.11, 0.32, 8, 0.32)}${cr(0.01, 0.3, 7, 0.24)}
+            ${nailSVG(lerp2(J, T, 0.84), ang, 112, 92, 1)}
+            ${stroke([at(lerp2(B, J, -0.1), n1, -60), at(lerp2(B, J, -0.6), n1, -40)], 40, C.skinShade, 0.25, blur(14))}
+          </g>`,
+      };
+    })();
+
+    // The heel of his hand and his wrist below the phone (the palm side towards us: the phone lies in
+    // his palm), in the phone's shadow along the top; the creases of his wrist; then his sleeve.
+    const palmPts = [[180, 1120], [210, 1240], [252, 1334], [318, 1420], [382, 1504], [418, 1600], [430, 1720], [600, 1740], [772, 1712], [796, 1580], [830, 1452], [856, 1340], [854, 1236], [814, 1142], [700, 1060]];
+    const palmD = smooth(palmPts, true);
+    const fingers = [
+      finger([-14, 1052], 7, 160, 132, 3),
+      finger([-30, 912], 1, 194, 146, 2),
+      finger([-22, 774], -5, 172, 138, 1),
+    ];
+    const k = 11.2, ang = -104;
+    const sl = F.sleeveSVG(`${id}psl`, {
+      out: [[-210, -44], [-160, -45.5], [-110, -42], [-66, -36.5], [-34, -32], [-18, -28.5], [0, -26.5]],
+      inn: [[-210, 40], [-160, 40.5], [-110, 38], [-66, 34.5], [-34, 30.5], [-18, 27.5], [0, 26.5]],
+      folds: [[[-150, -22], [-118, -27], [-88, -24]], [[-128, 14], [-100, 8], [-74, 11]], [[-58, -18], [-48, -6], [-52, 8]]],
+      cuff: 16, litEdge: 'out', lw: 0.36,
+    }, 1);
+    const wrist = [600, 1528];
+    const back = `${defs}
+      <g transform="translate(${xy(wrist)}) rotate(${ang}) scale(${k})">${sl.body}</g>
+      <path d="${palmD}" fill="${C.line}" stroke="${C.line}" stroke-width="${LW * 2}" stroke-linejoin="round"/>
+      <clipPath id="${id}palm"><path d="${palmD}"/></clipPath>
+      <path d="${palmD}" fill="${C.skin}"/>
+      <g clip-path="url(#${id}palm)">
+        ${stroke([[150, 1272], [400, 1290], [640, 1286], [880, 1262]], 110, C.skinDeep, 0.55, blur(24))}
+        ${stroke([[300, 1420], [430, 1500], [610, 1530], [790, 1490]], 60, C.skinShade, 0.4, blur(14))}
+        ${stroke([[740, 1300], [776, 1360], [770, 1420]], 80, C.skinHi, 0.32, blur(24))}
+        ${stroke([[330, 1330], [400, 1380], [470, 1400]], 60, C.skinHi, 0.26, blur(24))}
+        ${stroke([[600, 1300], [580, 1380], [586, 1450]], 40, C.skinShade, 0.32, blur(14))}
+        ${stroke([[662, 1282], [632, 1356], [626, 1430]], 3, NAIL.crease, 0.45)}
+        ${stroke([[400, 1476], [520, 1500], [650, 1500], [790, 1470]], 2.8, NAIL.crease, 0.45)}
+        ${stroke([[412, 1502], [530, 1522], [660, 1522], [780, 1496]], 2.4, NAIL.crease, 0.32)}
+      </g>
+      <g transform="translate(${xy(wrist)}) rotate(${ang}) scale(${k})">${sl.cuff}</g>
+      ${thumb.fade}<g ${thumb.mask}>${thumb.line}${thumb.body}</g>`;
+    // over the phone: the fingertips, and the thumb again where it lies on the phone (the same drawing,
+    // so it joins the part beside the phone without a seam)
+    const phoneClip = `<clipPath id="${id}ph"><rect x="0" y="0" width="604" height="1260" rx="92"/></clipPath>`;
+    const front = `${defs}${phoneClip}
+      <g clip-path="url(#${id}ph)">${fingers.map((f) => f.shadow).join('')}${thumb.shadow}</g>
+      ${fingers.map((f) => f.line + f.body).join('')}
+      <g clip-path="url(#${id}ph)">${thumb.line}${thumb.body}</g>`;
+    return { back, front };
+  }
+
   KINDS.handPhone = {
     make(s, root) {
       KINDS.phone.make(s, root);
-      const line = 'stroke="#3A2118" stroke-width="4" stroke-linejoin="round"';
-      // a fingertip from behind the phone: the pad round the edge, its crease, shade under it, light on top
-      const tip = (y, h) => {
-        const r = h / 2;
-        return `<path d="M 18 ${y - r * 0.7} C 18 ${y - r * 1.02}, -30 ${y - r * 1.04}, -62 ${y - r * 0.9} C -80 ${y - r * 0.6}, -80 ${y + r * 0.6}, -62 ${y + r * 0.9} C -30 ${y + r * 1.04}, 18 ${y + r * 1.02}, 18 ${y + r * 0.7} C 26 ${y + r * 0.3}, 26 ${y - r * 0.3}, 18 ${y - r * 0.7} Z" fill="#EDBB98" ${line}/>
-          <path d="M -8 ${y + r * 0.95} C 6 ${y + r * 0.9}, 16 ${y + r * 0.6}, 19 ${y + r * 0.3}" fill="none" stroke="#C48E77" stroke-width="10" opacity="0.5" stroke-linecap="round"/>
-          <path d="M -44 ${y - r * 0.62} C -24 ${y - r * 0.82}, -2 ${y - r * 0.8}, 10 ${y - r * 0.6}" fill="none" stroke="#F8DCC8" stroke-width="7" opacity="0.7" stroke-linecap="round"/>
-          <path d="M -26 ${y - r * 0.8} C -14 ${y - r * 0.3}, -14 ${y + r * 0.3}, -26 ${y + r * 0.8}" fill="none" stroke="#B57F67" stroke-width="3.2" opacity="0.55" stroke-linecap="round"/>`;
-      };
-      const back = `<svg class="hand" style="left:-260px;top:0;width:1124px;height:1900px" viewBox="-260 0 1124 1900">
-        <path d="M 250 1190 C 380 1150, 600 1140, 716 1200 C 812 1260, 806 1480, 776 1900 L 276 1900 C 262 1640, 236 1380, 250 1190 Z" fill="#EDBB98" ${line}/>
-        <path d="M 270 1240 C 260 1450, 270 1700, 290 1900" fill="none" stroke="#C48E77" stroke-width="40" opacity="0.4"/>
-        <path d="M 262 1700 L 790 1700 L 776 1900 L 276 1900 Z" fill="#141312"/>
-        <path d="M 258 1688 L 792 1688 L 790 1722 L 260 1722 Z" fill="#0B0A09"/></svg>`;
-      const front = `<svg class="hand" style="left:-260px;top:0;width:1124px;height:1900px" viewBox="-260 0 1124 1900">
-        ${tip(704, 110)}${tip(805, 112)}${tip(903, 106)}${tip(994, 92)}
-        <path d="M 610 1330 C 586 1210, 556 1080, 552 980 C 550 914, 598 878, 646 902 C 690 926, 706 1010, 718 1090 C 732 1180, 748 1260, 770 1330 Z" fill="#EDBB98" ${line}/>
-        <path d="M 704 1060 C 716 1150, 732 1240, 750 1320" fill="none" stroke="#C48E77" stroke-width="18" opacity="0.45" stroke-linecap="round"/>
-        <ellipse cx="604" cy="936" rx="34" ry="27" transform="rotate(-14 604 936)" fill="#F8DECF" stroke="#C48E77" stroke-width="2.6"/>
-        <path d="M 586 926 C 596 918, 612 916, 622 920" fill="none" stroke="#fff" stroke-width="3.4" opacity="0.7" stroke-linecap="round"/>
-        <path d="M 572 1056 C 598 1046, 628 1048, 652 1062" fill="none" stroke="#B57F67" stroke-width="3.6" opacity="0.6" stroke-linecap="round"/>
-        <path d="M 576 1072 C 600 1066, 624 1068, 644 1078" fill="none" stroke="#B57F67" stroke-width="2.6" opacity="0.4" stroke-linecap="round"/></svg>`;
-      s.phone.insertAdjacentHTML('afterbegin', back);
-      s.phone.insertAdjacentHTML('beforeend', front);
+      const h = povHand(window.Founder, `ph${Math.random().toString(36).slice(2, 7)}`);
+      const wrap = (inner) => `<svg class="hand" style="position:absolute;left:-260px;top:0;width:1124px;height:1900px;overflow:visible;filter:brightness(0.9)" viewBox="-260 0 1124 1900">${inner}</svg>`;
+      // the phone's shadow falls on the room, not on his hand: drawn first, under the hand
+      s.phone.querySelector('.shell').style.boxShadow = '0 0 0 1.5px rgba(246,227,163,.18) inset, 0 0 0 5px #0b0a08 inset';
+      const shadow = `<svg class="hand" style="position:absolute;left:-260px;top:0;width:1124px;height:1900px;overflow:visible" viewBox="-260 0 1124 1900">
+        <filter id="${s.id || 'ph'}sh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="50"/></filter>
+        <rect x="10" y="60" width="584" height="1240" rx="92" fill="#000" opacity="0.7" filter="url(#${s.id || 'ph'}sh)"/></svg>`;
+      s.phone.insertAdjacentHTML('afterbegin', wrap(h.back));
+      s.phone.insertAdjacentHTML('afterbegin', shadow);
+      s.phone.insertAdjacentHTML('beforeend', wrap(h.front));
     },
     async draw(s, t) {
       await KINDS.phone.draw(s, t);
