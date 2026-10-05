@@ -214,6 +214,7 @@ A new account grows on consistency: post every day at the same times. UK times t
 
 **First comes EP02**, the animated episode (`EPISODES.md`, section P): TCP's account on Monday
 5 October at 19:30, the founder's on Tuesday 6 October at 19:30. Day 1 below is Tuesday 6 October.
+EP08 takes day 3's 19:30 slot (Thursday 8 October), and that day's reel moves to 12:30.
 
 | Day | 07:30 | 19:30 |
 |---|---|---|

@@ -251,3 +251,183 @@ UK times. The two accounts post a day apart, so the same story never goes out tw
   and keep the original sound at about 50%.
 - **The first hour:** answer the early comments, ideally with a short video reply; TikTok pushes
   replies. Note the three-second hold rate after a day.
+
+---
+
+## EP08 · The Day I Deleted 27 Indicators
+
+### A. Episode card
+
+| | |
+|---|---|
+| Title | The Day I Deleted 27 Indicators |
+| Pillar | Trading comedy, with one lesson |
+| Length | 23.3 s |
+| Accounts | TCP (`tcp-ep08-27-indicators-*`) and personal (`tcp-ep08-27-indicators-personal-*`) |
+| The idea | Fewer lines, a clearer chart: mark the levels everyone watches |
+| Ask | TCP: *Follow TCP*. Personal: *Follow for the next one* |
+
+### B. Hook options
+
+1. **"the day I deleted 27 indicators"** (used). The number makes it specific and a little absurd,
+   and the buried chart proves it in the first frame.
+2. **"I couldn't find the price."** A confession: anyone who's done it stays to see the fix.
+3. **"just one more indicator…"** (used as the turn). It runs on from EP02's "just one more
+   breakout…", so followers get the callback.
+
+### C. Final timed script
+
+No voice. On-screen text only.
+
+| Time | On screen | Text |
+|---|---|---|
+| 0.0–2.0 | His chart, buried under 27 indicators | *the day I deleted 27 indicators* |
+| 2.0–3.0 | Him, leaning in, squinting | *I couldn't find the price.* |
+| 3.0–6.5 | How it happened: one average, then indicator after indicator, faster and faster, the price squeezed into a strip | *it started with one.* then *just one more indicator…* |
+| 6.5–8.0 | All 27: lines, clouds, bands, BUY and SELL tags everywhere, the count at 27 | *every one had an opinion.* |
+| 8.0–9.0 | The side-eye to camera. Silence | — |
+| 9.0–10.0 | Right-click, *Remove all indicators*, click | — |
+| 10.0–11.0 | They drop away, 27 to 0 | — |
+| 11.0–12.5 | Just the candles | *oh. there it is.* |
+| 12.5–15.0 | 4 levels draw in: the previous day's high and low, the Asia session's high and low | *now I mark 4 levels.* then *the ones everyone watches.* |
+| 15.0–16.5 | A small smirk and a nod, the clean chart behind him | — |
+| 16.5–20.5 | His phone: the Quant Terminal's Markets tab, the same levels on its chart | *the Quant Terminal marks them for me.* |
+| 20.5–23.3 | End card | TCP / *Follow TCP* / *The Quant Terminal, inside Telegram.* / the risk line |
+
+### D. Shot list
+
+| # | Time | Camera | Action | Sound | Into the next |
+|---|---|---|---|---|---|
+| 1 | 0.0–2.0 | The monitor on his desk, slow push | The buried chart, the count reading 27 | music in | cut |
+| 2 | 2.0–3.0 | Close-up | Leaning in, squinting | | cut |
+| 3 | 3.0–6.5 | The monitor, pulling back as it fills | One average, then 26 more, faster and faster | a pop for each, ticks once they're too fast to count | cut |
+| 4 | 6.5–8.0 | The monitor, push in towards the count | All 27, BUY and SELL tags | | cut, music out |
+| 5 | 8.0–9.0 | Close-up | The side-eye to camera | silence | cut |
+| 6 | 9.0–9.6 | Close on the menu | Right-click, the pointer to *Remove all indicators* | click | cut |
+| 7 | 9.6–10.0 | Close on the mouse | The click | click | cut |
+| 8 | 10.0–12.5 | The monitor | 27 to 0, then the candles | whoosh; music back at 11.0 | cut |
+| 9 | 12.5–15.0 | The monitor | The 4 levels draw in | a pop for each | cut |
+| 10 | 15.0–16.5 | Medium | Smirk, nod; the clean chart on his monitor | | cut |
+| 11 | 16.5–20.5 | His point of view | The phone rises into frame: the real app | | fade |
+| 12 | 20.5–23.3 | End card | | whoosh | end |
+
+### E. Character continuity
+
+- **Outfit, every shot:** as approved on sheet V6: black cap worn forward with the gold TCP crown, the
+  pearl chain, the black AMIRI crewneck. No shades.
+- **Expressions:** urgent at the screen; a squint in shot 2; the side-eye to camera in shot 5; a small
+  smirk and a nod in shot 10. He never grins.
+- **Pose:** right hand on the mouse, left hand on the keyboard, the whole episode.
+- **Props:** monitor, keyboard, mouse, the black mug with the crown, his phone.
+
+### F. Environment
+
+- **Where:** his desk at night, as in EP02. The screen shots pull back far enough to show the monitor
+  standing on the desk, with the keyboard, mouse and mug out of focus below it.
+- **Light:** the monitor is the key light. It turns more violet as the indicators pile up and back to
+  cool white when they're gone.
+
+### G. Animation
+
+`brand/source/reels/specs/ep08-27-indicators.js` is the whole episode, on the same pose and chart tracks
+as EP02. The chart is EP08's own (`story: 'clutter'` in `toon/toon.js`): 64 example candles with 200
+more of history behind them, and 27 indicators each worked out from those candles (averages, bands,
+clouds, levels, oscillators), so nothing on it is scribbled. The menu is drawn plainly, with no
+platform's branding. The count is the joke, so it's whole in every frame: the camera holds the legend
+and the count together up to a scale of 0.62, and any push past that heads for the count.
+
+```sh
+node render.cjs ep08-27-indicators $W --stills=0.5,9.5,14.5   # check a moment
+node render.cjs ep08-27-indicators $W                         # the TCP cut
+node render.cjs ep08-27-indicators $W --variant=personal      # the founder's cut
+```
+
+### H. Product
+
+- **16.5–20.5:** the real Quant Terminal on his phone, in his hand: the Markets tab, scrolling to the
+  15-minute chart with the previous day's high and low and the Asia range drawn on. The same 4
+  levels he marks in the story. It's footage of the app itself in demo mode, labelled DEMO PRICES.
+- **The end card** names it: *The Quant Terminal, inside Telegram.*
+- The chart on his monitor is a story chart, labelled EXAMPLE CHART · NOT REAL PRICES.
+
+### I. Edit map
+
+- **Tempo:** cuts on the 120 bpm grid: 2.0, 3.0, 6.5, 8.0, 9.0, 9.6, 10.0, 12.5, 15.0, 16.5, 20.5.
+- **Music** (the `-music` cut): in from the first frame, out from 8.0 (the side-eye) to 11.0 (*oh.
+  there it is.*).
+- **The climb:** indicators come on faster and faster (each a little sooner than the last), 26 in
+  2.8 s, so the sounds turn from pops into a rattle.
+- **The wipe:** 27 to 0 in 0.9 s, the count running down with them.
+
+### J. Personal account version
+
+- **Hook:** *the day I deleted 27 indicators*, no TCP badge in the corner.
+- **End card:** *Follow for the next one* / *The day I deleted 27 indicators.*
+- **Caption:**
+
+```
+Deleted all 27. Found the price again. 😮‍💨
+
+Now I mark 4 levels: yesterday's high and low, and the Asia session's.
+
+How many are on your chart right now? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades. App shown with demo prices.
+```
+
+### K. TCP account version
+
+- **Hook:** *the day I deleted 27 indicators*, with the TCP badge in the corner.
+- **End card:** *Follow TCP* / *The Quant Terminal, inside Telegram.*
+- **Caption:**
+
+```
+27 indicators. No idea where the price was.
+
+Which one would you delete first? 👇
+
+Fewer lines, a clearer chart: the levels everyone watches. One lesson an episode, from TCP.
+
+#trading #daytrading #tradingtips #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades. App shown with demo prices.
+```
+
+### L. QA
+
+- **The count is honest:** 27 named indicators, each drawn from the candles, and the legend and panes
+  list every one.
+- **Narrative:** works without sound; one beat a shot; the lesson comes from the story.
+- **Visual:** the approved drawing of him in every shot; five fingers on every hand; chart, menu and
+  app text real and readable; no warped screens.
+- **Trading:** one idea; no statistics; no profit claims; the chart says it's an example; no indicator
+  or platform is named as bad.
+- **Platform and labels:** text clear of TikTok's buttons; no AI voice or AI imagery.
+
+### M. Cover
+
+The opening frame at 0.9 s: the buried chart with the count at 27 and *the day I deleted 27
+indicators*. If TikTok asks for cover text, use the same line.
+
+### N. Caption and hashtags
+
+In J and K. Keep the risk line last.
+
+### O. Production split
+
+- **Made here:** script, sets, the chart and its 27 indicators, animation, captions, music and
+  effects, both cuts, covers, captions for posting.
+- **You:** post each cut at the times in P; choose a trending sound if you want one (the `-sfx`
+  file); tell me what the comments say.
+
+### P. Posting
+
+UK times. TCP's account has batch 1 at 07:30 and 19:30 each day from Tuesday, so EP08 takes
+Thursday's 19:30 slot and that day's reel (6. 10 losses) moves to 12:30.
+
+| When | Account | File | Where |
+|---|---|---|---|
+| Thu 8 Oct, 19:30 | TCP | `tcp-ep08-27-indicators-music.mp4` | TikTok, caption K |
+| Thu 8 Oct, 20:00 | TCP | the same file | Instagram Reels, caption K |
+| Fri 9 Oct, 19:30 | Founder | `tcp-ep08-27-indicators-personal-music.mp4` | TikTok, caption J |
+| Fri 9 Oct, 20:00 | Founder | the same file | Instagram Reels, caption J |

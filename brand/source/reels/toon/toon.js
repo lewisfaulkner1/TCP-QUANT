@@ -3,6 +3,7 @@
 //
 //   toon       one shot: a set ('desk', 'ots', 'screen', 'mouse') seen through a camera, with the founder
 //              and the story chart. { set, cam: [{ t, s, x, y }], pose, chart, dof: { bg, fg, all }, hits: [t] }
+//              A chart key with story: 'clutter' draws EP08's chart instead (indicators, a menu, levels).
 //   caption    meme-style text, one thought at a time { text, y, size }; a numbered lesson card
 //              { style: 'note', num, text, sub }; or a line of steps { style: 'steps', text }
 //   handPhone  the real app in a phone, held in his hand (the phone kind, plus a hand)
@@ -122,6 +123,10 @@
   }
   // The colour the screen throws on his face: the latest candle's, stronger the bigger it is.
   function glowOf(st) {
+    if (st.story === 'clutter') {
+      const k = cl((st.ind || 0) / 27), a = [159, 194, 255], b = [196, 168, 255];
+      return `rgb(${a.map((v, j) => Math.round(mix(v, b[j], k))).join(',')})`;
+    }
     const i = Math.max(0, Math.min(OHLC.length - 1, Math.floor(st.i - 0.001)));
     const c = OHLC[i];
     const f = forming(c, cl(st.i - i));
@@ -133,6 +138,7 @@
   // The chart, 860 x 560, in the chart's own units. Every set scales this same drawing.
   const CW = 860, CH = 560;
   function chartSVG(st, id, bare = false) {
+    if (st.story === 'clutter') return clutterSVG(st, id, bare);
     const pmin = 28, pmax = 96, padL = 22, padR = 22, top = 70, bot = 26;
     const step = (CW - padL - padR) / OHLC.length;
     const y = (p) => top + (1 - (p - pmin) / (pmax - pmin)) * (CH - top - bot);
@@ -213,6 +219,272 @@
       o.push(`<rect x="${n(zx)}" y="${n(z0)}" width="${n(zw)}" height="${n(z1 - z0)}" rx="5" fill="${GOLD}" fill-opacity="${n(0.22 * a3)}" stroke="${GOLD}" stroke-width="2.6" opacity="${n(cl(a3 * 2))}"/>${badge(zx + zw / 2, z1 + 26, 3, a3)}`);
       const run = cl((shown - 42) / (OHLC.length - 42));
       if (run > 0) o.push(`<path d="M ${n(x(41.5))} ${n(y(52))} C ${n(x(46))} ${n(y(56))}, ${n(x(50))} ${n(y(70))}, ${n(x(55.5))} ${n(y(92))}" fill="none" stroke="${GOLDHI}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${n(460 * run)} 460" opacity="0.9"/>`);
+    }
+    return `<g>${o.join('')}</g>`;
+  }
+
+  // ------------------------------------------------------------ the cluttered chart (EP08)
+  // Another example chart: it fills up with indicators until the price can't be seen, then is wiped
+  // back to the candles and the 4 levels that matter. Every indicator is worked out from the candles,
+  // with 200 more candles of history before the 64 shown, so even the 200-candle average is real.
+  // The state's story is 'clutter': ind is how many indicators are on (0 to 27; a fraction fades the
+  // next one in, or the last one out on the way down), menu and hover the right-click menu and its
+  // "Remove all indicators" row, levels the 4 levels drawing in.
+  const CL = (() => {
+    const r = rng(81), all = [];
+    const legs = [0.42, 0.5, -0.5, -0.2, 0.45, 0.3, -0.25, 0.2];
+    let p = 40;
+    for (let i = 0; i < 264; i++) {
+      const d = i < 200 ? Math.sin(i / 23) * 0.32 + 0.05 : legs[Math.floor((i - 200) / 8)];
+      const o = p, c = o + d + (r() - 0.5) * 2.6;
+      all.push({ o, c, h: Math.max(o, c) + r() * 1.3, l: Math.min(o, c) - r() * 1.3, v: 40 + r() * 60 + Math.abs(c - o) * 24 });
+      p = c;
+    }
+    return all;
+  })();
+  const CLI = (() => {
+    const C = CL.map((c) => c.c), H = CL.map((c) => c.h), L = CL.map((c) => c.l), V = CL.map((c) => c.v);
+    const sma = (a, k) => a.map((_, i) => (i < k - 1 ? null : a.slice(i - k + 1, i + 1).reduce((s, v) => s + v, 0) / k));
+    const ema = (a, k) => { const al = 2 / (k + 1); let e = a[0]; return a.map((v, i) => (e = i ? al * v + (1 - al) * e : v)); };
+    const rma = (a, k) => { let e = a[0]; return a.map((v, i) => (e = i ? (e * (k - 1) + v) / k : v)); };
+    const hh = (a, k) => a.map((_, i) => Math.max(...a.slice(Math.max(0, i - k + 1), i + 1)));
+    const ll = (a, k) => a.map((_, i) => Math.min(...a.slice(Math.max(0, i - k + 1), i + 1)));
+    const sd = (a, k) => a.map((_, i) => { if (i < k - 1) return null; const s = a.slice(i - k + 1, i + 1), m = s.reduce((x, y) => x + y, 0) / k; return Math.sqrt(s.reduce((x, y) => x + (y - m) ** 2, 0) / k); });
+    const TR = CL.map((c, i) => (i ? Math.max(c.h - c.l, Math.abs(c.h - CL[i - 1].c), Math.abs(c.l - CL[i - 1].c)) : c.h - c.l));
+    const atr14 = rma(TR, 14), atr10 = rma(TR, 10);
+    const sma20 = sma(C, 20), sd20 = sd(C, 20), ema20 = ema(C, 20);
+    const gain = C.map((c, i) => (i ? Math.max(0, c - C[i - 1]) : 0)), loss = C.map((c, i) => (i ? Math.max(0, C[i - 1] - c) : 0));
+    const ag = rma(gain, 14), al = rma(loss, 14);
+    const e12 = ema(C, 12), e26 = ema(C, 26), macd = e12.map((v, i) => v - e26[i]), sig = ema(macd, 9);
+    const h14 = hh(H, 14), l14 = ll(L, 14), raw = C.map((c, i) => (100 * (c - l14[i])) / ((h14[i] - l14[i]) || 1));
+    const k3 = sma(raw.map((v) => v), 3).map((v, i) => v ?? raw[i]), d3 = sma(k3, 3).map((v, i) => v ?? k3[i]);
+    const tp = CL.map((c) => (c.h + c.l + c.c) / 3), tp20 = sma(tp, 20);
+    const cci = tp.map((v, i) => { if (i < 19) return 0; const s = tp.slice(i - 19, i + 1), md = s.reduce((x, y) => x + Math.abs(y - tp20[i]), 0) / 20; return (v - tp20[i]) / (0.015 * (md || 1)); });
+    let ob = 0;
+    const obv = C.map((c, i) => (ob += i ? Math.sign(c - C[i - 1]) * V[i] : 0));
+    const pdm = CL.map((c, i) => (i && c.h - CL[i - 1].h > CL[i - 1].l - c.l ? Math.max(0, c.h - CL[i - 1].h) : 0));
+    const mdm = CL.map((c, i) => (i && CL[i - 1].l - c.l > c.h - CL[i - 1].h ? Math.max(0, CL[i - 1].l - c.l) : 0));
+    const sp = rma(pdm, 14), sm = rma(mdm, 14);
+    const dx = sp.map((p, i) => { const a = (100 * p) / atr14[i], b = (100 * sm[i]) / atr14[i]; return (100 * Math.abs(a - b)) / ((a + b) || 1); });
+    const adx = rma(dx, 14);
+    // supertrend (10, 3)
+    const st = [];
+    let up = 0, dn = 0, trend = 1;
+    CL.forEach((c, i) => {
+      const mid = (c.h + c.l) / 2, u = mid - 3 * atr10[i], d = mid + 3 * atr10[i];
+      up = i && C[i - 1] > up ? Math.max(u, up) : u;
+      dn = i && C[i - 1] < dn ? Math.min(d, dn) : d;
+      if (c.c > dn) trend = 1; else if (c.c < up) trend = -1;
+      st.push({ v: trend > 0 ? up : dn, up: trend > 0 });
+    });
+    // parabolic SAR (0.02, 0.2)
+    const sar = [];
+    let long = true, af = 0.02, ep = CL[0].h, s = CL[0].l;
+    CL.forEach((c, i) => {
+      if (i) {
+        s += af * (ep - s);
+        if (long) { s = Math.min(s, CL[i - 1].l, CL[Math.max(0, i - 2)].l); if (c.l < s) { long = false; s = ep; ep = c.l; af = 0.02; } else if (c.h > ep) { ep = c.h; af = Math.min(0.2, af + 0.02); } }
+        else { s = Math.max(s, CL[i - 1].h, CL[Math.max(0, i - 2)].h); if (c.h > s) { long = true; s = ep; ep = c.h; af = 0.02; } else if (c.l < ep) { ep = c.l; af = Math.min(0.2, af + 0.02); } }
+      }
+      sar.push(s);
+    });
+    const conv = hh(H, 9).map((v, i) => (v + ll(L, 9)[i]) / 2), base = hh(H, 26).map((v, i) => (v + ll(L, 26)[i]) / 2);
+    const spanA = conv.map((v, i) => (v + base[i]) / 2), spanB = hh(H, 52).map((v, i) => (v + ll(L, 52)[i]) / 2);
+    return { C, H, L, V, sma20, ema9: ema(C, 9), ema21: ema(C, 21), ema50: ema(C, 50), sma200: sma(C, 200), bbU: sma20.map((m, i) => m + 2 * sd20[i]), bbL: sma20.map((m, i) => m - 2 * sd20[i]),
+      kcU: ema20.map((m, i) => m + 2 * atr10[i]), kcL: ema20.map((m, i) => m - 2 * atr10[i]), dcU: hh(H, 20), dcL: ll(L, 20),
+      rsi: ag.map((g, i) => 100 - 100 / (1 + g / (al[i] || 1e-9))), macd, sig, stK: k3, stD: d3, atr: atr14, cci, obv, adx, st, sar, conv, base, spanA, spanB, tp };
+  })();
+  function clutterSVG(st, id, bare) {
+    const N = 64, off = CL.length - N, S = CL.slice(off), at = (a, i) => a[off + i];
+    const padL = 10, padR = 78, top = 56, bottom = CH - 6;
+    const step = (CW - padL - padR) / N, x = (i) => padL + step * (i + 0.5);
+    const ind = cl(st.ind || 0, 0, 27), on = (k) => cl(ind - (k - 1));
+    // the panels under the price, each added at the bottom as it comes on
+    const PANELS = [[3, 'RSI 14', '#A78BFA'], [4, 'MACD 12 26 9', '#60A5FA'], [6, 'Vol', '#7C8796'], [10, 'Stoch 14 3 3', '#38BDF8'], [15, 'ATR 14', '#94A3B8'], [20, 'CCI 20', '#FB923C'], [26, 'OBV', '#2DD4BF'], [27, 'ADX 14', '#F472B6']];
+    const PH = 40;
+    const panes = PANELS.map(([k, name, col]) => ({ k, name, col, h: PH * easeIO(on(k)), a: on(k) })).filter((p) => p.a > 0);
+    const total = panes.reduce((s, p) => s + p.h, 0);
+    const pb = bottom - total;
+    let yy = pb;
+    panes.forEach((p) => { p.y0 = yy; yy += p.h; p.y1 = yy; });
+    const lo = Math.min(...S.map((c) => c.l)), hi = Math.max(...S.map((c) => c.h)), pad = (hi - lo) * 0.08;
+    const y = (p) => top + 8 + (1 - (p - (lo - pad)) / (hi - lo + 2 * pad)) * (pb - top - 16);
+    const o = [];
+    const line = (vals, col, w = 1.8, extra = '') => {
+      const pts = vals.map((v, i) => (v == null ? null : `${n(x(i))} ${n(y(v))}`)).filter(Boolean);
+      return pts.length > 1 ? `<path d="M ${pts.join(' L ')}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"${extra}/>` : '';
+    };
+    const band = (u, l, col, op) => `<path d="M ${u.map((v, i) => `${n(x(i))} ${n(y(v))}`).join(' L ')} L ${l.map((v, i) => `${n(x(i))} ${n(y(v))}`).reverse().join(' L ')} Z" fill="${col}" opacity="${op}"/>`;
+    const seg = (a) => S.map((_, i) => at(a, i));
+    o.push(`<rect width="${CW}" height="${CH}" rx="6" fill="#0A0D11"/>`);
+    for (let g = 1; g < 8; g++) { const gx = n(CW * g / 8); o.push(`<line y1="${top}" y2="${bottom}" x1="${gx}" x2="${gx}" stroke="#121820" stroke-width="1.5"/>`); }
+    for (let g = 1; g < 6; g++) { const gy = n(top + (pb - top) * g / 6); o.push(`<line x1="0" x2="${CW}" y1="${gy}" y2="${gy}" stroke="#141A22" stroke-width="1.5"/>`); }
+    o.push(`<rect width="${CW}" height="48" fill="#0E1218"/><line x1="0" x2="${CW}" y1="48" y2="48" stroke="#1E2630" stroke-width="2"/>`);
+    if (!bare) o.push(`<circle cx="26" cy="24" r="6" fill="${GOLD}"/>
+      <text x="42" y="31" font-family="JB Mono" font-weight="600" font-size="19" fill="#C9D1DC" letter-spacing="2">EXAMPLE CHART</text>
+      <text x="252" y="31" font-family="JB Mono" font-weight="500" font-size="17" fill="#5F6A78" letter-spacing="1">not real prices</text>`);
+    // the count, top right, gold while any indicator is on
+    const count = Math.round(ind);
+    if (ind > 0.01) {
+      o.push(`<g opacity="${n(cl(ind * 3))}"><text x="${CW - 96}" y="31" text-anchor="end" font-family="JB Mono" font-weight="600" font-size="15" fill="#8A93A0" letter-spacing="2">INDICATORS</text>
+        <rect x="${CW - 86}" y="9" width="72" height="31" rx="7" fill="${count >= 20 ? '#3A1712' : '#2A2213'}" stroke="${count >= 20 ? DOWN : GOLD}" stroke-width="2"/>
+        <text x="${CW - 50}" y="33" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="24" fill="${count >= 20 ? '#FF8A6E' : GOLDHI}">${count}</text></g>`);
+    }
+    // the price pane: overlays under the candles first, then the candles, then the rest on top
+    o.push(`<clipPath id="${id}pp"><rect x="0" y="${top}" width="${CW - padR + 4}" height="${n(pb - top)}"/></clipPath><g clip-path="url(#${id}pp)">`);
+    const fade = (k, svg) => (on(k) > 0 ? `<g opacity="${n(on(k))}">${svg}</g>` : '');
+    // 8 Ichimoku cloud (shifted 26 candles forward, so it runs on past the last candle)
+    if (on(8) > 0) {
+      const A = S.map((_, i) => at(CLI.spanA, i - 26)), B = S.map((_, i) => at(CLI.spanB, i - 26));
+      let cloud = '';
+      for (let i = 1; i < N; i++) {
+        const up = A[i] >= B[i];
+        cloud += `<path d="M ${n(x(i - 1))} ${n(y(A[i - 1]))} L ${n(x(i))} ${n(y(A[i]))} L ${n(x(i))} ${n(y(B[i]))} L ${n(x(i - 1))} ${n(y(B[i - 1]))} Z" fill="${up ? '#22C55E' : '#EF4444'}" opacity="0.16"/>`;
+      }
+      o.push(fade(8, `${cloud}${line(A, '#4ADE80', 1.3)}${line(B, '#F87171', 1.3)}${line(seg(CLI.conv), '#2563EB', 1.4)}${line(seg(CLI.base), '#B91C1C', 1.4)}`));
+    }
+    // 5 Bollinger, 16 Keltner, 19 Donchian, 25 regression channel
+    o.push(fade(5, `${band(seg(CLI.bbU), seg(CLI.bbL), '#2DD4BF', 0.08)}${line(seg(CLI.bbU), '#2DD4BF', 1.5)}${line(seg(CLI.bbL), '#2DD4BF', 1.5)}${line(seg(CLI.sma20), '#F59E0B', 1.2, ' stroke-dasharray="5 4"')}`));
+    o.push(fade(16, `${line(seg(CLI.kcU), '#C084FC', 1.5, ' stroke-dasharray="7 5"')}${line(seg(CLI.kcL), '#C084FC', 1.5, ' stroke-dasharray="7 5"')}`));
+    o.push(fade(19, `${line(seg(CLI.dcU), '#A3E635', 1.4)}${line(seg(CLI.dcL), '#A3E635', 1.4)}`));
+    if (on(25) > 0) {
+      const xs = S.map((_, i) => i), ys = S.map((c) => c.c), mx = (N - 1) / 2, my = ys.reduce((s, v) => s + v, 0) / N;
+      const b = xs.reduce((s, xi, i) => s + (xi - mx) * (ys[i] - my), 0) / xs.reduce((s, xi) => s + (xi - mx) ** 2, 0), a0 = my - b * mx;
+      const res = Math.sqrt(ys.reduce((s, v, i) => s + (v - (a0 + b * i)) ** 2, 0) / N);
+      const L0 = (k) => `<line x1="${n(x(0))}" x2="${n(x(N - 1))}" y1="${n(y(a0 + k * res))}" y2="${n(y(a0 + b * (N - 1) + k * res))}" stroke="#E879F9" stroke-width="1.5"${k ? ' stroke-dasharray="3 4"' : ''}/>`;
+      o.push(fade(25, `${L0(0)}${L0(2)}${L0(-2)}`));
+    }
+    // 23 support and resistance zones, 12 pivots, 9 Fibonacci
+    o.push(fade(23, [[hi - 1.2, hi + 0.4, '#EF4444'], [lo - 0.4, lo + 1.2, '#22C55E'], [S[30].h - 0.8, S[30].h + 0.6, '#F59E0B']].map(([a, b, c]) => `<rect x="${n(x(0))}" y="${n(y(b))}" width="${n(x(N - 1) - x(0))}" height="${n(y(a) - y(b))}" fill="${c}" opacity="0.13"/>`).join('')));
+    if (on(12) > 0) {
+      const d = S.slice(0, 32), H0 = Math.max(...d.map((c) => c.h)), L0 = Math.min(...d.map((c) => c.l)), C0 = d[31].c, P = (H0 + L0 + C0) / 3;
+      const lv = [['P', P], ['R1', 2 * P - L0], ['S1', 2 * P - H0], ['R2', P + (H0 - L0)], ['S2', P - (H0 - L0)]];
+      o.push(fade(12, lv.map(([t, v]) => `<line x1="${n(x(32))}" x2="${n(x(N - 1))}" y1="${n(y(v))}" y2="${n(y(v))}" stroke="#FACC15" stroke-width="1.4"/><text x="${n(x(32) + 3)}" y="${n(y(v) - 3)}" font-family="JB Mono" font-size="10" fill="#FACC15">${t}</text>`).join('')));
+    }
+    if (on(9) > 0) {
+      const fl = [[0, '#9CA3AF'], [0.236, '#EF4444'], [0.382, '#F59E0B'], [0.5, '#22C55E'], [0.618, '#06B6D4'], [0.786, '#3B82F6'], [1, '#9CA3AF']];
+      o.push(fade(9, fl.map(([f, c]) => { const v = hi - (hi - lo) * f; return `<line x1="${n(x(0))}" x2="${n(x(N - 1))}" y1="${n(y(v))}" y2="${n(y(v))}" stroke="${c}" stroke-width="1.2" opacity="0.85"/><text x="${n(x(0) + 2)}" y="${n(y(v) - 3)}" font-family="JB Mono" font-size="10" fill="${c}">${f}</text>`; }).join('')));
+    }
+    // the candles
+    const shown = cl(st.i ?? N, 0, N), full = Math.floor(shown), frac = shown - full;
+    const bw = step * 0.62;
+    for (let i = 0; i < Math.min(N, full + (frac > 0 ? 1 : 0)); i++) {
+      const c = S[i], f = i === full ? forming(c, frac) : { close: c.c, hi: c.h, lo: c.l };
+      const col = f.close >= c.o ? UP : DOWN, t0 = y(Math.max(c.o, f.close)), b0 = y(Math.min(c.o, f.close));
+      o.push(`<line x1="${n(x(i))}" x2="${n(x(i))}" y1="${n(y(f.hi))}" y2="${n(y(f.lo))}" stroke="${col}" stroke-width="1.8"/><rect x="${n(x(i) - bw / 2)}" y="${n(t0)}" width="${n(bw)}" height="${n(Math.max(1.5, b0 - t0))}" rx="1.2" fill="${col}"/>`);
+    }
+    // moving averages and the rest of the lines
+    o.push(fade(1, line(seg(CLI.sma20), '#FACC15', 2)));
+    o.push(fade(2, line(seg(CLI.ema50), '#3B82F6', 2)));
+    if (on(7) > 0) {
+      let pv = 0, vv = 0;
+      const vw = S.map((c, i) => { if (i < 32) return null; pv += at(CLI.tp, i) * c.v; vv += c.v; return pv / vv; });
+      o.push(fade(7, line(vw, '#FB923C', 2.2)));
+    }
+    o.push(fade(11, line(seg(CLI.sma200), '#EF4444', 2.2)));
+    if (on(13) > 0) {
+      let s = '';
+      for (let i = 1; i < N; i++) { const a = at(CLI.st, i - 1), b = at(CLI.st, i); if (a.up === b.up) s += `<line x1="${n(x(i - 1))}" x2="${n(x(i))}" y1="${n(y(a.v))}" y2="${n(y(b.v))}" stroke="${b.up ? '#22C55E' : '#EF4444'}" stroke-width="2.2"/>`; }
+      o.push(fade(13, s));
+    }
+    o.push(fade(14, S.map((_, i) => `<circle cx="${n(x(i))}" cy="${n(y(at(CLI.sar, i)))}" r="1.9" fill="#E5E7EB"/>`).join('')));
+    o.push(fade(17, line(seg(CLI.ema9), '#F472B6', 1.6)));
+    o.push(fade(18, line(seg(CLI.ema21), '#22D3EE', 1.6)));
+    if (on(21) > 0 || on(22) > 0) {
+      // swings for the zig zag and the trendlines: a turn of 3.5 or more
+      const piv = [];
+      let dir = 0, ext = S[0].c, ei = 0;
+      S.forEach((c, i) => {
+        if (dir >= 0 && c.h > ext) { ext = c.h; ei = i; } else if (dir <= 0 && c.l < ext) { ext = c.l; ei = i; }
+        if (dir >= 0 && ext - c.l > 3.5) { piv.push({ i: ei, v: ext, hi: true }); dir = -1; ext = c.l; ei = i; } else if (dir <= 0 && c.h - ext > 3.5) { piv.push({ i: ei, v: ext, hi: false }); dir = 1; ext = c.h; ei = i; }
+      });
+      piv.push({ i: ei, v: ext, hi: dir > 0 });
+      o.push(fade(21, `<path d="M ${piv.map((q) => `${n(x(q.i))} ${n(y(q.v))}`).join(' L ')}" fill="none" stroke="#F8FAFC" stroke-width="1.6" opacity="0.8"/>`));
+      const highs = piv.filter((q) => q.hi), lows = piv.filter((q) => !q.hi), tl = [];
+      for (const arr of [highs, lows]) for (let j = 1; j < arr.length && tl.length < 6; j += 1) {
+        const a = arr[j - 1], b = arr[j], sl = (b.v - a.v) / ((b.i - a.i) || 1);
+        tl.push(`<line x1="${n(x(a.i))}" y1="${n(y(a.v))}" x2="${n(x(N - 1))}" y2="${n(y(a.v + sl * (N - 1 - a.i)))}" stroke="${arr === highs ? '#F87171' : '#4ADE80'}" stroke-width="1.6"/>`);
+      }
+      o.push(fade(22, tl.join('')));
+    }
+    if (on(24) > 0) {
+      let s = '';
+      for (let i = 1; i < N; i++) {
+        const d0 = at(CLI.ema9, i - 1) - at(CLI.ema21, i - 1), d1 = at(CLI.ema9, i) - at(CLI.ema21, i);
+        if (d0 <= 0 && d1 > 0) s += `<g transform="translate(${n(x(i))} ${n(y(S[i].l) + 16)})"><path d="M 0 -9 L 7 0 L -7 0 Z" fill="${UP}"/><rect x="-17" y="1" width="34" height="15" rx="3" fill="${UP}"/><text y="12.5" text-anchor="middle" font-family="JB Mono" font-weight="700" font-size="10" fill="#04130D">BUY</text></g>`;
+        if (d0 >= 0 && d1 < 0) s += `<g transform="translate(${n(x(i))} ${n(y(S[i].h) - 16)})"><path d="M 0 9 L 7 0 L -7 0 Z" fill="${DOWN}"/><rect x="-19" y="-16" width="38" height="15" rx="3" fill="${DOWN}"/><text y="-4.5" text-anchor="middle" font-family="JB Mono" font-weight="700" font-size="10" fill="#1A0703">SELL</text></g>`;
+      }
+      o.push(fade(24, s));
+    }
+    // the levels that matter: the previous day's high and low, and the Asia session's
+    if ((st.levels || 0) > 0) {
+      const d = S.slice(0, 32), as = S.slice(32, 44);
+      const lv = [['PDH', Math.max(...d.map((c) => c.h)), '#E9C46A'], ['ASIA H', Math.max(...as.map((c) => c.h)), '#8E7CF0'], ['ASIA L', Math.min(...as.map((c) => c.l)), '#8E7CF0'], ['PDL', Math.min(...d.map((c) => c.l)), '#E9C46A']];
+      lv.forEach(([t, v, c], j) => {
+        const a = cl(st.levels * 1.6 - j * 0.2), ly = y(v), x1 = mix(x(0), CW - padR + 2, easeOut(a));
+        if (a <= 0) return;
+        o.push(`<line x1="${n(x(0))}" x2="${n(x1)}" y1="${n(ly)}" y2="${n(ly)}" stroke="${c}" stroke-width="2.4" stroke-dasharray="9 6"/>`);
+      });
+    }
+    o.push('</g>');
+    // the levels' tags, outside the clip, at the right edge
+    if ((st.levels || 0) > 0) {
+      const d = S.slice(0, 32), as = S.slice(32, 44);
+      const lv = [['PDH', Math.max(...d.map((c) => c.h)), '#E9C46A'], ['ASIA H', Math.max(...as.map((c) => c.h)), '#8E7CF0'], ['ASIA L', Math.min(...as.map((c) => c.l)), '#8E7CF0'], ['PDL', Math.min(...d.map((c) => c.l)), '#E9C46A']];
+      lv.forEach(([t, v, c], j) => {
+        const a = cl(st.levels * 1.6 - j * 0.2 - 0.5);
+        if (a <= 0) return;
+        o.push(`<g opacity="${n(a)}" transform="translate(${CW - padR + 4} ${n(y(v))})"><rect x="0" y="-11" width="${t.length > 3 ? 70 : 46}" height="22" rx="4" fill="${c}"/><text x="${t.length > 3 ? 35 : 23}" y="5" text-anchor="middle" font-family="JB Mono" font-weight="700" font-size="12" fill="#14110C">${t}</text></g>`);
+      });
+    }
+    // the legend of every overlay on, in rows across the top of the price pane
+    const OV = [[1, 'SMA 20', '#FACC15'], [2, 'EMA 50', '#3B82F6'], [5, 'BB 20 2', '#2DD4BF'], [7, 'VWAP', '#FB923C'], [8, 'Ichimoku 9 26 52', '#4ADE80'], [9, 'Fib', '#06B6D4'], [11, 'SMA 200', '#EF4444'], [12, 'Pivots', '#FACC15'], [13, 'Supertrend 10 3', '#22C55E'], [14, 'PSAR', '#E5E7EB'],
+      [16, 'Keltner 20', '#C084FC'], [17, 'EMA 9', '#F472B6'], [18, 'EMA 21', '#22D3EE'], [19, 'Donchian 20', '#A3E635'], [21, 'Zig Zag', '#F8FAFC'], [22, 'Trendlines', '#F87171'], [23, 'S/R zones', '#F59E0B'], [24, 'Signals', '#35A68C'], [25, 'Lin Reg', '#E879F9']];
+    let lx = 10, ly = top + 16;
+    for (const [k, name, col] of OV) {
+      const a = on(k);
+      if (a <= 0) continue;
+      const w = name.length * 7.2 + 22;
+      if (lx + w > CW - padR - 6) { lx = 10; ly += 17; }
+      o.push(`<g opacity="${n(a)}"><rect x="${n(lx - 3)}" y="${n(ly - 12)}" width="${n(w)}" height="16" rx="3" fill="#0A0D11" opacity="0.72"/><circle cx="${n(lx + 4)}" cy="${n(ly - 4)}" r="3.5" fill="${col}"/><text x="${n(lx + 12)}" y="${n(ly)}" font-family="JB Mono" font-size="12" fill="${col}">${name}</text></g>`);
+      lx += w + 4;
+    }
+    // the panels
+    const sub = (k, arr) => S.map((_, i) => at(arr, i));
+    for (const p of panes) {
+      const h = p.y1 - p.y0, pad2 = 5;
+      o.push(`<g opacity="${n(p.a)}"><rect x="0" y="${n(p.y0)}" width="${CW}" height="${n(h)}" fill="#0B0F14"/><line x1="0" x2="${CW}" y1="${n(p.y0)}" y2="${n(p.y0)}" stroke="#263040" stroke-width="1.5"/>`);
+      if (h > 14) {
+        const series = { 3: [CLI.rsi], 4: [CLI.macd, CLI.sig], 6: null, 10: [CLI.stK, CLI.stD], 15: [CLI.atr], 20: [CLI.cci], 26: [CLI.obv], 27: [CLI.adx] }[p.k];
+        const py = (v, mn, mx) => p.y1 - pad2 - ((v - mn) / ((mx - mn) || 1)) * (h - 2 * pad2);
+        if (p.k === 6) {
+          const mxv = Math.max(...S.map((c) => c.v));
+          S.forEach((c, i) => { const bh = (c.v / mxv) * (h - 2 * pad2); o.push(`<rect x="${n(x(i) - bw / 2)}" y="${n(p.y1 - pad2 - bh)}" width="${n(bw)}" height="${n(bh)}" fill="${c.c >= c.o ? UP : DOWN}" opacity="0.55"/>`); });
+        } else {
+          const vals = series.map((a) => sub(p.k, a));
+          let mn = Math.min(...vals.flat()), mx = Math.max(...vals.flat());
+          if (p.k === 3 || p.k === 10) { mn = 0; mx = 100; [70, 30, 80, 20].slice(p.k === 3 ? 0 : 2, p.k === 3 ? 2 : 4).forEach((g) => o.push(`<line x1="0" x2="${CW - padR}" y1="${n(py(g, mn, mx))}" y2="${n(py(g, mn, mx))}" stroke="#3A4250" stroke-width="1" stroke-dasharray="4 4"/>`)); }
+          if (p.k === 4) {
+            const hist = vals[0].map((v, i) => v - vals[1][i]), hm = Math.max(...hist.map(Math.abs)) || 1, z = (p.y0 + p.y1) / 2;
+            hist.forEach((v, i) => o.push(`<rect x="${n(x(i) - bw / 2)}" y="${n(Math.min(z, z - (v / hm) * (h / 2 - pad2)))}" width="${n(bw)}" height="${n(Math.abs((v / hm) * (h / 2 - pad2)))}" fill="${v >= 0 ? '#22C55E' : '#EF4444'}" opacity="0.5"/>`));
+          }
+          const cols = [p.col, '#F59E0B'];
+          vals.forEach((vs, j) => o.push(`<path d="M ${vs.map((v, i) => `${n(x(i))} ${n(py(v, mn, mx))}`).join(' L ')}" fill="none" stroke="${cols[j]}" stroke-width="1.5"/>`));
+        }
+        o.push(`<text x="8" y="${n(p.y0 + 13)}" font-family="JB Mono" font-size="11" fill="${p.col}">${p.name}</text>`);
+      }
+      o.push('</g>');
+    }
+    // the right-click menu, its "Remove all indicators" row lit as the pointer reaches it
+    if ((st.menu || 0) > 0.01) {
+      const mxp = 470, myp = 150, a = easeOut(cl(st.menu)), hv = cl(st.hover || 0);
+      const rows = ['Reset chart view', 'Add alert…', 'Remove all indicators', 'Remove drawings', 'Settings…'];
+      o.push(`<g opacity="${n(a)}" transform="translate(${mxp} ${myp}) scale(${n(0.94 + 0.06 * a)})">
+        <rect x="6" y="8" width="250" height="${rows.length * 34 + 14}" rx="8" fill="#000" opacity="0.45"/>
+        <rect width="250" height="${rows.length * 34 + 14}" rx="8" fill="#1B2028" stroke="#323B48" stroke-width="1.5"/>
+        ${rows.map((r, j) => `${j === 2 ? `<rect x="6" y="${7 + j * 34}" width="238" height="32" rx="5" fill="#2A5BD7" opacity="${n(hv)}"/>` : ''}
+          <text x="20" y="${29 + j * 34}" font-family="Archivo" font-weight="${j === 2 ? 600 : 400}" font-size="16" fill="${j === 2 && hv > 0.5 ? '#FFFFFF' : '#C9D1DC'}">${r}</text>`).join('')}
+        <path d="M ${n(150 + 40 * (1 - hv))} ${n(70 + 18 * (1 - hv) + 10)} l 0 22 l 6 -5 l 4 9 l 4 -2 l -4 -9 l 8 0 Z" fill="#fff" stroke="#000" stroke-width="1.4"/></g>`);
     }
     return `<g>${o.join('')}</g>`;
   }
@@ -429,9 +701,24 @@
   // example label and the replay badge stay put above it.
   SETS.screen = (s, t, st, p, id) => {
     const k = 2.0;
-    return [{ f: 1, svg: `${roomDefs(id, '#9FC2FF')}
+    // EP08 frames the whole monitor, so his desk shows under it: the stand, the keyboard, the mouse
+    // and the mug, out of focus, in the screen's light
+    const glow = glowOf(st);
+    const below = st.story === 'clutter' ? [{ f: 1, blur: 7, svg: `
+      <rect x="-1400" y="1700" width="4800" height="1700" fill="url(#${id}desk)"/>
+      ${grain(-1400, 1720, 3400, 2700, 31)}
+      <path d="M -1400 1700 L 3400 1700" stroke="#4A3D30" stroke-width="4"/>
+      <ellipse cx="900" cy="1820" rx="980" ry="260" fill="url(#${id}glow)" style="mix-blend-mode:screen" opacity="0.8"/>
+      <path d="M 850 1650 L 950 1650 L 962 1782 L 838 1782 Z" fill="#141416"/><path d="M 850 1650 L 862 1650 L 850 1782 L 838 1782 Z" fill="#26262A"/>
+      <ellipse cx="900" cy="1790" rx="230" ry="26" fill="#18181A"/><ellipse cx="900" cy="1784" rx="190" ry="16" fill="#26262A"/>
+      <path d="M 330 1930 L 1470 1930 L 1520 2150 L 280 2150 Z" fill="#141416"/><path d="M 352 1946 L 1450 1946 L 1492 2132 L 306 2132 Z" fill="#1E1E22"/>
+      ${Array.from({ length: 5 }, (_, r) => Array.from({ length: 15 }, (__, c) => `<rect x="${n(372 + c * 72 - r * 6)}" y="${n(1958 + r * 34)}" width="60" height="26" rx="5" fill="#2C2C32"/>`).join('')).join('')}
+      <path d="M 330 1930 L 1470 1930" stroke="${glow}" stroke-width="3" opacity="0.4"/>
+      <ellipse cx="1700" cy="2060" rx="80" ry="50" fill="url(#${id}mouse)"/><path d="M 1640 2040 C 1670 2010, 1730 2010, 1760 2040" stroke="#4A4A52" stroke-width="3" fill="none"/>
+      <g transform="translate(120 2020) scale(2)"><ellipse cx="0" cy="8" rx="44" ry="8" fill="#000" opacity="0.4"/><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#141312"/><path d="M 38 -66 C 66 -66, 66 -18, 38 -18" fill="none" stroke="#141312" stroke-width="12"/><ellipse cx="0" cy="-86" rx="38" ry="7" fill="#0A0908"/><ellipse cx="0" cy="-85" rx="32" ry="5" fill="#2A1A10"/>${crown(0, -40, 0.17)}</g>` }] : [];
+    return [{ f: 1, svg: `${roomDefs(id, glow)}
       <rect x="-1400" y="-700" width="4800" height="3320" fill="#08090B"/>
-      <g transform="translate(40 500)">${monitor(st, id + 'c', CW * k, true)}</g>` },
+      <g transform="translate(40 500)">${monitor(st, id + 'c', CW * k, true)}</g>` }, ...below,
     { f: 0, svg: `<rect x="-10" y="-10" width="1100" height="1940" fill="url(#${id}vig)" opacity="0.5"/>
       <text x="64" y="452" font-family="JB Mono" font-weight="600" font-size="24" fill="#8A93A0" letter-spacing="3">EXAMPLE CHART · NOT REAL PRICES</text>
       ${st.replay > 0.01 ? `<g opacity="${n(st.replay)}" transform="translate(848 420)"><rect width="170" height="44" rx="9" fill="${GOLD}"/>
