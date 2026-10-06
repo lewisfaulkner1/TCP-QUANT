@@ -4,7 +4,7 @@
 //   toon       one shot: a set ('desk', 'ots', 'screen', 'mouse'; the jet's 'cabin', 'window', 'panel')
 //              seen through a camera, with the founder; or 'map', a game's city from above (EP04)
 //              and the story chart. { set, cam: [{ t, s, x, y }], pose, chart, dof: { bg, fg, all }, hits: [t] }
-//              A chart key with story: 'clutter' draws EP08's chart instead (indicators, a menu, levels).
+//              A chart key with story: 'clutter' draws EP08's chart instead (indicators, a menu, his TCP QT).
 //   caption    meme-style text, one thought at a time { text, y, size }; a numbered lesson card
 //              { style: 'note', num, text, sub }; or a line of steps { style: 'steps', text }
 //   handPhone  the real app in a phone, held in his hand (the phone kind, plus a hand)
@@ -29,6 +29,7 @@
     .caption { position: absolute; left: 60px; right: 60px; text-align: center; font: 800 66px/1.08 "TCP Display"; letter-spacing: -0.02em; color: #F7F2E8;
       text-shadow: 0 5px 0 rgba(0,0,0,.6), 0 0 34px rgba(0,0,0,.85), 0 0 6px rgba(0,0,0,.9); transform-origin: 50% 60%; }
     .caption .w { margin: 0 .1em; }
+    .caption .w.foil { background: none; color: #F3D27A; }
     .caption.note { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: 28px; text-align: left; text-shadow: none; }
     .caption.note i { grid-row: span 2; width: 104px; height: 104px; border-radius: 50%; background: linear-gradient(180deg, #F6E3A3, #D8AD4E 60%, #C29640); color: #15110A;
       font: 800 60px/104px "TCP Display"; font-style: normal; text-align: center; box-shadow: 0 10px 40px rgba(216,173,78,.35); }
@@ -226,11 +227,11 @@
 
   // ------------------------------------------------------------ the cluttered chart (EP08)
   // Another example chart: it fills up with indicators until the price can't be seen, then is wiped
-  // back to the candles and the 4 levels that matter. Every indicator is worked out from the candles,
+  // back to the candles, then his own indicator's view. Every indicator is worked out from the candles,
   // with 200 more candles of history before the 64 shown, so even the 200-candle average is real.
   // The state's story is 'clutter': ind is how many indicators are on (0 to 27; a fraction fades the
   // next one in, or the last one out on the way down), menu and hover the right-click menu and its
-  // "Remove all indicators" row, levels the 4 levels drawing in.
+  // "Remove all indicators" row, tcp his TCP QT view coming in (0 to 1).
   const CL = (() => {
     const r = rng(81), all = [];
     const legs = [0.42, 0.5, -0.5, -0.2, 0.45, 0.3, -0.25, 0.2];
@@ -291,14 +292,165 @@
     });
     const conv = hh(H, 9).map((v, i) => (v + ll(L, 9)[i]) / 2), base = hh(H, 26).map((v, i) => (v + ll(L, 26)[i]) / 2);
     const spanA = conv.map((v, i) => (v + base[i]) / 2), spanB = hh(H, 52).map((v, i) => (v + ll(L, 52)[i]) / 2);
-    return { C, H, L, V, sma20, ema9: ema(C, 9), ema21: ema(C, 21), ema50: ema(C, 50), sma200: sma(C, 200), bbU: sma20.map((m, i) => m + 2 * sd20[i]), bbL: sma20.map((m, i) => m - 2 * sd20[i]),
+    return { C, H, L, V, sma20, ema9: ema(C, 9), ema21: ema(C, 21), ema50: ema(C, 50), ema200: ema(C, 200), sma200: sma(C, 200), bbU: sma20.map((m, i) => m + 2 * sd20[i]), bbL: sma20.map((m, i) => m - 2 * sd20[i]),
       kcU: ema20.map((m, i) => m + 2 * atr10[i]), kcL: ema20.map((m, i) => m - 2 * atr10[i]), dcU: hh(H, 20), dcL: ll(L, 20),
       rsi: ag.map((g, i) => 100 - 100 / (1 + g / (al[i] || 1e-9))), macd, sig, stK: k3, stD: d3, atr: atr14, cci, obv, adx, st, sar, conv, base, spanA, spanB, tp };
   })();
+  // His indicator, TCP QT v11.7, on the example chart: Lewis made its look public on 6 October 2026.
+  // Only its look is here, drawn from a screenshot with example values, never how it works out what
+  // it shows. tcp runs 0 to 1: the chart zooms to the last 44 candles, then the sessions, the H4 zone
+  // and the averages, the fib, the structure, the liquidity, and the dashboard a block at a time.
+  // under() goes under the candles, over() on top, side() beside the price pane (the price tags and
+  // the dashboard).
+  function tcpView(S, seg, x, y, step, right, loW, hiW, last) {
+    const R = hiW - loW, ph = (t, a, d = 0.1) => easeOut(cl((t - a) / d));
+    const price = (v) => 4110 + ((v - loW) * 60) / R, p3 = (v) => price(v).toFixed(3), comma = (v) => p3(v).replace(/^(\d)(\d{3})/, '$1,$2');
+    const mono = (tx, ty, str, col, size = 10, anchor = 'start', wt = 500) => `<text x="${n(tx)}" y="${n(ty)}" text-anchor="${anchor}" font-family="JB Mono" font-weight="${wt}" font-size="${size}" fill="${col}">${str}</text>`;
+    const tri = (cx, cy, up, col, r = 3.6) => { const b = cy + (up ? r * 0.75 : -r * 0.75), tp = cy + (up ? -r * 0.85 : r * 0.85); return `<path d="M ${n(cx - r)} ${n(b)} L ${n(cx + r)} ${n(b)} L ${n(cx)} ${n(tp)} Z" fill="${col}"/>`; };
+    const dia = (cx, cy, r = 4.5) => `<path d="M ${n(cx)} ${n(cy - r)} L ${n(cx + r * 0.8)} ${n(cy)} L ${n(cx)} ${n(cy + r)} L ${n(cx - r * 0.8)} ${n(cy)} Z" fill="#EAB308"/>`;
+    const poly = (vals, k, col, w) => { const pts = []; for (let i = 0; i <= k && i < vals.length; i++) pts.push(`${n(x(i))} ${n(y(vals[i]))}`); return pts.length > 1 ? `<path d="M ${pts.join(' L ')}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>` : ''; };
+    const hline = (v, x0, x1, col, w, extra = '') => `<line x1="${n(x0)}" x2="${n(x1)}" y1="${n(y(v))}" y2="${n(y(v))}" stroke="${col}" stroke-width="${w}"${extra}/>`;
+    const loI = 30, hiI = 45, fhi = S[hiI].h, flo = S[loI].l, fib = (f) => fhi - (fhi - flo) * f;
+    const xl = x(20) - step / 2, xEnd = right - 2, xLab = x(S.length - 1) + step;
+    const ZONE = [loW - 0.135 * R, loW - 0.04 * R];
+    const SES = [[22, 33, 'Asia', '#F0ABFC'], [35, 46, 'London', '#93C5FD'], [48, 61, 'New York', '#FDBA74']];
+    const EMAS = [['ema200', '#8B5CF6', 2.6], ['ema50', '#EAB308', 2], ['ema21', '#38BDF8', 1.3], ['ema9', '#A3A34A', 1.1]];
+    const FIB = [[0], [0.236], [0.5], [0.618, '#EF4444'], [0.65], [0.705, '#F59E0B'], [0.786], [0.882], [1], [1.18, '#EF4444']];
+    const STRUCT = [[23, 36, 'CHoCH', 1], [37, 43, 'BOS', 1], [41, 51, 'CHoCH', -1], [56, 61, 'CHoCH', 1]];
+    const LIQ = [['BSL', hiW + 0.035 * R, '#EF4444', hiI, ''], ['SSL', loW, '#3B82F6', loI, ' stroke-dasharray="6 4"'], ['PWL', loW - 0.2 * R, '#22C55E', 20, '']];
+    const lastUp = last >= S[S.length - 1].o;
+    return {
+      under(t) {
+        const o = [];
+        // the sessions: a dashed box round each one's range, its name on top
+        const a1 = ph(t, 0.2);
+        if (a1 > 0) SES.forEach(([i0, i1, name, col]) => {
+          const d = S.slice(i0, i1 + 1), tp = y(Math.max(...d.map((c) => c.h))) - 4, bt = y(Math.min(...d.map((c) => c.l))) + 4, bx = x(i0) - step / 2;
+          o.push(`<g opacity="${n(a1)}"><rect x="${n(bx)}" y="${n(tp)}" width="${n(x(i1) - x(i0) + step)}" height="${n(bt - tp)}" fill="${col}" fill-opacity="0.05" stroke="${col}" stroke-width="1.3" stroke-dasharray="5 4"/>${mono(bx + 3, tp - 4, name, col, 10, 'start', 600)}</g>`);
+        });
+        // the H4 zone, sweeping out from the left
+        const a2 = ph(t, 0.32);
+        if (a2 > 0) {
+          const zt = y(ZONE[1]), zb = y(ZONE[0]), zm = (zt + zb) / 2;
+          o.push(`<rect x="${n(xl)}" y="${n(zt)}" width="${n((xEnd - xl) * a2)}" height="${n(zb - zt)}" fill="#5B5A1C" fill-opacity="0.45" stroke="${GOLD}" stroke-width="1.4"/>`);
+          o.push(`<g opacity="${n(cl((t - 0.37) / 0.08))}">${mono(xl + 6, zm + 3.5, 'H4 zone · vol 1.3x', GOLDHI, 10, 'start', 600)}${dia(xl + 6 + 18 * 6 + 8, zm, 3.8)}</g>`);
+        }
+        // the fib's band
+        const a3 = ph(t, 0.45, 0.12);
+        if (a3 > 0) {
+          const x0 = x(loI), y0 = y(fib(0.618));
+          o.push(`<rect x="${n(x0)}" y="${n(y0)}" width="${n((xEnd - x0) * a3)}" height="${n(y(fib(0.705)) - y0)}" fill="#F59E0B" fill-opacity="0.13"/>`);
+        }
+        return o.join('');
+      },
+      over(t) {
+        const o = [];
+        // the averages, drawn left to right
+        const a2 = ph(t, 0.32, 0.16);
+        if (a2 > 0) EMAS.forEach(([k, col, w]) => o.push(poly(seg(CLI[k]), 20 + (S.length - 21) * a2, col, w)));
+        // the fib: each level sweeps out from the swing low, its label at the right
+        const a3 = ph(t, 0.45, 0.12);
+        if (a3 > 0) {
+          const x0 = x(loI), x1 = mix(x0, xEnd, a3), la = cl((t - 0.52) / 0.08);
+          FIB.forEach(([f, col]) => {
+            const v = fib(f), c = col || '#9CA3AF';
+            o.push(hline(v, x0, x1, c, col ? 1.4 : 1, ' opacity="0.9"'));
+            if (la > 0) o.push(`<g opacity="${n(la)}">${mono(xEnd - 2, y(v) - 3, `${f} (${p3(v)})`, c, 9.5, 'end')}</g>`);
+          });
+        }
+        // the structure: a dotted line from the swing it breaks, and its tag
+        STRUCT.forEach(([i0, i1, name, dir], j) => {
+          const a = ph(t, 0.58 + j * 0.025, 0.08);
+          if (a <= 0) return;
+          const v = dir > 0 ? S[i0].h : S[i0].l, ly = y(v), col = dir > 0 ? '#22C55E' : '#EF4444';
+          const tw = name.length * 6 + 12, tx = (x(i0) + x(i1)) / 2 - tw / 2, ty = dir > 0 ? ly - 18 : ly + 4;
+          o.push(hline(v, x(i0), mix(x(i0), x(i1), a), col, 1.4, ' stroke-dasharray="2 3"'));
+          o.push(`<g opacity="${n(cl(a * 2 - 1))}"><rect x="${n(tx)}" y="${n(ty)}" width="${tw}" height="14" rx="7" fill="${dir > 0 ? '#166534' : '#7F1D1D'}"/>${mono(tx + tw / 2, ty + 10.5, name, dir > 0 ? '#BBF7D0' : '#FECACA', 10, 'middle', 600)}</g>`);
+        });
+        // the liquidity, and the swing diamonds
+        const a5 = ph(t, 0.68, 0.12);
+        if (a5 > 0) {
+          LIQ.forEach(([name, v, col, i0, dash]) => {
+            o.push(hline(v, x(i0), mix(x(i0), xEnd, a5), col, 1.6, dash));
+            o.push(`<g opacity="${n(cl((t - 0.74) / 0.06))}">${mono(xLab, name === 'PWL' ? y(v) + 12 : y(v) - 4, name, col, 10, 'start', 600)}</g>`);
+          });
+          [[30, -1], [53, -1], [58, -1], [45, 1]].forEach(([i, d], j) => { const k = ph(t, 0.68 + j * 0.02, 0.06); if (k > 0) o.push(dia(x(i), d > 0 ? y(S[i].h) - 10 : y(S[i].l) + 10, 4.6 * k)); });
+        }
+        // the last price's line
+        o.push(`<g opacity="${n(ph(t, 0, 0.1))}">${hline(last, x(S.length - 1), xEnd, lastUp ? UP : DOWN, 1.2, ' stroke-dasharray="2 3"')}</g>`);
+        return o.join('');
+      },
+      side(t) {
+        const o = [];
+        // the price tags on the scale: the averages in view, and the last price
+        const tags = [];
+        const ae = ph(t, 0.32, 0.12);
+        if (ae > 0) EMAS.forEach(([k, col]) => { const v = CLI[k][CLI[k].length - 1]; if (y(v) > 60 && y(v) < CH - 16) tags.push({ v, col, ink: '#0A0D11', a: ae }); });
+        tags.push({ v: last, col: lastUp ? UP : DOWN, ink: '#FFFFFF', a: ph(t, 0, 0.1) });
+        tags.forEach((g) => (g.y = y(g.v)));
+        tags.sort((a, b) => a.y - b.y);
+        for (let j = 1; j < tags.length; j++) tags[j].y = Math.max(tags[j].y, tags[j - 1].y + 20);
+        tags.forEach((g) => o.push(`<g opacity="${n(g.a)}"><rect x="${CW - 74}" y="${n(g.y - 9.5)}" width="70" height="19" rx="3" fill="${g.col}"/>${mono(CW - 39, g.y + 3.8, comma(g.v), g.ink, 10.5, 'middle', 600)}</g>`));
+        // the dashboard, sliding in, then a block at a time
+        const ap = ph(t, 0.45, 0.1);
+        if (ap > 0) {
+          const X0 = 518, Y0 = 60, PW = 262, RH = 16.6, TH = 24, c1 = X0 + 168, c2 = X0 + 254;
+          const G = '#22C55E', Rd = '#EF4444', Or = '#F59E0B', Nt = '#CBD5E1';
+          const ROWS = [
+            ['h', 'trend matrix', 'structure', 'ema 50/200'],
+            ['r', '15m chart', '▲ bull', '▲ stack', G, G, 1],
+            ['r', '1H', '▲ bull', '▲ stack', G, G, 1],
+            ['r', '4H', '▲ bull', '▼ stack', G, Rd, 1],
+            ['r', '1D', '▼ bear', '▲ stack', Rd, G, -1],
+            ['r', 'aligned', 'bull 3/4', 'bull 3/4', G, G, 0],
+            ['r', 'DXY 4H inverse', '▼ bear', '▼ stack', G, G, 1],
+            ['h', 'regime', 'state', 'adx · atr pct'],
+            ['r', '15m chart', 'neutral', '22 · 61%', Nt, Nt, 0],
+            ['r', '4H', 'compressed', '17 · 9%', Or, Or, 0],
+            ['r', 'H4 flow', 'up', '+6.42', G, G, 0],
+            ['r', 'correlation', '', 'DXY down · AG up', Nt, Nt, 0],
+            ['h', 'setup', 'long', 'short'],
+            ['r', 'next H4 zone', p3(ZONE[1]), '–', G, Rd, 0],
+            ['h', 'order flow est.', '', 'from 1m bars'],
+            ['r', 'last bar delta', '+22% buy', 'vol 1.2x', G, Nt, 0],
+            ['r', 'day CVD', '▲ rising', '9.874K', G, G, 0],
+            ['r', 'CVD vs price', 'agree', '', G, Nt, 0],
+            ['r', 'value', 'inside value', `POC ${p3(66.6)}`, Nt, Nt, 0],
+            ['r', 'volume shelf', `▲ ${p3(S[37].h)}`, `▼ ${p3(66.35)}`, G, Rd, 0],
+            ['r', 'absorption', '–', '–', Nt, Nt, 0],
+          ];
+          const cell = (xr, my, str, col) => {
+            if (!str) return '';
+            const mark = str[0] === '▲' || str[0] === '▼', txt = mark ? str.slice(2) : str;
+            return `${mark ? tri(xr - txt.length * 6 - 7, my - 3.4, str[0] === '▲', col) : ''}${mono(xr, my, txt, col, 10, 'end', 600)}`;
+          };
+          o.push(`<g opacity="${n(ap)}" transform="translate(${n(40 * (1 - ap))} 0)"><rect x="${X0}" y="${Y0}" width="${PW}" height="${n(TH + ROWS.length * RH + 4)}" rx="4" fill="#0B0F14" fill-opacity="0.95" stroke="#263040" stroke-width="1.2"/>
+            <text x="${X0 + 8}" y="${Y0 + 16.5}" font-family="Archivo" font-weight="600" font-size="13" fill="#F1F5F9">TCP<tspan dx="4">QT</tspan></text>
+            <rect x="${X0 + 62}" y="${Y0 + 5.5}" width="38" height="14" rx="3" fill="#5B1F1F"/>${mono(X0 + 81, Y0 + 15.8, 'v11.7', '#FCA5A5', 9.5, 'middle', 600)}
+            ${mono(c1, Y0 + 16, 'MARKET', '#64748B', 9.5, 'end', 600)}${mono(c2, Y0 + 16, 'GOLD 15m', '#F1F5F9', 10, 'end', 600)}`);
+          let ry = Y0 + TH, grp = -1;
+          ROWS.forEach((r) => {
+            if (r[0] === 'h') grp++;
+            const a = ph(t, [0.58, 0.68, 0.79, 0.89][grp], 0.06), mid = ry + RH / 2 + 3.5;
+            if (a > 0 && r[0] === 'h') o.push(`<g opacity="${n(a)}"><rect x="${X0 + 1}" y="${n(ry)}" width="${PW - 2}" height="${n(RH)}" fill="#18202B"/>${mono(X0 + 8, mid, r[1], '#94A3B8', 9.5, 'start', 600)}${mono(c1, mid, r[2], '#94A3B8', 9.5, 'end', 600)}${mono(c2, mid, r[3], '#94A3B8', 9.5, 'end', 600)}</g>`);
+            else if (a > 0) {
+              const [, label, v1, v2, k1, k2, tint] = r;
+              o.push(`<g opacity="${n(a)}">${tint ? `<rect x="${X0 + 1}" y="${n(ry + 0.5)}" width="104" height="${n(RH - 1)}" fill="${tint > 0 ? '#14532D' : '#7F1D1D'}" fill-opacity="${tint > 0 ? 0.32 : 0.4}"/>` : ''}${mono(X0 + 8, mid, label, '#CBD5E1', 10)}${cell(c1, mid, v1, k1)}${cell(c2, mid, v2, k2)}<line x1="${X0 + 6}" x2="${X0 + PW - 6}" y1="${n(ry + RH)}" y2="${n(ry + RH)}" stroke="#151C26" stroke-width="1"/></g>`);
+            }
+            ry += RH;
+          });
+          o.push('</g>');
+        }
+        return o.join('');
+      },
+    };
+  }
   function clutterSVG(st, id, bare) {
     const N = 64, off = CL.length - N, S = CL.slice(off), at = (a, i) => a[off + i];
     const padL = 10, padR = 78, top = 56, bottom = CH - 6;
-    const step = (CW - padL - padR) / N, x = (i) => padL + step * (i + 0.5);
+    // his view zooms to the last 44 candles, with room on the right for the labels and the dashboard
+    const tcp = cl(st.tcp || 0), win = easeIO(cl(tcp / 0.18)), W0 = 20, i0 = W0 * win, right = mix(CW - padR, 512, win);
+    const step = (right - padL) / (N - i0 + 12 * win), x = (i) => padL + step * (i - i0 + 0.5);
     const ind = cl(st.ind || 0, 0, 27), on = (k) => cl(ind - (k - 1));
     // the panels under the price, each added at the bottom as it comes on
     const PANELS = [[3, 'RSI 14', '#A78BFA'], [4, 'MACD 12 26 9', '#60A5FA'], [6, 'Vol', '#7C8796'], [10, 'Stoch 14 3 3', '#38BDF8'], [15, 'ATR 14', '#94A3B8'], [20, 'CCI 20', '#FB923C'], [26, 'OBV', '#2DD4BF'], [27, 'ADX 14', '#F472B6']];
@@ -308,7 +460,8 @@
     const pb = bottom - total;
     let yy = pb;
     panes.forEach((p) => { p.y0 = yy; yy += p.h; p.y1 = yy; });
-    const lo = Math.min(...S.map((c) => c.l)), hi = Math.max(...S.map((c) => c.h)), pad = (hi - lo) * 0.08;
+    const LW = S.slice(W0), loW = Math.min(...LW.map((c) => c.l)), hiW = Math.max(...LW.map((c) => c.h));
+    const lo = mix(Math.min(...S.map((c) => c.l)), loW - (hiW - loW) * 0.24, win), hi = mix(Math.max(...S.map((c) => c.h)), hiW + (hiW - loW) * 0.04, win), pad = (hi - lo) * 0.08;
     const y = (p) => top + 8 + (1 - (p - (lo - pad)) / (hi - lo + 2 * pad)) * (pb - top - 16);
     const o = [];
     const line = (vals, col, w = 1.8, extra = '') => {
@@ -325,9 +478,9 @@
       <text x="42" y="31" font-family="JB Mono" font-weight="600" font-size="19" fill="#C9D1DC" letter-spacing="2">EXAMPLE CHART</text>
       <text x="252" y="31" font-family="JB Mono" font-weight="500" font-size="17" fill="#5F6A78" letter-spacing="1">not real prices</text>`);
     // the count, top right, gold while any indicator is on
-    const count = Math.round(ind);
-    if (ind > 0.01) {
-      o.push(`<g opacity="${n(cl(ind * 3))}"><text x="${CW - 96}" y="31" text-anchor="end" font-family="JB Mono" font-weight="600" font-size="15" fill="#8A93A0" letter-spacing="2">INDICATORS</text>
+    const count = tcp > 0 ? 1 : Math.round(ind);
+    if (ind > 0.01 || tcp > 0) {
+      o.push(`<g opacity="${n(tcp > 0 ? cl(tcp / 0.06) : cl(ind * 3))}"><text x="${CW - 96}" y="31" text-anchor="end" font-family="JB Mono" font-weight="600" font-size="15" fill="#8A93A0" letter-spacing="2">INDICATORS</text>
         <rect x="${CW - 86}" y="9" width="72" height="31" rx="7" fill="${count >= 20 ? '#3A1712' : '#2A2213'}" stroke="${count >= 20 ? DOWN : GOLD}" stroke-width="2"/>
         <text x="${CW - 50}" y="33" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="24" fill="${count >= 20 ? '#FF8A6E' : GOLDHI}">${count}</text></g>`);
     }
@@ -369,6 +522,9 @@
     // the candles
     const shown = cl(st.i ?? N, 0, N), full = Math.floor(shown), frac = shown - full;
     const bw = step * 0.62;
+    // his TCP QT view: under the candles, on top of them, and beside the price pane
+    const Q = tcp > 0 ? tcpView(S, seg, x, y, step, right, loW, hiW, full < N ? forming(S[full], frac).close : S[N - 1].c) : null;
+    if (Q) o.push(Q.under(tcp));
     for (let i = 0; i < Math.min(N, full + (frac > 0 ? 1 : 0)); i++) {
       const c = S[i], f = i === full ? forming(c, frac) : { close: c.c, hi: c.h, lo: c.l };
       const col = f.close >= c.o ? UP : DOWN, t0 = y(Math.max(c.o, f.close)), b0 = y(Math.min(c.o, f.close));
@@ -417,30 +573,13 @@
       }
       o.push(fade(24, s));
     }
-    // the levels that matter: the previous day's high and low, and the Asia session's
-    if ((st.levels || 0) > 0) {
-      const d = S.slice(0, 32), as = S.slice(32, 44);
-      const lv = [['PDH', Math.max(...d.map((c) => c.h)), '#E9C46A'], ['ASIA H', Math.max(...as.map((c) => c.h)), '#8E7CF0'], ['ASIA L', Math.min(...as.map((c) => c.l)), '#8E7CF0'], ['PDL', Math.min(...d.map((c) => c.l)), '#E9C46A']];
-      lv.forEach(([t, v, c], j) => {
-        const a = cl(st.levels * 1.6 - j * 0.2), ly = y(v), x1 = mix(x(0), CW - padR + 2, easeOut(a));
-        if (a <= 0) return;
-        o.push(`<line x1="${n(x(0))}" x2="${n(x1)}" y1="${n(ly)}" y2="${n(ly)}" stroke="${c}" stroke-width="2.4" stroke-dasharray="9 6"/>`);
-      });
-    }
+    if (Q) o.push(Q.over(tcp));
     o.push('</g>');
-    // the levels' tags, outside the clip, at the right edge
-    if ((st.levels || 0) > 0) {
-      const d = S.slice(0, 32), as = S.slice(32, 44);
-      const lv = [['PDH', Math.max(...d.map((c) => c.h)), '#E9C46A'], ['ASIA H', Math.max(...as.map((c) => c.h)), '#8E7CF0'], ['ASIA L', Math.min(...as.map((c) => c.l)), '#8E7CF0'], ['PDL', Math.min(...d.map((c) => c.l)), '#E9C46A']];
-      lv.forEach(([t, v, c], j) => {
-        const a = cl(st.levels * 1.6 - j * 0.2 - 0.5);
-        if (a <= 0) return;
-        o.push(`<g opacity="${n(a)}" transform="translate(${CW - padR + 4} ${n(y(v))})"><rect x="0" y="-11" width="${t.length > 3 ? 70 : 46}" height="22" rx="4" fill="${c}"/><text x="${t.length > 3 ? 35 : 23}" y="5" text-anchor="middle" font-family="JB Mono" font-weight="700" font-size="12" fill="#14110C">${t}</text></g>`);
-      });
-    }
+    if (Q) o.push(Q.side(tcp));
     // the legend of every overlay on, in rows across the top of the price pane
     const OV = [[1, 'SMA 20', '#FACC15'], [2, 'EMA 50', '#3B82F6'], [5, 'BB 20 2', '#2DD4BF'], [7, 'VWAP', '#FB923C'], [8, 'Ichimoku 9 26 52', '#4ADE80'], [9, 'Fib', '#06B6D4'], [11, 'SMA 200', '#EF4444'], [12, 'Pivots', '#FACC15'], [13, 'Supertrend 10 3', '#22C55E'], [14, 'PSAR', '#E5E7EB'],
       [16, 'Keltner 20', '#C084FC'], [17, 'EMA 9', '#F472B6'], [18, 'EMA 21', '#22D3EE'], [19, 'Donchian 20', '#A3E635'], [21, 'Zig Zag', '#F8FAFC'], [22, 'Trendlines', '#F87171'], [23, 'S/R zones', '#F59E0B'], [24, 'Signals', '#35A68C'], [25, 'Lin Reg', '#E879F9']];
+    if (tcp > 0) o.push(`<text x="10" y="${top + 19}" opacity="${n(cl(tcp / 0.06))}" font-family="Archivo" font-weight="600" font-size="15" fill="#E5E7EB">TCP<tspan dx="5">QT</tspan></text>`);
     let lx = 10, ly = top + 16;
     for (const [k, name, col] of OV) {
       const a = on(k);
@@ -922,11 +1061,13 @@
         ${[0.32, 0.55, 0.78].map((k) => `<path d="M ${n(mix(1320, 436, k))} ${n(mix(1600, 1196, k))} L ${n(mix(1320, 400, k))} ${n(mix(1360, 1140, k))}" stroke="#9AA4B0" stroke-width="2" opacity="0.7"/>`).join('')}
         <path d="M 1320 1360 L 400 1140" stroke="#FFFFFF" stroke-width="6" opacity="0.9"/>
         <path d="M 1320 1600 L 436 1196" stroke="#6F7A87" stroke-width="3"/>
-        <path d="M 400 1140 L 436 1196 L 404 1010 L 352 930 L 322 934 Z" fill="#EEF1F4"/>
-        <path d="M 400 1140 L 352 930 L 322 934 Z" fill="#FFFFFF" opacity="0.8"/>
-        <path d="M 436 1196 L 404 1010 L 352 930" fill="none" stroke="#8D97A3" stroke-width="3"/>
-        ${crown(382, 1050, 0.3)}
-        <circle cx="330" cy="936" r="7" fill="#FF5A4E"/><circle cx="330" cy="936" r="18" fill="#FF5A4E" opacity="0.25"/></g>`;
+        <clipPath id="${id}jlet"><path d="M 394 1140 L 444 1198 L 422 1000 L 362 912 L 322 918 Z"/></clipPath>
+        <path d="M 394 1140 L 444 1198 L 422 1000 L 362 912 L 322 918 Z" fill="#EEF1F4"/>
+        <path d="M 394 1140 L 362 912 L 322 918 Z" fill="#FFFFFF" opacity="0.7"/>
+        <!-- the crown painted on the winglet: turned to its lean, kept inside its edges -->
+        <g clip-path="url(#${id}jlet)"><g transform="translate(392 1058) rotate(-19) skewX(-6)">${crown(0, 0, 0.21)}</g></g>
+        <path d="M 444 1198 L 422 1000 L 362 912" fill="none" stroke="#8D97A3" stroke-width="3"/>
+        <circle cx="338" cy="914" r="7" fill="#FF5A4E"/><circle cx="338" cy="914" r="18" fill="#FF5A4E" opacity="0.25"/></g>`;
     let far = '', sea = '';
     for (let i = 0; i < 7; i++) { const span = 2200, fx = ((i * span / 7 - t * 30 * speed) % span + span) % span - 400; far += cloud(fx, 980 + (i % 3) * 30, 240 + (i % 2) * 90, 60 + i, '#D6E3F1'); }
     for (let i = 0; i < 5; i++) { const span = 2600, fx = ((i * span / 5 - t * 120 * speed) % span + span) % span - 600; sea += cloud(fx, 1260 + (i % 2) * 60, 520 + (i % 3) * 120, 80 + i); }

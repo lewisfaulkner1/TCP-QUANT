@@ -72,7 +72,7 @@ A spec is a list of voice lines and a list of scenes. Copy one close to what you
   A reel without a voice sets `duration` instead.
 - `scenes`: `{ kind, from, to, ... }`. A time is seconds, or a voice line: `'c'` is when line c
   starts, `'c.end'` when it ends, and `'c+0.4'` adds seconds.
-- Kinds: `kicker`, `head` (`l1`, `l2`; `*word*` in gold, `\n` breaks a line), `note`, `stamp`, `tiles`,
+- Kinds: `kicker`, `head` (`l1`, `l2`; `*word*` or `*a phrase*` in gold, `\n` breaks a line), `note`, `stamp`, `tiles`,
   `table`, `drain`, `curve`, `coins`, `list`, `vs`, `chain`, `phone`, `swarm`, `end`. The specs show
   each in use, and its code in `reel.js` reads every option it takes.
 - Other settings: `tail` (seconds after the voice), `cover` (the cover's time), `seed`, `style` and

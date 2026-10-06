@@ -264,7 +264,7 @@ UK times. The two accounts post a day apart, so the same story never goes out tw
 | Pillar | Trading comedy, with one lesson |
 | Length | 23.3 s |
 | Accounts | TCP (`tcp-ep08-27-indicators-*`) and personal (`tcp-ep08-27-indicators-personal-*`) |
-| The idea | Fewer lines, a clearer chart: mark the levels everyone watches |
+| The idea | 27 opinions bury the price; one clear view, built for how you trade, shows it |
 | Ask | TCP: *Follow TCP*. Personal: *Follow for the next one* |
 
 ### B. Hook options
@@ -289,10 +289,11 @@ No voice. On-screen text only.
 | 9.0–10.0 | Right-click, *Remove all indicators*, click | — |
 | 10.0–11.0 | They drop away, 27 to 0 | — |
 | 11.0–12.5 | Just the candles | *oh. there it is.* |
-| 12.5–15.0 | 4 levels draw in: the previous day's high and low, the Asia session's high and low | *now I mark 4 levels.* then *the ones everyone watches.* |
-| 15.0–16.5 | A small smirk and a nod, the clean chart behind him | — |
-| 16.5–20.5 | His phone: the Quant Terminal's Markets tab, the same levels on its chart | *the Quant Terminal marks them for me.* |
-| 20.5–23.3 | End card | TCP / *Follow TCP* / *The Quant Terminal, inside Telegram.* / the risk line |
+| 12.5–15.0 | His own indicator, TCP QT, comes on: the chart zooms in, then the sessions, the H4 zone, the averages, the fib, the structure tags, the liquidity lines and its dashboard, block by block. The count reads 1 | *now I use one.* then *my own.* (gold) |
+| 15.0–16.5 | A small smirk and a nod, his view on the monitor behind him | — |
+| 16.5–18.5 | The dashboard up close: trend matrix, regime, setup, order flow | *trend, zones, order flow.* |
+| 18.5–20.5 | The whole chart again | *on one chart.* |
+| 20.5–23.3 | End card | TCP / *Follow TCP* / *One lesson an episode.* / the risk line, and *Example chart with example values, not real trades.* |
 
 ### D. Shot list
 
@@ -306,10 +307,11 @@ No voice. On-screen text only.
 | 6 | 9.0–9.6 | Close on the menu | Right-click, the pointer to *Remove all indicators* | click | cut |
 | 7 | 9.6–10.0 | Close on the mouse | The click | click | cut |
 | 8 | 10.0–12.5 | The monitor | 27 to 0, then the candles | whoosh; music back at 11.0 | cut |
-| 9 | 12.5–15.0 | The monitor | The 4 levels draw in | a pop for each | cut |
-| 10 | 15.0–16.5 | Medium | Smirk, nod; the clean chart on his monitor | | cut |
-| 11 | 16.5–20.5 | His point of view | The phone rises into frame: the real app | | fade |
-| 12 | 20.5–23.3 | End card | | whoosh | end |
+| 9 | 12.5–15.0 | The monitor, slow push | TCP QT comes on, layer by layer, then its dashboard | a pop for each layer, a tick for each block | cut |
+| 10 | 15.0–16.5 | Medium | Smirk, nod; his view on the monitor | | cut |
+| 11 | 16.5–18.5 | Close on the dashboard | Its rows, with the price tags beside them | whoosh | cut |
+| 12 | 18.5–20.5 | The monitor | The whole chart | | cut |
+| 13 | 20.5–23.3 | End card | | whoosh | end |
 
 ### E. Character continuity
 
@@ -336,18 +338,24 @@ clouds, levels, oscillators), so nothing on it is scribbled. The menu is drawn p
 platform's branding. The count is the joke, so it's whole in every frame: the camera holds the legend
 and the count together up to a scale of 0.62, and any push past that heads for the count.
 
+The ending is Lewis's own indicator, TCP QT v11.7, as it looks on his chart (he made its look public
+on 6 October 2026). `tcpView()` in `toon/toon.js` draws it from his screenshot on the same example
+candles: the sessions, the H4 zone, the 9, 21 and 50 averages, a fib from the swing low to the swing
+high, CHoCH and BOS tags, BSL, SSL and PWL, and the dashboard. Every value on it is an example. How the
+indicator works out what it shows, its code and its settings stay out of the repo.
+
 ```sh
-node render.cjs ep08-27-indicators $W --stills=0.5,9.5,14.5   # check a moment
+node render.cjs ep08-27-indicators $W --stills=0.5,9.5,14.95  # check a moment
 node render.cjs ep08-27-indicators $W                         # the TCP cut
 node render.cjs ep08-27-indicators $W --variant=personal      # the founder's cut
 ```
 
 ### H. Product
 
-- **16.5–20.5:** the real Quant Terminal on his phone, in his hand: the Markets tab, scrolling to the
-  15-minute chart with the previous day's high and low and the Asia range drawn on. The same 4
-  levels he marks in the story. It's footage of the app itself in demo mode, labelled DEMO PRICES.
-- **The end card** names it: *The Quant Terminal, inside Telegram.*
+- **12.5–20.5:** his own indicator, TCP QT v11.7: its look only, on the example chart, with example
+  values. Its dashboard names the market (GOLD 15m) as his does; the prices on it are made up.
+- **The end card:** *One lesson an episode.* The risk line adds *Example chart with example values,
+  not real trades.*
 - The chart on his monitor is a story chart, labelled EXAMPLE CHART · NOT REAL PRICES.
 
 ### I. Edit map
@@ -368,18 +376,18 @@ node render.cjs ep08-27-indicators $W --variant=personal      # the founder's cu
 ```
 Deleted all 27. Found the price again. 😮‍💨
 
-Now I mark 4 levels: yesterday's high and low, and the Asia session's.
+Now I use one: my own. Trend, zones and order flow on one chart.
 
 How many are on your chart right now? 👇
 
 #trading #daytrader #tradinglife #forex
-Education, not financial advice. Trading carries risk. Example chart, not real trades. App shown with demo prices.
+Education, not financial advice. Trading carries risk. Example chart with example values, not real trades.
 ```
 
 ### K. TCP account version
 
 - **Hook:** *the day I deleted 27 indicators*, with the TCP badge in the corner.
-- **End card:** *Follow TCP* / *The Quant Terminal, inside Telegram.*
+- **End card:** *Follow TCP* / *One lesson an episode.*
 - **Caption:**
 
 ```
@@ -387,10 +395,10 @@ Education, not financial advice. Trading carries risk. Example chart, not real t
 
 Which one would you delete first? 👇
 
-Fewer lines, a clearer chart: the levels everyone watches. One lesson an episode, from TCP.
+Stacked indicators argue with each other. One clear view beats 27 opinions. One lesson an episode, from TCP.
 
 #trading #daytrading #tradingtips #forextrader #xauusd
-Education, not financial advice. Trading carries risk. Example chart, not real trades. App shown with demo prices.
+Education, not financial advice. Trading carries risk. Example chart with example values, not real trades.
 ```
 
 ### L. QA
@@ -401,7 +409,8 @@ Education, not financial advice. Trading carries risk. Example chart, not real t
 - **Visual:** the approved drawing of him in every shot; five fingers on every hand; chart, menu and
   app text real and readable; no warped screens.
 - **Trading:** one idea; no statistics; no profit claims; the chart says it's an example; no indicator
-  or platform is named as bad.
+  or platform is named as bad. His indicator shows its look only: no hit rate, no win rate, no
+  results, and nothing on how it works out what it shows.
 - **Platform and labels:** text clear of TikTok's buttons; no AI voice or AI imagery.
 
 ### M. Cover
@@ -422,25 +431,22 @@ In J and K. Keep the risk line last.
 
 ### P. Posting
 
-**On hold: don't post this cut.** Lewis doesn't want the episode to say he just marks highs and lows;
-his indicator does much more. The ending (from 12.5 s) will be redone once he decides how to show
-it, and this section updated with the new files and times.
-
-The plan below was for the first cut:
+The ending is now his own indicator (rendered 6 October). Files from before then had the old
+*4 levels* ending: don't post those.
 
 | When | Account | File | Where |
 |---|---|---|---|
-| Thu 8 Oct, 19:30 | TCP | `tcp-ep08-27-indicators-music.mp4` | TikTok, caption K |
-| Thu 8 Oct, 20:00 | TCP | the same file | Instagram Reels, caption K |
-| Fri 9 Oct, 19:30 | Founder | `tcp-ep08-27-indicators-personal-music.mp4` | TikTok, caption J |
-| Fri 9 Oct, 20:00 | Founder | the same file | Instagram Reels, caption J |
+| Fri 16 Oct, 19:30 | TCP | `tcp-ep08-27-indicators-music.mp4` | TikTok, caption K |
+| Fri 16 Oct, 20:00 | TCP | the same file | Instagram Reels, caption K |
+| Fri 16 Oct, 21:00 | Founder | `tcp-ep08-27-indicators-personal-music.mp4` | TikTok, caption J |
+| Fri 16 Oct, 21:30 | Founder | the same file | Instagram Reels, caption J |
 
 ---
 
 ## This week: one episode a day
 
 Seven new episodes, made from the approved founder, the sets and the real app, for Tuesday 6 to
-Monday 12 October. EP08 follows once its new ending is made. Each one has the same files as the
+Monday 12 October. EP08, with its new ending, goes out on Friday 16 October. Each one has the same files as the
 others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the covers).
 
 | Day | Episode | TCP account | Founder's account |
@@ -452,7 +458,7 @@ others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the cov
 | Sat 10 Oct | EP15 · The Market Keeps Calling Me | the same | the same |
 | Sun 11 Oct | EP16 · Trading Group Chat at 3 AM | the same | the same |
 | Mon 12 Oct | EP17 · Fake Trader vs Real Trader | the same | the same |
-| Next free day | EP08 · The Day I Deleted 27 Indicators, with its new ending | the same | the same |
+| Fri 16 Oct | EP08 · The Day I Deleted 27 Indicators, with its new ending (see below) | the same | the same |
 
 UK times. On TCP's account each episode takes the day's 19:30 slot and that day's batch 1 reel moves
 to 12:30. Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -678,6 +684,7 @@ sat nav's prompts, a game's blips), and the jet has the cabin's roar under every
 | Tue 13 Oct | EP01 · Trading From 40,000 Feet | TikTok 19:30, Instagram 20:00 | TikTok 21:00, Instagram 21:30 |
 | Wed 14 Oct | EP07 · The Pilot Calls a Trade | the same | the same |
 | Thu 15 Oct | EP04 · If Trading Was GTA | the same | the same |
+| Fri 16 Oct | EP08 · The Day I Deleted 27 Indicators (his own indicator at the end; captions in EP08 J and K) | the same | the same |
 
 ### EP01 · Trading From 40,000 Feet (23 s, lo-fi)
 

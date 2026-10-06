@@ -12,8 +12,10 @@ can't pay for services yet: prefer free tiers, and ask before anything that cost
 ## Rules that always apply
 
 - **This repository is public.** No secrets (tokens, keys, passwords, chat IDs beyond placeholders), no
-  trading-strategy rules, and no team members' names. Lewis's indicator (TCP Quant Terminal v11.7) and
-  his reading of it stay out of the repo: the guide TCP AI reads lives in the terminal's database.
+  trading-strategy rules, and no team members' names. Lewis's indicator (TCP Quant Terminal v11.7):
+  its code, its settings and his reading of it stay out of the repo (the guide TCP AI reads lives in
+  the terminal's database). Its look on a chart may appear in reels, drawn on example charts with
+  example values, never how it works out what it shows: Lewis chose this on 6 October 2026.
 - **Money and members.** Anything that posts to members starts in test mode (the team group). Captions
   that ask people to open an account end with the partner disclosure and the risk line.
 - **Honest numbers.** Every record is measured against what no edge would give (no-edge odds, a random

@@ -1,13 +1,14 @@
 // EP08 · The Day I Deleted 27 Indicators. The founder's chart is buried under indicators; how it got
 // that way (one at a time, "just one more"); they all disagree; he right-clicks, removes them all, and
-// finds the price again; then 4 levels, and the Quant Terminal marking them on his phone. No voice:
-// the cuts sit on a 120 bpm grid and the music drops out for the side-eye and the menu. The base cut
-// is for the TCP account; --variant=personal is the founder's own account. The chart is an example
-// (labelled on it), with every indicator worked out from its candles. Production notes:
-// brand/video/reels/EPISODES.md.
+// finds the price again. Now he uses one: his own, TCP QT, its look drawn on the same example chart
+// with example values (Lewis made its look public on 6 October 2026; how it works stays out of the
+// repo). Then its dashboard up close: trend, zones and order flow on one chart. No voice: the cuts sit
+// on a 120 bpm grid and the music drops out for the side-eye and the menu. The base cut is for the TCP
+// account; --variant=personal is the founder's own account. The chart is an example (labelled on it),
+// with every indicator worked out from its candles. Production notes: brand/video/reels/EPISODES.md.
 
 // The story's moments, in seconds.
-const T = { squint: 2.0, rebuild: 3.0, full: 6.5, eye: 8.0, menu: 9.0, click: 9.75, wipe: 10.0, clean: 11.0, levels: 12.5, smirk: 15.0, phone: 16.5, end: 20.5 };
+const T = { squint: 2.0, rebuild: 3.0, full: 6.5, eye: 8.0, menu: 9.0, click: 9.75, wipe: 10.0, clean: 11.0, view: 12.5, smirk: 15.0, panel: 16.5, whole: 18.5, end: 20.5 };
 
 // One pose track for every shot, so a cut never changes what he's doing.
 const AT_SCREEN = { arms: 'desk', lean: 3, look: [1, 0.25], lid: 0.22, brow: [-0.5, -0.4], mouth: { smile: -0.3 }, head: { rot: 3 } };
@@ -29,8 +30,8 @@ const POSE = [
 ];
 
 // One chart track for every shot. ind is how many indicators are on: 27, then back to 1 for how it
-// started, climbing faster and faster to 27, then wiped to 0; levels draws the 4 levels in.
-const C = (t, more, ease) => ({ t, story: 'clutter', i: 63.3 + (t / 23.3) * 0.65, ind: 0, menu: 0, hover: 0, levels: 0, ...more, ease });
+// started, climbing faster and faster to 27, then wiped to 0; tcp brings his own view in.
+const C = (t, more, ease) => ({ t, story: 'clutter', i: 63.3 + (t / 23.3) * 0.65, ind: 0, menu: 0, hover: 0, tcp: 0, ...more, ease });
 const RISE = (u) => 1 + 26 * Math.pow(u, 1.8);                   // the climb from 1 to 27
 const rebuild = [];
 for (let k = 0; k <= 28; k++) { const t = 3.5 + (2.8 * k) / 28; rebuild.push(C(t, { ind: RISE(k / 28) }, 'linear')); }
@@ -40,7 +41,7 @@ const CHART = [
   C(9.0, { ind: 27 }), C(9.12, { ind: 27, menu: 1 }, 'out'), C(9.3, { ind: 27, menu: 1 }), C(9.42, { ind: 27, menu: 1, hover: 1 }),
   C(9.78, { ind: 27, menu: 1, hover: 1 }), C(9.84, { ind: 27 }), C(10.0, { ind: 27 }),
   C(10.9, { ind: 0 }, 'linear'),
-  C(12.55, { ind: 0 }), C(13.9, { ind: 0, levels: 1 }, 'linear'),
+  C(12.55, { ind: 0 }), C(14.9, { tcp: 1 }, 'linear'), C(23.3, { tcp: 1 }, 'linear'),
 ];
 // when each indicator comes on during the climb, for the sounds
 const ON = Array.from({ length: 26 }, (_, j) => 3.5 + 2.8 * Math.pow((j + 1) / 26, 1 / 1.8));
@@ -81,25 +82,22 @@ const SPEC = {
     shot('screen', T.menu, 9.6, [{ t: T.menu, s: 1.0, x: 1215, y: 960 }, { t: 9.6, s: 1.06, x: 1243, y: 960, ease: 'linear' }]),
     shot('mouse', 9.6, T.wipe, [{ t: 9.6, s: 1.0, x: 560, y: 1080 }, { t: T.wipe, s: 1.05, x: 575, y: 1080 }]),
     // 7 · the wipe, and the price again
-    shot('screen', T.wipe, T.levels, [{ t: T.wipe, ...HEADER, y: 1040 }, { t: T.levels, s: 0.7, x: 960, y: 1030, ease: 'linear' }]),
-    { kind: 'caption', from: T.clean, to: T.levels, y: 250, text: 'oh. there it is.', fi: 0.01, fo: 0.01 },
-    // 8 · the 4 levels
-    shot('screen', T.levels, T.smirk, [{ t: T.levels, s: 0.62, x: 905, y: 1040 }, { t: T.smirk, s: 0.645, x: 908, y: 1035, ease: 'linear' }]),
-    { kind: 'caption', from: 12.6, to: 13.8, y: 250, text: 'now I mark 4 levels.', fi: 0.01, fo: 0.01 },
-    { kind: 'caption', from: 13.8, to: T.smirk, y: 250, text: 'the ones everyone watches.', fi: 0.01, fo: 0.01 },
+    shot('screen', T.wipe, T.view, [{ t: T.wipe, ...HEADER, y: 1040 }, { t: T.view, s: 0.7, x: 960, y: 1030, ease: 'linear' }]),
+    { kind: 'caption', from: T.clean, to: T.view, y: 250, text: 'oh. there it is.', fi: 0.01, fo: 0.01 },
+    // 8 · now one indicator: his own
+    shot('screen', T.view, T.smirk, [{ t: T.view, ...WHOLE }, { t: T.smirk, ...HEADER, y: 1036, ease: 'linear' }]),
+    { kind: 'caption', from: 12.6, to: 13.8, y: 250, text: 'now I use one.', fi: 0.01, fo: 0.01 },
+    { kind: 'caption', from: 13.8, to: T.smirk, y: 250, text: '*my own.*', fi: 0.01, fo: 0.01 },
     // 9 · he sees it: a small smirk and a nod
-    shot('desk', T.smirk, T.phone, [{ t: T.smirk, s: 1.12, x: 500, y: 1000 }, { t: T.phone, s: 1.2, x: 490, y: 995, ease: 'linear' }], { dof: { bg: 2 } }),
-    // 10 · the Quant Terminal on his phone, the room behind
-    shot('desk', T.phone, T.end, [{ t: T.phone, s: 1.1, x: 540, y: 960 }], { dof: { bg: 18, all: 16 } }),
-    {
-      kind: 'handPhone', from: T.phone, to: T.end, tag: 'DEMO PRICES', fi: 0.25,
-      shots: [{ shot: 'markets', from: T.phone, u0: 2.4 }],
-      pose: [{ t: T.phone, x: 560, y: 1240, s: 0.84, rx: 14, ry: -10, rz: 3 }, { t: 17.1, x: 560, y: 1110, s: 0.9, rx: 6, ry: -6, rz: 1 }, { t: T.end, x: 556, y: 1090, s: 0.94, rx: 4, ry: 4, rz: 0 }],
-    },
-    { kind: 'caption', from: 16.7, to: T.end, y: 230, size: 56, text: 'the *Quant Terminal*\nmarks them for me.', fi: 0.01, fo: 0.2 },
+    shot('desk', T.smirk, T.panel, [{ t: T.smirk, s: 1.12, x: 500, y: 1000 }, { t: T.panel, s: 1.2, x: 490, y: 995, ease: 'linear' }], { dof: { bg: 2 } }),
+    // 10 · its dashboard up close, then the whole chart again
+    shot('screen', T.panel, T.whole, [{ t: T.panel, s: 1.3, x: 1414, y: 891 }, { t: T.whole, s: 1.33, x: 1414, y: 894, ease: 'linear' }]),
+    { kind: 'caption', from: T.panel + 0.1, to: T.whole, y: 210, text: 'trend, zones,\norder flow.', fi: 0.01, fo: 0.01 },
+    shot('screen', T.whole, T.end, [{ t: T.whole, ...WHOLE }, { t: T.end, ...HEADER, y: 1036, ease: 'linear' }]),
+    { kind: 'caption', from: T.whole + 0.05, to: T.end, y: 250, text: 'on one chart.', fi: 0.01, fo: 0.01 },
     // 11 · the end card: one ask
-    { id: 'end', kind: 'end', from: T.end, to: 23.3, cta: 'Follow TCP', sub: 'The Quant Terminal, inside Telegram.', fo: 0.01,
-      risk: 'Education, not financial advice. Trading carries risk.\nExample chart, not real trades. App shown with demo prices.' },
+    { id: 'end', kind: 'end', from: T.end, to: 23.3, cta: 'Follow TCP', sub: 'One lesson an episode.', fo: 0.01,
+      risk: 'Education, not financial advice. Trading carries risk.\nExample chart with example values, not real trades.' },
   ],
   cues: [
     { t: T.rebuild + 0.02, sfx: 'pop' },
@@ -107,7 +105,10 @@ const SPEC = {
     { t: T.eye - 0.02, sfx: 'mute', until: 10.95 },
     { t: 9.02, sfx: 'click' }, { t: T.click, sfx: 'click' },
     { t: T.wipe + 0.02, sfx: 'whoosh' },
-    { t: 12.62, sfx: 'pop' }, { t: 12.9, sfx: 'pop' }, { t: 13.18, sfx: 'pop' }, { t: 13.46, sfx: 'pop' },
+    // his view comes in: a pop for each layer, a tick for each block of the dashboard
+    ...[12.55, 13.02, 13.3, 13.61, 13.91].map((t) => ({ t, sfx: 'pop' })),
+    ...[14.15, 14.41, 14.64].map((t) => ({ t, sfx: 'tick' })),
+    { t: T.panel, sfx: 'whoosh' },
     { t: T.end, sfx: 'whoosh' },
   ],
   variants: {

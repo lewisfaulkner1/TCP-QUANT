@@ -39,7 +39,18 @@ function el(tag, cls, parent, html) {
 }
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // Wrap each word so it can move on its own; *word* marks an accent word in gold.
-const wordsOf = (text, cls = '') => String(text).split(/(\n|[ \t]+)/).map((w) => (w === '\n' ? '<br>' : /^\s+$/.test(w) ? w : `<span class="w${cls || /^\*.*\*$/.test(w) ? ' foil' : ''}">${esc(w.replace(/^\*|\*$/g, ''))}</span>`)).join('');
+// *gold* marks a word or a phrase: from the word starting with * to the one ending with it
+const wordsOf = (text, cls = '') => {
+  let gold = false;
+  return String(text).split(/(\n|[ \t]+)/).map((w) => {
+    if (w === '\n') return '<br>';
+    if (/^\s+$/.test(w)) return w;
+    if (w.startsWith('*')) gold = true;
+    const on = gold;
+    if (w.endsWith('*')) gold = false;
+    return `<span class="w${cls || on ? ' foil' : ''}">${esc(w.replace(/^\*|\*$/g, ''))}</span>`;
+  }).join('');
+};
 // Words stagger in from below, sharpening as they come.
 function revealWords(root, t, a, step = 0.055, dur = 0.42) {
   root.querySelectorAll('.w').forEach((w, i) => {
