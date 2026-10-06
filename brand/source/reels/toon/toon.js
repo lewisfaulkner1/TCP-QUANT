@@ -1,7 +1,8 @@
 // TCP toons: the animated founder episodes, drawn by the reel engine one frame at a time. A spec loads
 // this with founder.js (modules: ['toon/founder.js', 'toon/toon.js']) and uses three more kinds:
 //
-//   toon       one shot: a set ('desk', 'ots', 'screen', 'mouse') seen through a camera, with the founder
+//   toon       one shot: a set ('desk', 'ots', 'screen', 'mouse'; the jet's 'cabin', 'window', 'panel')
+//              seen through a camera, with the founder; or 'map', a game's city from above (EP04)
 //              and the story chart. { set, cam: [{ t, s, x, y }], pose, chart, dof: { bg, fg, all }, hits: [t] }
 //              A chart key with story: 'clutter' draws EP08's chart instead (indicators, a menu, levels).
 //   caption    meme-style text, one thought at a time { text, y, size }; a numbered lesson card
@@ -778,6 +779,405 @@
   }
 
   // ------------------------------------------------------------ the kinds
+  // ------------------------------------------------------------ the jet (EP01, EP07)
+  // A private jet's cabin by day: cream leather and walnut, oval windows with the sky going past.
+  // Shots can add turbulence ({ turb: [[from, to, size]] }) and the seatbelt sign ({ sign: [[from, to]] }).
+  const within = (ranges, t) => (ranges || []).some(([a, b]) => t >= at(a) && t < at(b));
+  function turb(s, t) {
+    let k = 0;
+    for (const [a, b, size] of s.turb || []) if (t >= at(a) && t < at(b)) k = Math.max(k, (size || 1) * Math.min(1, (t - at(a)) / 0.15, (at(b) - t) / 0.3));
+    return { dx: k * (Math.sin(t * 31) * 7 + Math.sin(t * 53) * 4), dy: k * (Math.sin(t * 23) * 10 + Math.cos(t * 47) * 5) };
+  }
+  // The jet is bright: a soft shade at the top of the frame keeps white captions readable.
+  const topShade = (id) => ({ f: 0, svg: `<defs><linearGradient id="${id}jtop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140E08" stop-opacity="0.62"/><stop offset="0.55" stop-color="#140E08" stop-opacity="0.28"/><stop offset="1" stop-color="#140E08" stop-opacity="0"/></linearGradient></defs>
+    <rect x="0" y="0" width="1080" height="760" fill="url(#${id}jtop)"/>` });
+  function jetDefs(id) {
+    return `<defs>
+      <linearGradient id="${id}jwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1EBE1"/><stop offset="0.55" stop-color="#E3D9CA"/><stop offset="1" stop-color="#C8BBA7"/></linearGradient>
+      <linearGradient id="${id}jceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FCFAF6"/><stop offset="1" stop-color="#E8E0D3"/></linearGradient>
+      <linearGradient id="${id}jsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F7FD0"/><stop offset="0.55" stop-color="#8FBDEE"/><stop offset="1" stop-color="#DCECFB"/></linearGradient>
+      <linearGradient id="${id}jwood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#875632"/><stop offset="0.45" stop-color="#633C20"/><stop offset="1" stop-color="#3F2513"/></linearGradient>
+      <linearGradient id="${id}jwoodv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4A2C17"/><stop offset="0.5" stop-color="#7A4C2A"/><stop offset="1" stop-color="#4A2C17"/></linearGradient>
+      <linearGradient id="${id}jseat" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#BFA585"/><stop offset="0.5" stop-color="#E2D0B6"/><stop offset="1" stop-color="#F2E6D3"/></linearGradient>
+      <linearGradient id="${id}jbezel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBF8F2"/><stop offset="1" stop-color="#D9D0C2"/></linearGradient>
+      <linearGradient id="${id}jsea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7FBFF"/><stop offset="1" stop-color="#C9DCEF"/></linearGradient>
+      <linearGradient id="${id}jwing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F6F8"/><stop offset="0.6" stop-color="#C9D0D8"/><stop offset="1" stop-color="#8F99A5"/></linearGradient>
+      <radialGradient id="${id}jsun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="0.35" stop-color="#FFF4D6" stop-opacity="0.4"/><stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${id}jlight" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${id}jwarm" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFD9A0" stop-opacity="0.5"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${id}jvig" cx="0.5" cy="0.45" r="0.78"><stop offset="0.62" stop-color="#2A2118" stop-opacity="0"/><stop offset="1" stop-color="#2A2118" stop-opacity="0.42"/></radialGradient>
+      <filter color-interpolation-filters="sRGB" id="${id}jb3" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter color-interpolation-filters="sRGB" id="${id}jb10" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10"/></filter>
+    </defs>`;
+  }
+  // A cumulus cloud: a flat, shaded base and white puffs on top.
+  function cloud(cx, cy, w, seed, base = '#C9D8EA') {
+    const r = rng(seed);
+    let puffs = '';
+    for (let i = 0; i < 7; i++) {
+      const u = i / 6 - 0.5, rad = w * (0.13 + r() * 0.09) * (1 - Math.abs(u) * 0.9);
+      puffs += `<circle cx="${n(cx + u * w * 0.86)}" cy="${n(cy - rad * 0.55 - (1 - Math.abs(u) * 2) * w * 0.05)}" r="${n(rad)}" fill="#FFFFFF"/>`;
+    }
+    return `<ellipse cx="${n(cx)}" cy="${n(cy + w * 0.02)}" rx="${n(w * 0.5)}" ry="${n(w * 0.075)}" fill="${base}"/>${puffs}
+      <ellipse cx="${n(cx)}" cy="${n(cy + w * 0.03)}" rx="${n(w * 0.46)}" ry="${n(w * 0.05)}" fill="${base}" opacity="0.55"/>`;
+  }
+  // The sky going past: a layer of far clouds and a nearer one, moving left at their own speeds.
+  function skyBand(id, x, y, w, h, t, seed, speed = 1) {
+    const far = [], near = [];
+    for (let i = 0; i < 6; i++) {
+      const span = w + 700, fx = ((x + i * span / 6 - t * 14 * speed) % span + span) % span + x - 350;
+      far.push(cloud(fx, y + h * (0.55 + (i % 3) * 0.08), 160 + (i % 2) * 70, seed + i, '#D3E1F0'));
+    }
+    for (let i = 0; i < 4; i++) {
+      const span = w + 900, fx = ((x + i * span / 4 - t * 46 * speed) % span + span) % span + x - 450;
+      near.push(cloud(fx, y + h * (0.8 + (i % 2) * 0.07), 300 + (i % 3) * 80, seed + 20 + i));
+    }
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${id}jsky)"/>
+      <g opacity="0.85" filter="url(#${id}jb3)">${far.join('')}</g>
+      <rect x="${x}" y="${n(y + h * 0.78)}" width="${w}" height="${n(h * 0.3)}" fill="url(#${id}jsea)"/>
+      <g>${near.join('')}</g>`;
+  }
+  // One of the cabin's windows: the opening, the sky through it, the bezel and its shade.
+  function jetWindow(id, x, y, w, h, t, seed, key) {
+    const rx = w * 0.46;
+    return `<clipPath id="${id}jw${key}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${n(rx)}"/></clipPath>
+      <rect x="${n(x - 26)}" y="${n(y - 30)}" width="${n(w + 52)}" height="${n(h + 60)}" rx="${n(rx + 26)}" fill="url(#${id}jbezel)"/>
+      <rect x="${n(x - 26)}" y="${n(y - 30)}" width="${n(w + 52)}" height="${n(h + 60)}" rx="${n(rx + 26)}" fill="none" stroke="#B9AD9B" stroke-width="2"/>
+      <g clip-path="url(#${id}jw${key})">${skyBand(id, x - 40, y - 20, w + 80, h + 40, t, seed)}
+        <rect x="${x}" y="${y}" width="${w}" height="${n(h * 0.16)}" fill="#E9E2D6"/><rect x="${x}" y="${n(y + h * 0.16 - 4)}" width="${w}" height="5" fill="#CFC5B5"/>
+        <rect x="${n(x + w / 2 - 16)}" y="${n(y + h * 0.16 - 2)}" width="32" height="7" rx="3" fill="#BDB1A0"/>
+        <path d="M ${x} ${n(y + h * 0.2)} L ${n(x + w * 0.5)} ${n(y + h * 0.2)} L ${x} ${n(y + h * 0.75)} Z" fill="#fff" opacity="0.12"/></g>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${n(rx)}" fill="none" stroke="#8F8676" stroke-width="5" opacity="0.6"/>
+      <ellipse cx="${n(x + w / 2)}" cy="${n(y + h / 2)}" rx="${n(w * 0.9)}" ry="${n(h * 0.75)}" fill="url(#${id}jlight)" opacity="0.6"/>`;
+  }
+  // The club seat's back: cream leather, quilted in rows, tan piping, a cushion for his head.
+  function jetSeat(id) {
+    return `<path d="M 70 880 C 70 740, 130 700, 240 700 L 500 700 C 600 700, 628 770, 628 880 L 628 1900 L 70 1900 Z" fill="url(#${id}jseat)"/>
+      <path d="M 70 880 C 70 740, 130 700, 240 700 L 500 700 C 600 700, 628 770, 628 880" fill="none" stroke="#A88C69" stroke-width="5"/>
+      <path d="M 132 905 C 132 812, 170 782, 252 780 L 450 780 C 528 782, 566 820, 566 905 L 566 1900 L 132 1900 Z" fill="#EADCC6"/>
+      ${[0, 1, 2, 3].map((i) => `<path d="M 140 ${980 + i * 110} C 260 ${968 + i * 110}, 440 ${968 + i * 110}, 558 ${980 + i * 110}" fill="none" stroke="#C6B092" stroke-width="3" opacity="0.8"/>
+        <path d="M 140 ${984 + i * 110} C 260 ${972 + i * 110}, 440 ${972 + i * 110}, 558 ${984 + i * 110}" fill="none" stroke="#FFF8EC" stroke-width="2" opacity="0.6"/>`).join('')}
+      <path d="M 210 760 C 210 728, 236 716, 290 716 L 420 716 C 476 716, 500 730, 500 760 L 500 830 C 500 852, 480 860, 452 860 L 258 860 C 228 860, 210 850, 210 830 Z" fill="#F4EADB" stroke="#CDB89A" stroke-width="2.5"/>
+      <path d="M 92 870 C 96 780, 140 730, 236 722" fill="none" stroke="#FFF8EE" stroke-width="7" opacity="0.7"/>`;
+  }
+  // The cabin, three-quarter like the desk: him on the left in the club seat, facing the side table.
+  SETS.cabin = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#FFF3E2', rim: 1 };
+    const { dx, dy } = turb(s, t);
+    const bg = `${roomDefs(id, '#FFF3E2')}${jetDefs(id)}
+      <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jwall)"/>
+      <!-- the ceiling: the fuselage curving overhead, the light along its edge -->
+      <path d="M -700 -700 L 1780 -700 L 1780 330 C 1300 250, 300 250, -700 360 Z" fill="url(#${id}jceil)"/>
+      <path d="M -700 360 C 300 250, 1300 250, 1780 330" fill="none" stroke="#FFF6E2" stroke-width="10" opacity="0.9"/>
+      <path d="M -700 372 C 300 262, 1300 262, 1780 342" fill="none" stroke="#FFD9A0" stroke-width="26" opacity="0.35" filter="url(#${id}jb10)"/>
+      ${[120, 420, 720].map((x) => `<circle cx="${x}" cy="200" r="14" fill="#FFFDF7"/><circle cx="${x}" cy="200" r="20" fill="none" stroke="#D8CDBB" stroke-width="3"/>`).join('')}
+      <!-- the side wall: two windows, the walnut ledge below them -->
+      ${jetWindow(id, 30 + dx * 0.4, 520 + dy * 0.4, 190, 260, t, 31, 'a')}
+      ${jetWindow(id, 560 + dx * 0.4, 520 + dy * 0.4, 190, 260, t + 7, 47, 'b')}
+      <rect x="-700" y="930" width="1560" height="70" fill="url(#${id}jwood)"/>
+      <rect x="-700" y="930" width="1560" height="5" fill="#B07A4A" opacity="0.8"/><rect x="-700" y="997" width="1560" height="4" fill="#2A180C" opacity="0.6"/>
+      <!-- the bulkhead ahead: walnut panelling, the crown inlaid in gold -->
+      <rect x="790" y="250" width="990" height="1300" fill="url(#${id}jwoodv)"/>
+      <rect x="790" y="250" width="14" height="1300" fill="#2A180C" opacity="0.7"/>
+      <rect x="840" y="420" width="250" height="400" rx="8" fill="none" stroke="#A8794C" stroke-width="3" opacity="0.7"/>
+      ${crown(965, 570, 0.36)}
+      <text x="965" y="676" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="38" fill="${GOLD}">TCP</text>
+      <ellipse cx="300" cy="640" rx="560" ry="520" fill="url(#${id}jlight)" opacity="0.7"/>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const subject = `
+      ${jetSeat(id)}
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      <!-- the laptop on the side table, its screen turned towards him and us -->
+      <g transform="translate(700 1130) skewY(-9) scale(0.66 1)">${monitor(st, id + 'c', 440)}</g>
+      <path d="M 700 1118 L 693 1122 L 693 1396 L 700 1392 Z" fill="#9AA0A8"/>
+      <path d="M 640 1440 L 1010 1384 L 1040 1416 L 664 1478 Z" fill="#B9BEC5"/><path d="M 664 1430 L 1004 1380 L 1020 1396 L 680 1446 Z" fill="#8E949C"/>
+      <!-- the side table: walnut, polished, the window's light along its edge -->
+      <path d="M -300 1448 L 1400 1448 L 1400 1600 L -300 1600 Z" fill="url(#${id}jwood)"/>
+      ${grain(-300, 1452, 1400, 1596, 13)}
+      <path d="M -300 1450 L 1400 1450" stroke="#D9A574" stroke-width="3" opacity="0.8"/>
+      <!-- an espresso on its saucer, and its steam -->
+      <g transform="translate(1120 1500)"><ellipse cx="0" cy="10" rx="70" ry="13" fill="#000" opacity="0.18"/><ellipse cx="0" cy="4" rx="64" ry="12" fill="#F6F3EE" stroke="#D8D2C8" stroke-width="2"/>
+        <path d="M -34 -46 L 34 -46 L 28 0 C 20 8, -20 8, -28 0 Z" fill="#FBF9F5" stroke="#D8D2C8" stroke-width="2"/><ellipse cx="0" cy="-46" rx="34" ry="7" fill="#3B2416"/>
+        <path d="M 32 -36 C 54 -36, 54 -12, 30 -12" fill="none" stroke="#FBF9F5" stroke-width="8"/>${crown(0, -22, 0.08)}</g>
+      ${steam(1120, 1440, t, id)}
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>
+      <!-- the table's front, in cream leather -->
+      <path d="M -300 1600 L 1400 1600 L 1400 2400 L -300 2400 Z" fill="#E3D6C3"/><path d="M -300 1600 L 1400 1600" stroke="#B49A78" stroke-width="5"/>
+      ${[0, 1, 2].map((i) => `<path d="M -300 ${1700 + i * 120} L 1400 ${1700 + i * 120}" stroke="#CBB89C" stroke-width="3" opacity="0.7"/>`).join('')}
+      <!-- the window's light on him, the cabin's warm light, the edges falling off -->
+      <ellipse cx="200" cy="900" rx="420" ry="560" fill="url(#${id}jlight)" style="mix-blend-mode:screen" opacity="0.6"/>
+      <ellipse cx="760" cy="1460" rx="520" ry="120" fill="url(#${id}jwarm)" style="mix-blend-mode:screen" opacity="0.6"/>
+      <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jvig)"/>`;
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: `<g transform="translate(${n(dx)} ${n(dy)})">${subject}</g>`, blur: s.dof && s.dof.all }, topShade(id)];
+  };
+
+  // A window, close: the sky and the cloud tops going past, the wing with the crown on its winglet.
+  SETS.window = (s, t, st, p, id) => {
+    const { dx, dy } = turb(s, t);
+    const W = { x: 160, y: 300, w: 760, h: 1180 };
+    const speed = s.speed || 1;
+    const wing = `<g transform="translate(${n(dx * 1.6)} ${n(dy * 2.2)})">
+        <path d="M 1320 1360 L 400 1140 L 436 1196 L 1320 1600 Z" fill="url(#${id}jwing)"/>
+        <path d="M 1320 1520 L 760 1352 L 772 1378 L 1320 1560 Z" fill="#AEB7C2"/>
+        ${[0.32, 0.55, 0.78].map((k) => `<path d="M ${n(mix(1320, 436, k))} ${n(mix(1600, 1196, k))} L ${n(mix(1320, 400, k))} ${n(mix(1360, 1140, k))}" stroke="#9AA4B0" stroke-width="2" opacity="0.7"/>`).join('')}
+        <path d="M 1320 1360 L 400 1140" stroke="#FFFFFF" stroke-width="6" opacity="0.9"/>
+        <path d="M 1320 1600 L 436 1196" stroke="#6F7A87" stroke-width="3"/>
+        <path d="M 400 1140 L 436 1196 L 404 1010 L 352 930 L 322 934 Z" fill="#EEF1F4"/>
+        <path d="M 400 1140 L 352 930 L 322 934 Z" fill="#FFFFFF" opacity="0.8"/>
+        <path d="M 436 1196 L 404 1010 L 352 930" fill="none" stroke="#8D97A3" stroke-width="3"/>
+        ${crown(382, 1050, 0.3)}
+        <circle cx="330" cy="936" r="7" fill="#FF5A4E"/><circle cx="330" cy="936" r="18" fill="#FF5A4E" opacity="0.25"/></g>`;
+    let far = '', sea = '';
+    for (let i = 0; i < 7; i++) { const span = 2200, fx = ((i * span / 7 - t * 30 * speed) % span + span) % span - 400; far += cloud(fx, 980 + (i % 3) * 30, 240 + (i % 2) * 90, 60 + i, '#D6E3F1'); }
+    for (let i = 0; i < 5; i++) { const span = 2600, fx = ((i * span / 5 - t * 120 * speed) % span + span) % span - 600; sea += cloud(fx, 1260 + (i % 2) * 60, 520 + (i % 3) * 120, 80 + i); }
+    const outside = `${jetDefs(id)}<rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jsky)"/>
+      <circle cx="840" cy="420" r="260" fill="url(#${id}jsun)"/>
+      <g filter="url(#${id}jb3)" opacity="0.9">${far}</g>
+      <rect x="-700" y="1150" width="2480" height="1500" fill="url(#${id}jsea)"/>${sea}${wing}`;
+    const rx = W.w * 0.46;
+    const frame = `${jetDefs(id)}
+      <mask id="${id}jhole"><rect x="-700" y="-700" width="2480" height="3320" fill="#fff"/><rect x="${W.x}" y="${W.y}" width="${W.w}" height="${W.h}" rx="${n(rx)}" fill="#000"/></mask>
+      <g mask="url(#${id}jhole)"><rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jwall)"/>
+        <rect x="${W.x - 70}" y="${W.y - 80}" width="${W.w + 140}" height="${W.h + 160}" rx="${n(rx + 70)}" fill="url(#${id}jbezel)"/>
+        <rect x="${W.x - 70}" y="${W.y - 80}" width="${W.w + 140}" height="${W.h + 160}" rx="${n(rx + 70)}" fill="none" stroke="#BCAF9C" stroke-width="4"/></g>
+      <rect x="${W.x}" y="${W.y}" width="${W.w}" height="${n(W.h * 0.12)}" rx="0" fill="#E7DFD2" clip-path="url(#${id}jwc)"/>
+      <clipPath id="${id}jwc"><rect x="${W.x}" y="${W.y}" width="${W.w}" height="${W.h}" rx="${n(rx)}"/></clipPath>
+      <rect x="${W.x + W.w / 2 - 50}" y="${n(W.y + W.h * 0.12 - 4)}" width="100" height="16" rx="7" fill="#BCAF9C"/>
+      <rect x="${W.x}" y="${W.y}" width="${W.w}" height="${W.h}" rx="${n(rx)}" fill="none" stroke="#8F8676" stroke-width="10" opacity="0.5"/>
+      <path d="M ${W.x + 60} ${W.y + 260} L ${W.x + 330} ${W.y + 200} L ${W.x + 80} ${W.y + 760} Z" fill="#fff" opacity="0.07"/>
+      <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jvig)" opacity="0.6"/>`;
+    return [{ f: 0.25, svg: outside, blur: s.dof && s.dof.bg }, { f: 1, svg: frame }, topShade(id)];
+  };
+
+  // Overhead, looking up: the reading lights, the vent, the speaker and the seatbelt sign.
+  SETS.panel = (s, t, st, p, id) => {
+    const on = within(s.sign, t), talk = within(s.pa, t);
+    const pulse = talk ? 0.5 + 0.5 * Math.abs(Math.sin(t * 11)) : 0;
+    const lit = (c) => (on ? c : '#5A554C');
+    const holes = [];
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) { const x = -40 + c * 20, y = -40 + r * 20; if (x * x + y * y < 52 * 52) holes.push(`<circle cx="${x}" cy="${y}" r="5" fill="#2C2925"/>`); }
+    const svg = `${jetDefs(id)}
+      <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jceil)"/>
+      <rect x="40" y="520" width="1000" height="880" rx="60" fill="#EFE8DC" stroke="#CFC4B2" stroke-width="4"/>
+      <rect x="60" y="540" width="960" height="840" rx="48" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>
+      ${[[290, 760, 1], [790, 760, 0]].map(([x, y, l]) => `<circle cx="${x}" cy="${y}" r="96" fill="#D9D1C3"/><circle cx="${x}" cy="${y}" r="80" fill="#C9C0B0"/><circle cx="${x}" cy="${y}" r="58" fill="${l ? '#FFF7E0' : '#E8E2D6'}"/>
+        ${l ? `<circle cx="${x}" cy="${y}" r="150" fill="url(#${id}jwarm)"/>` : ''}<circle cx="${x}" cy="${y}" r="58" fill="none" stroke="#B5AB99" stroke-width="3"/>`).join('')}
+      <g transform="translate(540 760)"><circle r="78" fill="#D9D1C3"/><circle r="62" fill="#BDB4A4"/>${holes.join('')}<circle r="70" fill="none" stroke="#FFD9A0" stroke-width="${n(6 * pulse)}" opacity="${n(pulse)}"/></g>
+      <!-- the signs: a seatbelt and no smoking, lit when the sign is on -->
+      <rect x="240" y="1010" width="600" height="230" rx="30" fill="#1E1C19"/>
+      <rect x="252" y="1022" width="576" height="206" rx="22" fill="#292620"/>
+      ${on ? `<rect x="252" y="1022" width="576" height="206" rx="22" fill="#5A4526"/><rect x="160" y="930" width="760" height="390" rx="80" fill="url(#${id}jwarm)" opacity="0.9"/>` : ''}
+      <g transform="translate(400 1125)" stroke-linecap="round" fill="none" ${on ? `filter="url(#${id}jb3)"` : ''} opacity="0"></g>
+      <g transform="translate(400 1125)" stroke-linecap="round" fill="none">
+        <path d="M -92 0 L -34 0 M 34 0 L 92 0" stroke="${lit('#FFF1CF')}" stroke-width="22"/>
+        <rect x="-36" y="-30" width="72" height="60" rx="12" fill="${lit('#FFF1CF')}"/>
+        <rect x="-18" y="-12" width="36" height="24" rx="5" fill="#292620"/>
+        <path d="M 8 -12 L 8 12" stroke="${lit('#FFF1CF')}" stroke-width="7"/></g>
+      <g transform="translate(680 1125)" stroke="${lit('#FFE7B0')}" stroke-width="10" stroke-linecap="round" fill="none">
+        <rect x="-60" y="-12" width="96" height="24" rx="4" fill="${lit('#FFE7B0')}" stroke="none"/><path d="M 48 -12 L 48 12"/><path d="M 56 -40 C 70 -60, 50 -70, 62 -90" opacity="0.8"/>
+        <circle cx="0" cy="0" r="78" stroke-width="9"/><path d="M -55 55 L 55 -55" stroke-width="9"/></g>
+      ${on ? `<rect x="240" y="1010" width="600" height="230" rx="30" fill="none" stroke="#FFE7B0" stroke-width="3" opacity="0.6"/>` : ''}
+      <text x="540" y="1330" text-anchor="middle" font-family="JB Mono" font-weight="700" font-size="34" fill="#9C907C" letter-spacing="6">1A</text>
+      ${crown(540, 600, 0.16, '#C9A45A')}
+      <rect x="-700" y="-700" width="2480" height="3320" fill="url(#${id}jvig)" opacity="0.7"/>`;
+    const { dx, dy } = turb(s, t);
+    return [{ f: 1, svg: `<g transform="translate(${n(dx * 0.6)} ${n(dy * 0.6)})">${svg}</g>` }, topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the game map (EP04)
+  // A city at night from above, like an open-world game's: roofs, roads with their names, a river,
+  // traffic, his car on a sat-nav route, and the game's HUD. The shot gives the story:
+  // { route: [{ t, x, y, ease?, jump?, rev? }], legs: [{ from, to, pts, colour }], stars: [[t, count]],
+  //   gps: [[t, text, warn]], banners: [[from, to, text, colour]], wait: [from, to],
+  //   overview: [from, x, y, zoom], flash: [t] }.
+  const GRID = 480;
+  const STREETS = [
+    ['h', -480, -1000, 40, 'FOMO AVE'], ['v', -960, -1480, -440, 'REVENGE RD'], ['h', -960, -1500, -1000, 'OVERLEVERAGE ST'],
+    ['v', 0, -1960, -440, 'PATIENCE WAY'], ['h', -1920, -40, 1000, 'PLAN ST'], ['h', 0, -1500, 1500, 'HOPIUM BLVD'],
+    ['v', 960, -2400, 700, 'BAGHOLDER LN'], ['v', -480, -2400, 700, 'PUMP ST'], ['h', -1440, -1500, 1500, 'RUG PULL RD'], ['v', 480, -2400, 700, 'HODL ST'],
+  ];
+  const ang = (a, b) => Math.atan2(b.y - a.y, b.x - a.x);
+  function routeAt(route, t) {
+    const ks = route.map((k) => ({ ...k, at: at(k.t) }));
+    const dirs = [];
+    // a leg's direction (backwards when the car reverses), or the last one while it stands still
+    for (let i = 0; i < ks.length - 1; i++) dirs.push(ks[i + 1].jump || (ks[i + 1].x === ks[i].x && ks[i + 1].y === ks[i].y) ? null : ang(ks[i], ks[i + 1]) + (ks[i + 1].rev ? Math.PI : 0));
+    for (let i = 0; i < dirs.length; i++) if (dirs[i] === null) dirs[i] = i ? dirs[i - 1] : dirs.find((d) => d !== null) || 0;
+    if (t <= ks[0].at) return { x: ks[0].x, y: ks[0].y, h: dirs[0], moving: false };
+    for (let i = 0; i < ks.length - 1; i++) {
+      const a = ks[i], b = ks[i + 1];
+      if (t >= b.at) continue;
+      if (b.jump) return { x: a.x, y: a.y, h: i ? dirs[i - 1] : dirs[0], moving: false };
+      const k = cl((t - a.at) / Math.max(1e-6, b.at - a.at));
+      const e = b.ease === 'in' ? k * k : b.ease === 'out' ? 1 - (1 - k) * (1 - k) : b.ease === 'io' ? easeIO(k) : k;
+      // turn into the new direction over the first quarter second of a leg
+      let h = dirs[i];
+      const prev = i ? dirs[i - 1] : h;
+      const turn = cl((t - a.at) / 0.25);
+      if (turn < 1 && !a.jump) { let d = h - prev; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; h = prev + d * easeOut(turn); }
+      return { x: mix(a.x, b.x, e), y: mix(a.y, b.y, e), h, moving: !(a.x === b.x && a.y === b.y) };
+    }
+    const L = ks[ks.length - 1];
+    return { x: L.x, y: L.y, h: dirs[dirs.length - 1], moving: false };
+  }
+  // A car from above: body, glass, lights; his has the crown on its roof.
+  function car(x, y, h, body, id, mine = false, lights = true) {
+    const deg = n((h * 180) / Math.PI + 90);
+    return `<g transform="translate(${n(x)} ${n(y)}) rotate(${deg})">
+      ${lights ? `<path d="M -22 -64 L -70 -230 L 70 -230 L 22 -64 Z" fill="url(#${id}mbeam)" opacity="0.7"/>` : ''}
+      <rect x="-30" y="-62" width="60" height="124" rx="22" fill="#000" opacity="0.45" transform="translate(5 7)"/>
+      <rect x="-30" y="-62" width="60" height="124" rx="22" fill="${body}"/>
+      <path d="M -24 -30 C -20 -44, 20 -44, 24 -30 L 20 -14 L -20 -14 Z" fill="#1C2A44"/>
+      <path d="M -22 30 L 22 30 L 18 44 L -18 44 Z" fill="#1C2A44"/>
+      <rect x="-20" y="-12" width="40" height="40" rx="8" fill="${mine ? '#0E0E10' : body}" opacity="${mine ? 1 : 0.85}"/>
+      ${mine ? crown(0, 8, 0.11) : ''}
+      <rect x="-26" y="-62" width="14" height="6" rx="3" fill="#FFF3C4"/><rect x="12" y="-62" width="14" height="6" rx="3" fill="#FFF3C4"/>
+      <rect x="-26" y="56" width="14" height="5" rx="2" fill="#FF4B3E"/><rect x="12" y="56" width="14" height="5" rx="2" fill="#FF4B3E"/>
+      ${mine ? '<path d="M -30 -40 L -30 40 M 30 -40 L 30 40" stroke="#D8AD4E" stroke-width="3" opacity="0.8"/>' : ''}</g>`;
+  }
+  function star(cx, cy, r, fill, stroke) {
+    const pts = [];
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r * 0.45 : r; pts.push(`${n(cx + Math.cos(a) * rr)} ${n(cy + Math.sin(a) * rr)}`); }
+    return `<path d="M ${pts.join(' L ')} Z" fill="${fill}" stroke="${stroke}" stroke-width="4" stroke-linejoin="round"/>`;
+  }
+  const lastOf = (list, t) => (list || []).filter((e) => t >= at(e[0])).pop();
+  SETS.map = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#C9B8FF', rim: 0.9 };
+    const me = routeAt(s.route, t), cam = routeAt(s.route, Math.max(0, t - 0.08));
+    // the camera: on the car, then out to the whole city for the overview
+    let cx = cam.x, cy = cam.y - 120, z = 1;
+    if (s.overview && t >= at(s.overview[0])) {
+      const k = easeIO(cl((t - at(s.overview[0])) / 1.4));
+      cx = mix(cx, s.overview[1], k); cy = mix(cy, s.overview[2], k); z = mix(1, s.overview[3], k);
+    }
+    const vx = 600 / z, vy = 1060 / z;
+    const r = rng(404);
+    let blocks = '';
+    for (let gx = -6; gx <= 5; gx++) for (let gy = -7; gy <= 3; gy++) {
+      const x0 = gx * GRID + 60, y0 = gy * GRID + 60, w = GRID - 120;
+      const roll = r(), roll2 = r(), roll3 = r();
+      if (x0 + w < cx - vx - 100 || x0 > cx + vx + 100 || y0 + w < cy - vy - 100 || y0 > cy + vy + 100) continue;
+      if (x0 < -1500) continue;
+      if (roll < 0.14) {
+        // a park: grass, paths, trees
+        let trees = '';
+        for (let k = 0; k < 9; k++) trees += `<circle cx="${n(x0 + 40 + ((k * 97 + gx * 31) % (w - 80)))}" cy="${n(y0 + 40 + ((k * 61 + gy * 43) % (w - 80)))}" r="${n(22 + (k % 3) * 8)}" fill="#1F5A33"/><circle cx="${n(x0 + 34 + ((k * 97 + gx * 31) % (w - 80)))}" cy="${n(y0 + 34 + ((k * 61 + gy * 43) % (w - 80)))}" r="${n(10 + (k % 3) * 4)}" fill="#2D7A47" opacity="0.8"/>`;
+        blocks += `<rect x="${x0}" y="${y0}" width="${w}" height="${w}" rx="14" fill="#173A25"/><path d="M ${x0} ${y0 + w / 2} L ${x0 + w} ${y0 + w / 2} M ${x0 + w / 2} ${y0} L ${x0 + w / 2} ${y0 + w}" stroke="#2C5A3C" stroke-width="10"/>${trees}`;
+        continue;
+      }
+      // buildings: two or three roofs on the block, with their details
+      const tones = ['#1C2132', '#232A3E', '#2A3048', '#1A1E2C'];
+      const split = roll2 < 0.5;
+      const roofs = split ? [[x0, y0, w, w * 0.48], [x0, y0 + w * 0.52, w * 0.56, w * 0.48], [x0 + w * 0.6, y0 + w * 0.52, w * 0.4, w * 0.48]] : [[x0, y0, w * 0.48, w], [x0 + w * 0.52, y0, w * 0.48, w * 0.6], [x0 + w * 0.52, y0 + w * 0.64, w * 0.48, w * 0.36]];
+      roofs.forEach(([x, y, ww, hh], j) => {
+        const tone = tones[(gx * 3 + gy * 5 + j + 40) % 4];
+        blocks += `<rect x="${n(x)}" y="${n(y)}" width="${n(ww)}" height="${n(hh)}" rx="6" fill="${tone}"/><rect x="${n(x + 8)}" y="${n(y + 8)}" width="${n(ww - 16)}" height="${n(hh - 16)}" rx="4" fill="none" stroke="#000" stroke-opacity="0.35" stroke-width="3"/>`;
+        blocks += `<rect x="${n(x + ww * 0.2)}" y="${n(y + hh * 0.25)}" width="${n(ww * 0.18)}" height="${n(hh * 0.16)}" fill="#3A4258"/><circle cx="${n(x + ww * 0.7)}" cy="${n(y + hh * 0.6)}" r="${n(Math.min(ww, hh) * 0.08)}" fill="#3A4258"/>`;
+        if ((gx + gy + j) % 5 === 0) blocks += `<rect x="${n(x + 4)}" y="${n(y + 4)}" width="${n(ww - 8)}" height="${n(hh - 8)}" rx="5" fill="none" stroke="${(gx + j) % 2 ? '#FF4FD8' : '#35E0FF'}" stroke-width="4" opacity="0.75"/>`;
+        if (roll3 < 0.25 && j === 0) blocks += `<rect x="${n(x + ww * 0.55)}" y="${n(y + hh * 0.15)}" width="${n(ww * 0.3)}" height="${n(hh * 0.25)}" rx="8" fill="#1B6F95"/><rect x="${n(x + ww * 0.55)}" y="${n(y + hh * 0.15)}" width="${n(ww * 0.3)}" height="6" fill="#7FD6FF" opacity="0.6"/>`;
+        if (roll3 > 0.8 && j === 1) blocks += `<circle cx="${n(x + ww / 2)}" cy="${n(y + hh / 2)}" r="${n(Math.min(ww, hh) * 0.32)}" fill="none" stroke="#E6C15A" stroke-width="5" opacity="0.7"/><text x="${n(x + ww / 2)}" y="${n(y + hh / 2 + 16)}" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="44" fill="#E6C15A" opacity="0.7">H</text>`;
+      });
+    }
+    // the TCP tower by the destination
+    const pin = s.pin || { x: 960, y: -1920, label: 'LIQUIDITY' };
+    const tower = `<rect x="1020" y="-1860" width="360" height="360" rx="10" fill="#14110C"/><rect x="1032" y="-1848" width="336" height="336" rx="8" fill="none" stroke="${GOLD}" stroke-width="5"/>${crown(1200, -1700, 0.7)}`;
+    // roads: asphalt, lane dashes, kerbs, street lights
+    let roads = '';
+    for (let k = -7; k <= 6; k++) {
+      const c = k * GRID;
+      roads += `<rect x="-1540" y="${c - 60}" width="3200" height="120" fill="#2B2F3B"/><rect x="${c - 60}" y="-3500" width="120" height="4800" fill="#2B2F3B"/>`;
+      roads += `<path d="M -1540 ${c} L 1660 ${c}" stroke="#E7D9A8" stroke-width="5" stroke-dasharray="34 30" opacity="0.55"/><path d="M ${c} -3500 L ${c} 1300" stroke="#E7D9A8" stroke-width="5" stroke-dasharray="34 30" opacity="0.55"/>`;
+    }
+    let lamps = '';
+    for (let k = -7; k <= 6; k++) for (let j = -7; j <= 3; j++) {
+      const lx = k * GRID + 66, ly = j * GRID + 66;
+      if (lx < cx - vx - 60 || lx > cx + vx + 60 || ly < cy - vy - 60 || ly > cy + vy + 60 || lx < -1500) continue;
+      lamps += `<circle cx="${lx}" cy="${ly}" r="26" fill="url(#${id}mlamp)"/><circle cx="${lx}" cy="${ly}" r="5" fill="#FFE2A0"/>`;
+    }
+    // the river to the west, and the end of Overleverage St at its edge
+    const river = `<rect x="-3200" y="-3500" width="1700" height="4800" fill="#0B2340"/>
+      ${Array.from({ length: 14 }, (_, i) => `<path d="M ${-2300 + (i % 3) * 200} ${n(-3200 + i * 340 + ((t * 40) % 340))} q 40 -14 80 0 t 80 0" fill="none" stroke="#2C5D8F" stroke-width="5" opacity="0.6"/>`).join('')}
+      <rect x="-1520" y="-3500" width="24" height="4800" fill="#4A4F5C"/>`;
+    // the roadblock on Revenge Rd
+    const block = `<g transform="translate(-960 -1200)"><rect x="-58" y="-14" width="116" height="28" rx="4" fill="#F2F2F2"/>
+      ${[0, 1, 2, 3].map((i) => `<path d="M ${-50 + i * 30} -14 l 18 0 l -14 28 l -18 0 Z" fill="#E0413A"/>`).join('')}
+      <g transform="translate(86 -10)"><path d="M -18 -44 L 18 -44 L 44 -18 L 44 18 L 18 44 L -18 44 L -44 18 L -44 -18 Z" fill="#D7302B" stroke="#fff" stroke-width="5"/><text y="9" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="24" fill="#fff">STOP</text></g></g>`;
+    // street names along their roads
+    const names = STREETS.map(([axis, c, a, b, name]) => {
+      const mid = (a + b) / 2;
+      return axis === 'h' ? `<text x="${mid}" y="${c + 12}" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="#F4F1E8" stroke="#0B0D14" stroke-width="10" paint-order="stroke" letter-spacing="3">${name}</text>`
+        : `<text transform="translate(${c + 12} ${mid}) rotate(-90)" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="#F4F1E8" stroke="#0B0D14" stroke-width="10" paint-order="stroke" letter-spacing="3">${name}</text>`;
+    }).join('');
+    // the routes: the active leg glowing, later legs hidden
+    const legs = (s.legs || []).filter((L) => t >= at(L.from) && t < at(L.to)).map((L) => {
+      const d = `M ${L.pts.map(([x, y]) => `${x} ${y}`).join(' L ')}`;
+      return `<path d="${d}" fill="none" stroke="${L.colour || '#B26BFF'}" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+        <path d="${d}" fill="none" stroke="${L.colour || '#B26BFF'}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>`;
+    }).join('');
+    // the traffic: always some on Hopium Blvd and Rug Pull Rd; across his junction while he waits
+    const traffic = [];
+    const flow = (road, c, dir, speed, phase, colour) => {
+      const span = 3200, pos = ((phase * span + dir * speed * t) % span + span) % span - 1500;
+      traffic.push(road === 'h' ? car(pos, c + dir * 30, dir > 0 ? 0 : Math.PI, colour, id) : car(c - dir * 30, pos, dir > 0 ? Math.PI / 2 : -Math.PI / 2, colour, id));
+    };
+    flow('h', 0, 1, 420, 0.1, '#C23B3B'); flow('h', 0, -1, 380, 0.6, '#3B7BC2'); flow('h', -1440, 1, 460, 0.35, '#D9D9D9'); flow('h', -1440, -1, 400, 0.8, '#E2B13C');
+    flow('v', 480, 1, 380, 0.2, '#7A3BC2'); flow('v', 960, -1, 420, 0.5, '#3BC28A');
+    if (s.wait && t >= at(s.wait[0]) - 0.6 && t < at(s.wait[1]) + 0.8) {
+      const w0 = at(s.wait[0]);
+      [[1, 0.0, '#E2B13C'], [-1, 0.45, '#C23B3B'], [1, 0.9, '#3B7BC2'], [-1, 1.35, '#D9D9D9']].forEach(([dir, delay, colour]) => {
+        const x = dir * (-700 + 900 * (t - w0 - delay + 0.6));
+        if (Math.abs(x) < 800) traffic.push(car(x, -480 + dir * 30, dir > 0 ? 0 : Math.PI, colour, id));
+      });
+    }
+    const red = s.wait && t >= at(s.wait[0]) - 0.6 && t < at(s.wait[1]);
+    const lightPole = `<g transform="translate(78 -560)"><rect x="-16" y="-44" width="32" height="88" rx="8" fill="#111"/><circle cy="-22" r="11" fill="${red ? '#FF3B30' : '#3A1612'}"/><circle cy="20" r="11" fill="${red ? '#0E3A1C' : '#2EE06B'}"/>
+      <circle cy="${red ? -22 : 20}" r="30" fill="${red ? '#FF3B30' : '#2EE06B'}" opacity="0.25"/></g>`;
+    const pinSvg = `<g transform="translate(${pin.x} ${pin.y})"><circle r="${n(70 + 30 * ((t * 1.2) % 1))}" fill="none" stroke="${GOLD}" stroke-width="6" opacity="${n(1 - ((t * 1.2) % 1))}"/>
+      <path d="M 0 0 C -50 -70, -60 -110, -60 -140 A 60 60 0 1 1 60 -140 C 60 -110, 50 -70, 0 0 Z" fill="${GOLD}" stroke="#14110C" stroke-width="6"/><circle cy="-140" r="34" fill="#14110C"/>${crown(0, -142, 0.17)}
+      <text y="64" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="44" fill="#F6E3A3" stroke="#0B0D14" stroke-width="10" paint-order="stroke" letter-spacing="3">${pin.label}</text></g>`;
+    const mine = car(me.x, me.y, me.h, '#0F0F12', id, true, true);
+    const world = `<defs>
+        <radialGradient id="${id}mlamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFD98A" stop-opacity="0.55"/><stop offset="1" stop-color="#FFD98A" stop-opacity="0"/></radialGradient>
+        <linearGradient id="${id}mbeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FFF3C4" stop-opacity="0.7"/><stop offset="1" stop-color="#FFF3C4" stop-opacity="0"/></linearGradient>
+        <radialGradient id="${id}mvig" cx="0.5" cy="0.5" r="0.7"><stop offset="0.55" stop-color="#05060A" stop-opacity="0"/><stop offset="1" stop-color="#05060A" stop-opacity="0.75"/></radialGradient>
+      </defs>
+      <rect x="-3200" y="-3600" width="6400" height="6400" fill="#10131C"/>
+      ${river}${roads}${blocks}${tower}${block}${lamps}${legs}${names}${lightPole}${traffic.join('')}${pinSvg}${mine}`;
+    const view = `<g transform="translate(540 1000) scale(${n(z)}) translate(${n(-cx)} ${n(-cy)})">${world}</g>
+      <rect x="0" y="0" width="1080" height="1920" fill="url(#${id}mvig)"/>`;
+    // the HUD: the sat nav's instruction, the drawdown stars, his face, the game's big words
+    const g = lastOf(s.gps, t);
+    let hud = '';
+    if (g && g[1]) {
+      const a = cl((t - at(g[0])) / 0.15), warn = g[2];
+      hud += `<g opacity="${n(a)}" transform="translate(60 ${n(360 - 20 * (1 - a))})"><rect width="760" height="108" rx="18" fill="${warn ? '#3A0E12' : '#0B0F1A'}" opacity="0.92" stroke="${warn ? '#FF4B3E' : '#B26BFF'}" stroke-width="4"/>
+        <rect x="14" y="14" width="80" height="80" rx="14" fill="${warn ? '#FF4B3E' : '#B26BFF'}"/>
+        <text x="54" y="74" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="56" fill="#fff">${warn ? '!' : g[3] || '↑'}</text>
+        <text x="118" y="68" font-family="TCP Display" font-weight="800" font-size="40" fill="${warn ? '#FFB4AE' : '#FFFFFF'}">${g[1]}</text></g>`;
+    }
+    const stars = lastOf(s.stars, t), count = stars ? stars[1] : 0, since = stars ? t - at(stars[0]) : 9;
+    const blink = count >= 3 && Math.floor(t * 6) % 2 === 0;
+    hud += `<text x="1020" y="512" text-anchor="end" font-family="JB Mono" font-weight="700" font-size="24" fill="#F4F1E8" letter-spacing="3" stroke="#000" stroke-width="5" paint-order="stroke">DRAWDOWN</text>`;
+    for (let i = 0; i < 5; i++) {
+      const on = i < count, pop = on && i === count - 1 && since < 0.3 ? 1 + 0.5 * (1 - since / 0.3) : 1;
+      hud += `<g transform="translate(${1000 - (4 - i) * 58} 560) scale(${n(pop)})">${star(0, 0, 26, on ? (blink ? '#FFFFFF' : '#FF4B3E') : 'none', on ? '#FFFFFF' : '#8A8F9C')}</g>`;
+    }
+    // his face, in the corner
+    hud += `<defs><clipPath id="${id}mface"><circle cx="940" cy="300" r="92"/></clipPath></defs>
+      <circle cx="940" cy="300" r="100" fill="#0B0F1A" stroke="${count >= 3 ? '#FF4B3E' : GOLD}" stroke-width="7"/>
+      <g clip-path="url(#${id}mface)"><rect x="840" y="200" width="200" height="200" fill="#2A2F4A"/>
+        <g transform="translate(940 300) scale(0.46) translate(-505 -865)"><g transform="translate(${HIM.x} ${HIM.y}) scale(${HIM.s})">${F.founderSVG(p, id + 'f', 'body')}</g></g></g>`;
+    for (const [a, b, text, colour] of s.banners || []) {
+      if (t < at(a) || t >= at(b)) continue;
+      const k = easeOut(cl((t - at(a)) / 0.18)), out = cl((at(b) - t) / 0.2);
+      const size = Math.min(100, 880 / (text.length * 0.82));
+      hud += `<g opacity="${n(out)}" transform="translate(540 980) scale(${n(0.6 + 0.4 * k)}) skewX(-8)">
+        <text text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="${n(size)}" fill="${colour}" stroke="#08090D" stroke-width="${n(size * 0.15)}" paint-order="stroke" letter-spacing="2">${text}</text></g>`;
+    }
+    for (const f of s.flash || []) { const d = t - at(f); if (d >= 0 && d < 0.35) hud += `<rect width="1080" height="1920" fill="#FFFFFF" opacity="${n(0.9 * (1 - d / 0.35))}"/>`; }
+    return [{ f: 0, svg: view }, { f: 0, svg: hud }];
+  };
+
   KINDS.toon = {
     make(s, root) {
       s.node = el('div', 'toon', root);

@@ -663,3 +663,107 @@ The difference happens before the entry.
 Education, not financial advice. Trading carries risk. Example chart, not real trades.
 ```
 
+---
+
+## Out of the room: new places, new sound
+
+Three episodes away from the desk, each with its own look and its own music, for Tuesday 13 to
+Thursday 15 October. A private jet's cabin by day (cream leather, walnut, the sky going past, the
+wing with the crown on its winglet), and a game's city at night from above. The music has new
+styles in new keys (`lofi`, `lounge`, `trap`) and new effects (a cabin chime, the seatbelt ding, a
+sat nav's prompts, a game's blips), and the jet has the cabin's roar under everything.
+
+| Day | Episode | TCP account | Founder's account |
+|---|---|---|---|
+| Tue 13 Oct | EP01 · Trading From 40,000 Feet | TikTok 19:30, Instagram 20:00 | TikTok 21:00, Instagram 21:30 |
+| Wed 14 Oct | EP07 · The Pilot Calls a Trade | the same | the same |
+| Thu 15 Oct | EP04 · If Trading Was GTA | the same | the same |
+
+### EP01 · Trading From 40,000 Feet (23 s, lo-fi)
+
+`specs/ep01-40000-feet.js`. The wing and the clouds: *trading from 40,000 feet.* In his seat, phone
+in hand: *no setup yet. so I don't force one.* The clouds go by faster: *I wait. an hour later…* The
+ding: *ALERT · price at your level*, *the alert I set before take-off.* The plan on his phone (the
+real Quant Terminal, demo prices): *check the plan, not the chart all day.* Back to the window:
+*freedom isn't staring at charts all day. it's having a process.* The brief's EP01: freedom comes
+from process.
+
+**TCP account (K):**
+```
+Trading from 40,000 feet. ✈️
+
+No setup, no trade. Set the alert, live your day, check the plan when it fires.
+
+Freedom isn't staring at charts all day. It's having a process.
+
+#trading #daytrading #tradingtips #forextrader #xauusd
+Education, not financial advice. Trading carries risk. App shown with demo prices.
+```
+
+**Founder's account (J):**
+```
+No setup, no trade. The alert does the watching. ✈️
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. App shown with demo prices.
+```
+
+### EP07 · The Pilot Calls a Trade (24 s, lounge)
+
+`specs/ep07-pilot-calls.js`. The cabin chime and the seatbelt sign: *when your pilot is also a
+trader:* *YOUR CAPTAIN · we're approaching resistance.* *…resistance?* *please keep your stop losses
+fastened.* Turbulence at the window: *expect some volatility.* *stop's already in.* *position sizes in
+the upright position.* Then: *risk management is the seatbelt. you don't put it on mid-turbulence.*
+
+**TCP account (K):**
+```
+When your pilot is also a trader. ✈️
+
+"Please keep your stop losses fastened." Risk management is the seatbelt: you don't put it on mid-turbulence.
+
+What would your captain say? 👇
+
+#trading #daytrading #riskmanagement #forextrader #xauusd
+Education, not financial advice. Trading carries risk.
+```
+
+**Founder's account (J):**
+```
+Captain gets it. ✈️ Stop's in before take-off.
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk.
+```
+
+### EP04 · If Trading Was GTA (23 s, trap)
+
+`specs/ep04-trading-gta.js`. A game's city from above at night; his car with the crown on its roof;
+the HUD with a drawdown meter and his face in the corner. The sat nav: left onto *FOMO Ave* (nothing
+there: *recalculating*), *Revenge Rd* (*road closed*: **STOPPED OUT**), floor it down *Overleverage
+St* to the river: **MARGIN CALL**. Respawn. *New route: wait for liquidity* at the red light while
+the market goes past, then *Patience Way*, *Plan St* and the pin: **LEVEL COMPLETE**. The camera
+pulls back over both routes: *same city. better route. the plan is the map.* The map and its streets
+are made up, and nothing from the game is copied.
+
+**TCP account (K):**
+```
+If trading was GTA. 🎮
+
+FOMO Ave → Revenge Rd → Overleverage St → margin call.
+
+Or: wait for liquidity, take Patience Way, follow the plan.
+
+Which street have you driven down? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk.
+```
+
+**Founder's account (J):**
+```
+Took every wrong turn before I found Patience Way. 🎮
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk.
+```
+

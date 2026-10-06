@@ -24,7 +24,7 @@ Instagram play at). The captions and posting plan are in `brand/video/reels/POST
 | `reel.html`, `reel.js` | The engine: draws any moment of a reel from its script, in Chromium. Background, headlines, stamps, tables, coin grids, compounding curves, lists, a phone playing app footage, the probability swarm, the end card, and the subtitles |
 | `toon/` | The animated founder and his sets, for the episodes |
 | `voice.py` | The voice: Kokoro through sherpa-onnx, offline. Speaks each line, trims it, and times every word for the subtitles |
-| `music.py` | Original music in D minor (`pulse` under a voice, `drive` without, `calm` for the welcome video) and the sound effects, on the cues the frames report. Ducks under the voice |
+| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt and a game's blips, and `ambience: 'cabin'` for an airliner's roar. Ducks under the voice |
 | `render.cjs` | Runs the lot: voice, frames (4 browsers at once), sound, and the videos with ffmpeg |
 | `capture.cjs` | Records the terminal in demo mode, as a phone shows it, frame by frame, for the phone scenes |
 | `hear.py` | Transcribes a voice track, to check the voice read the script |

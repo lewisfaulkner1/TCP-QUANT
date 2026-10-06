@@ -148,6 +148,7 @@ function ffmpeg(list) {
     '--style', SPEC.style || (VOICE ? 'pulse' : 'drive'), '--bpm', String(SPEC.bpm || 120), '--seed', String(SPEC.seed || 1),
     '--out', path.join(DIR, 'mix.wav'), '--bed', path.join(DIR, 'bed.wav'), '--sfx', path.join(DIR, 'sfx.wav')];
   if (VOICE) music.push('--voice', path.join(DIR, 'voice.wav'));
+  if (SPEC.ambience) music.push('--amb', SPEC.ambience);
   execFileSync(music[0], music.slice(1), { stdio: 'inherit' });
 
   // ---------------------------------------------------------------- videos
