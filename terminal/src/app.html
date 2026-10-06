@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TCP Quant Terminal</title>
+<meta name="color-scheme" content="dark">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js" integrity="sha384-stKllnUqA9AD0gsKCuUtf5XlqAW7PwIgDagoNsTWkjkBmJ/GZ/uHTgEBxdLV2VSK" crossorigin="anonymous"></script>
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<template id="crown"><svg viewBox="-19.2 -19.53 238.4 194.2" aria-hidden="true"><defs><linearGradient id="foil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6E3A3"/><stop offset="0.42" stop-color="#D8AD4E"/><stop offset="0.72" stop-color="#B0812F"/><stop offset="1" stop-color="#E3C06D"/></linearGradient></defs><path fill="url(#foil)" fill-rule="evenodd" d="M16 130L0 36.67L60 76.67L100 10L140 76.67L200 36.67L184 130ZM16 141.67H184V166.67H16ZM40 73.33H46V85H53V116.67H46V123.33H40V116.67H33V85H40ZM97 40H103V55H110V110H103V123.33H97V110H90V55H97ZM154 73.33H160V85H167V116.67H160V123.33H154V116.67H147V85H154Z"/><circle cx="0" cy="28.33" r="11.2" fill="url(#foil)"/><circle cx="100" cy="1.67" r="13.2" fill="url(#foil)"/><circle cx="200" cy="28.33" r="11.2" fill="url(#foil)"/></svg></template>
+
+<header>
+  <span data-crown></span>
+  <div class="brand"><b>TCP</b><span>QUANT TERMINAL</span></div>
+  <div class="who" id="who" hidden><span id="whoName"></span><span class="avatar" id="whoInitial"></span></div>
+</header>
+
+<div class="engine" id="engine" aria-live="off">
+  <span class="pulse"></span><b id="engineState">LIVE</b>
+  <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  <span>QUANT ENGINE</span>
+  <span class="sync" id="engineSync">starting…</span>
+</div>
+
+<main>
+  <!-- ============================================================ Markets -->
+  <section id="markets">
+    <div class="segment" role="group" aria-label="Market">
+      <button data-symbol="XAUUSD" aria-pressed="true"><b>XAUUSD</b><span>Gold</span></button>
+      <button data-symbol="BTCUSD" aria-pressed="false"><b>BTCUSD</b><span>Bitcoin</span></button>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><span class="label" id="quoteName">Gold · spot</span><span class="pill" id="status"><span class="dot"></span><span></span></span></div>
+      <div class="quote">
+        <div>
+          <div class="price" id="price"><span class="skeleton" style="display:inline-block;width:180px;height:34px"></span></div>
+          <div class="change" id="change">&nbsp;</div>
+        </div>
+        <svg id="spark" viewBox="0 0 112 46" preserveAspectRatio="none" aria-label="Last 48 hours"></svg>
+      </div>
+      <div class="testing" id="testing" hidden></div>
+      <div class="meta" id="updated">&nbsp;</div>
+    </div>
+
+    <div class="card brief">
+      <div class="row spread"><h2 class="label">Engine briefing</h2><span class="tag">from the numbers</span></div>
+      <p id="briefing" aria-live="polite"><span class="skeleton" style="display:block;height:54px"></span></p>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Chart · 15 min</h2><span class="timer" id="candleTimer"></span></div>
+      <div id="chart"><div class="chart-note" id="chartNote">Loading the chart…</div></div>
+      <div class="keys">
+        <span><i style="color:var(--gold)"></i>Previous day</span>
+        <span><i style="color:var(--gold-soft);border-top-style:solid"></i>Previous week</span>
+        <span><i style="color:#8C7BD1"></i>Asia range</span>
+        <span><i style="color:rgba(227,192,109,.9)"></i>68% cone</span>
+        <span><i style="color:rgba(166,157,140,.8);border-top-style:dotted"></i>95% cone</span>
+        <span id="zoneKey" hidden><i style="color:rgba(53,166,140,.9);border-top-style:dashed"></i>Brief zones</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Probability swarm</h2><span class="tag" id="swarmTag">paths to the close</span></div>
+      <canvas id="swarm" role="img" aria-label="Simulated price paths from now to the close"></canvas>
+      <div class="swarm-legend" id="swarmLegend"></div>
+      <div class="fine">Each dot is one possible path from the live price to the close, drawn with this market's hour-by-hour volatility. A dot lights up when it touches a level, and the share that do settles on the engine's odds. At the close they stack into the spread of where it could finish. Tap to run it again.</div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Probability engine</h2><span class="tag" id="closeIn">to the close</span></div>
+      <div class="bands">
+        <div class="band"><span>68% CLOSE RANGE</span><b id="band68">—</b></div>
+        <div class="band"><span>95% CLOSE RANGE</span><b id="band95">—</b></div>
+      </div>
+      <div class="row spread" style="margin-bottom:2px"><span class="label">Level · chance of a touch</span><span class="label">distance</span></div>
+      <div id="levels"><div class="skeleton" style="height:160px;margin-top:10px"></div></div>
+      <div class="fine">Chances of a touch before today's close, if price moves at random with this market's usual volatility for each hour. They measure reach, not direction. They move with every tick and shrink as the close gets nearer.</div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Market state</h2><span class="tag">not a signal</span></div>
+      <div id="state"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="label">Volatility today</h2>
+      <div class="row spread" style="align-items:flex-end">
+        <div><div class="big" id="range">—</div><div class="sub">moved today</div></div>
+        <div style="text-align:right"><div class="big" id="rangePct">—</div><div class="sub">of an average day</div></div>
+      </div>
+      <div class="gauge" aria-hidden="true"><div class="fill" id="gaugeFill" style="width:0"></div><div class="avg" style="left:66.6%"></div></div>
+      <div class="gauge-scale"><span>0%</span><span>100%</span><span>150%</span></div>
+      <div class="meta" id="atrLine">&nbsp;</div>
+      <div class="vclock">
+        <div class="row spread"><span class="label" id="vclockTitle">When it moves</span><span class="label">your time</span></div>
+        <svg id="vclock" viewBox="0 0 320 96" preserveAspectRatio="none" role="img" aria-label="Typical move for each hour of the day"></svg>
+        <div class="meta" id="vclockNote"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Sessions</h2><span class="label" id="localTime"></span></div>
+      <div class="sessions" id="sessions"></div>
+      <div class="overlap" id="overlap" hidden></div>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">Model check</h2><span class="tag">out of sample</span></div>
+      <div id="check"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================== Risk -->
+  <section id="risk" hidden>
+    <div class="segment" id="riskMode" role="group" aria-label="Risk tools">
+      <button data-mode="size" aria-pressed="true"><b>LOT SIZE</b><span>Your next trade</span></button>
+      <button data-mode="sim" aria-pressed="false"><b>PROP CHALLENGE</b><span>Your odds of passing</span></button>
+    </div>
+    <div id="sizeView">
+      <div class="card">
+        <h2 class="label">Position size</h2>
+        <div class="field">
+          <label for="balance">Account balance</label>
+          <div class="inputs"><input id="balance" inputmode="decimal" placeholder="10000" autocomplete="off"><select id="currency" aria-label="Account currency"><option>USD</option><option>GBP</option><option>EUR</option></select></div>
+          <div class="hint" id="fxHint" hidden></div>
+        </div>
+        <div class="field">
+          <label for="riskPct">Risk per trade (%)</label>
+          <div class="inputs"><input id="riskPct" inputmode="decimal" value="1" autocomplete="off">
+            <div class="chips" id="riskChips"><button data-risk="0.5">0.5</button><button data-risk="1">1</button><button data-risk="2">2</button></div></div>
+        </div>
+        <div class="field">
+          <label>Market</label>
+          <div class="chips" id="riskMarket"><button data-symbol="XAUUSD">XAUUSD</button><button data-symbol="BTCUSD">BTCUSD</button></div>
+        </div>
+        <div class="field">
+          <div class="row spread"><label for="entry">Entry</label><button class="link" id="useLive" type="button">Use live price</button></div>
+          <input id="entry" inputmode="decimal" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="stop">Stop loss</label>
+          <input id="stop" inputmode="decimal" autocomplete="off" placeholder="Your stop price">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="contract">Contract size (per 1.00 lot)</label>
+          <input id="contract" inputmode="decimal" autocomplete="off">
+          <div class="hint">Gold is usually 100 oz and Bitcoin 1 BTC. Check yours in MT5: tap the symbol, then Specification.</div>
+        </div>
+      </div>
+
+      <div class="card result" id="result">
+        <div class="label">Lot size</div>
+        <div class="lots" id="lots">—</div>
+        <div class="sub" id="lotsLine">Enter your balance and stop loss.</div>
+        <div class="facts" id="facts" hidden></div>
+        <table id="targets" hidden><thead><tr><th>TARGET</th><th>PRICE</th><th>ODDS</th><th>PROFIT</th></tr></thead><tbody></tbody></table>
+        <div class="odds-note" id="oddsNote" hidden></div>
+      </div>
+      <p class="note">A calculator, not advice. Check the numbers in MT5 before you place a trade.</p>
+    </div>
+
+    <div id="simView" hidden>
+      <div class="card result">
+        <div class="label">Pass chance</div>
+        <div class="lots" id="simPass">—</div>
+        <div class="sub" id="simLine">Enter your numbers below.</div>
+        <div id="simBody" hidden>
+          <div class="sim-bar" id="simBar"></div>
+          <div class="sim-legend" id="simLegend"></div>
+          <canvas id="simChart" role="img" aria-label="40 of the simulated challenges, from the start to where each ended"></canvas>
+          <div class="facts" id="simFacts"></div>
+          <div class="odds-note" id="simNote"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row spread"><h2 class="label">Your trading</h2><span class="tag">your numbers</span></div>
+        <div class="sim-grid">
+          <div class="field"><label for="simRate">Win rate (%)</label><input id="simRate" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simRr">Reward to risk</label><input id="simRr" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simRisk">Risk a trade (%)</label><input id="simRisk" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simPerDay">Trades a day</label><input id="simPerDay" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <div class="field">
+          <label>Win rate measured over (trades)</label>
+          <div class="chips wrap" id="simN"><button data-n="20">20</button><button data-n="50">50</button><button data-n="100">100</button><button data-n="300">300</button><button data-n="0">Exact</button></div>
+          <div class="hint">The fewer trades behind a win rate, the less sure it is. The pass chance allows for that.</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label for="simCost">Costs a trade (R)</label>
+          <input id="simCost" inputmode="decimal" autocomplete="off">
+          <div class="hint">Spread and commission as a share of your risk: a 30-cent spread on a $6 gold stop is 0.05R.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row spread"><h2 class="label">The challenge</h2><span class="tag">check your firm's rules</span></div>
+        <div class="chips wrap sim-presets" id="simPreset"></div>
+        <div class="sim-grid">
+          <div class="field"><label for="simTarget">Target (%)</label><input id="simTarget" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simDaily">Daily limit (%)</label><input id="simDaily" inputmode="decimal" autocomplete="off" placeholder="None"></div>
+          <div class="field"><label for="simMax">Max loss (%)</label><input id="simMax" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="simDays">Days allowed</label><input id="simDays" inputmode="numeric" autocomplete="off" placeholder="No limit"></div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Max loss is</label>
+          <div class="chips" id="simTrail"><button data-trail="0">Static</button><button data-trail="1">Trailing</button></div>
+          <div class="hint">Static counts from your starting balance. Trailing follows your highest balance up, and stops at your starting balance. Days are trading days: 30 calendar days is about 21.</div>
+          <div class="hint warn" id="simErr" hidden></div>
+        </div>
+      </div>
+      <div class="card" id="simSweepCard" hidden>
+        <div class="row spread"><h2 class="label">Pass chance by risk</h2><span class="tag">same trades</span></div>
+        <div class="sim-sweep" id="simSweep"></div>
+        <div class="odds-note" id="simSweepNote"></div>
+      </div>
+      <p class="note">A simulation, not a forecast, and not advice. Each trade closes at its stop or its target, one at a time, and doesn't depend on the last. Minimum trading days, consistency rules and news rules aren't included. Nothing here is sent anywhere.</p>
+    </div>
+  </section>
+
+  <!-- =========================================================== Signals -->
+  <section id="signals" hidden>
+    <div class="card pb-card" id="pbCard">
+      <div class="row spread"><h2 class="label">The Playbook</h2><span class="tag" id="pbTag">loading</span></div>
+      <p class="pb-lede">Lewis's setups, logged <b>before</b> the result, with his reasons. Each one is followed to the end automatically, and every result counts.</p>
+      <div id="pbBody">
+        <div class="pb-stats">
+          <div><span>Results</span><b id="pbResults">—</b></div>
+          <div><span>Won · lost</span><b id="pbWL">—</b></div>
+          <div><span>Average</span><b id="pbAvg">—</b></div>
+          <div><span>Total</span><b id="pbTotal">—</b></div>
+        </div>
+        <div class="pb-chart" id="pbChart">
+          <canvas id="pbCurve" role="img" aria-label="The average result after each setup closed, with the band the true average likely sits in"></canvas>
+          <div class="pb-tip" id="pbTip" hidden></div>
+        </div>
+        <div class="pb-legend" aria-hidden="true">
+          <span><i class="k-line"></i>Average, after costs</span>
+          <span><i class="k-band"></i>95% band</span>
+          <span><i class="k-won"></i>Won</span>
+          <span><i class="k-lost"></i>Lost</span>
+        </div>
+        <div class="pb-verdict" id="pbVerdict"></div>
+        <p class="pb-first" id="pbFirst"></p>
+        <p class="fine">Results in R after an assumed spread. With no edge, the average sits on zero; an edge shows when the whole band clears it, and that takes many results.</p>
+      </div>
+      <p class="pb-empty" id="pbEmpty" hidden></p>
+      <button class="pb-more" id="pbExport" type="button" hidden>SEND ME THE WHOLE RECORD</button>
+    </div>
+
+    <div id="pbActive"></div>
+
+    <div class="card" id="pbHistoryCard" hidden>
+      <div class="row spread"><h2 class="label">History</h2><span class="tag" id="pbCount"></span></div>
+      <div id="pbHistory"></div>
+    </div>
+
+    <div class="card" id="pbReadsCard" hidden>
+      <div class="row spread"><h2 class="label">Early reads</h2><span class="tag">not evidence</span></div>
+      <div id="pbReads"></div>
+      <p class="fine">Averages after costs for each reason, market and session with at least 5 results. With this many ways to slice a small record, some will look good by luck: treat them as questions, not answers.</p>
+    </div>
+
+    <div class="card">
+      <div class="row spread"><h2 class="label">From the algo to your account</h2><span class="tag">the plan</span></div>
+      <div class="pipe">
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 18 9 12l4 3 7-9"/><path d="M15 6h5v5"/></svg></span>
+          <div><b>TCP algo</b><small>Finds the trade: entry, stop and targets, by fixed rules.</small></div>
+          <span class="state testing">In forward test</span>
+        </div>
+        <div class="flow" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg></span>
+          <div><b>Terminal and Inner Circle</b><small>The signal lands here and in the group at the same moment, with its odds.</small></div>
+          <span class="state testing">Waiting on the algo</span>
+        </div>
+        <div class="flow" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+          <div><b>The TCP EA</b><small>Places the trade on Lewis's account, exactly as signalled.</small></div>
+          <span class="state testing">Dry run</span>
+        </div>
+        <div class="flow" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="node">
+          <span class="node-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 11.5a3 3 0 1 0 0-6M17.5 20h4a5.5 5.5 0 0 0-4.5-5.4"/></svg></span>
+          <div><b>Your account</b><small>Copy trading: the same trade on your MT5, at the size you choose.</small></div>
+          <span class="state soon-tag">Coming soon</span>
+        </div>
+      </div>
+      <p class="note serif" style="margin:14px 0 0">Proven first. Then live.</p>
+    </div>
+
+    <div class="card example">
+      <div class="row spread"><h2 class="label">What a signal will look like</h2><span class="tag">example</span></div>
+      <div class="sig">
+        <div class="sig-top"><b>XAUUSD</b><span class="sig-side">BUY</span><span class="sig-time">09:12 · London</span></div>
+        <div class="sig-grid">
+          <div><span>Entry</span><b>3,742.50</b></div>
+          <div><span>Stop</span><b>3,737.50</b></div>
+          <div><span>Target 1 · 1R</span><b>3,747.50</b></div>
+          <div><span>Target 2 · 2R</span><b>3,752.50</b></div>
+        </div>
+        <div class="sig-foot"><span>Tested win rate <b>—</b></span><span>Your size at 1% <b>0.20 lots</b></span></div>
+        <span class="watermark">EXAMPLE</span>
+      </div>
+      <div class="fine">Not a live signal. Once the algo passes its forward test, each signal shows its tested win rate and a size worked out for your account, and every result is posted in full.</div>
+    </div>
+
+    <div class="card soon-card" data-feature="copy">
+      <div class="row spread"><h2 class="label">Copy trading</h2><span class="state soon-tag">Coming soon</span></div>
+      <p>Connect your MT5 account and the algo's trades copy onto it automatically, at the risk you set. Pause or stop whenever you like.</p>
+      <button class="notify" type="button">Notify me</button>
+    </div>
+  </section>
+
+  <!-- ================================================================ AI -->
+  <section id="ai" hidden>
+    <div class="card ai-hero">
+      <canvas id="orb" aria-hidden="true"></canvas>
+      <div class="ai-copy">
+        <span class="state testing" id="brMode" hidden>Test mode</span>
+        <h2>TCP AI</h2>
+        <p>Before each session, Lewis sends his charts. TCP AI reads them with the terminal's numbers and drafts the brief, and Lewis checks it before it posts. After the session, every zone is scored.</p>
+      </div>
+    </div>
+
+    <div class="card br-next" id="brNext" hidden>
+      <div class="row spread"><h2 class="label">Next session</h2><span class="tag" id="brNextTag"></span></div>
+      <div class="br-nextrow"><span class="br-icon" id="brNextIcon" aria-hidden="true"></span><div><b id="brNextName"></b><small id="brNextWhen" data-open=""></small></div></div>
+      <p class="br-ask" id="brAsk" hidden></p>
+    </div>
+
+    <div id="brList"></div>
+
+    <div class="card" id="brRecordCard" hidden>
+      <div class="row spread"><h2 class="label">Zone record</h2><span class="tag">vs a random walk</span></div>
+      <div class="pb-stats">
+        <div><span>Briefs</span><b id="brBriefs">—</b></div>
+        <div><span>Zones</span><b id="brZoneCount">—</b></div>
+        <div><span>Reached</span><b id="brReached">—</b></div>
+        <div><span>Avg turn</span><b id="brTurn">—</b></div>
+      </div>
+      <div class="pb-verdict" id="brVerdict"></div>
+      <p class="pb-first" id="brReach"></p>
+      <div id="brReads" hidden></div>
+      <p class="fine">A zone counts as reached when price trades into it after the brief goes out. The turn is how far price then went back the way it came, less how far it went on through, before the session closed, in average daily ranges (ATR). Moving at random, price reaches each zone as often as its odds say and goes back as far as it goes through, so zero is the line to beat.</p>
+    </div>
+
+    <div class="card" id="brHistoryCard" hidden>
+      <div class="row spread"><h2 class="label">Earlier briefs</h2><span class="tag" id="brCount"></span></div>
+      <div id="brHistory"></div>
+    </div>
+
+    <div class="card ai-memory" id="aiMemory">
+      <div class="row spread"><h2 class="label">What TCP AI has learned</h2><span class="state testing">Growing</span></div>
+      <div class="mem-grid">
+        <div><b id="memCharts">0</b><span>charts read</span></div>
+        <div><b id="memLessons">0</b><span>lessons from Lewis</span></div>
+        <div><b id="memZones">0</b><span>zones scored</span></div>
+      </div>
+      <p>Before every brief, TCP AI reads Lewis's guide to his charts, what he changed in its earlier drafts, and how the zones have done since. <span id="memPlaybook"></span></p>
+      <div class="pb-buttons"><button type="button" class="gold" id="brTeach" hidden>TEACH TCP AI</button><button type="button" id="brExport" hidden>SEND ME THE DATA</button></div>
+    </div>
+
+    <div class="card feature-list" data-feature="ai">
+      <div class="feature"><b>Session briefs</b><p>Lewis's charts, read by TCP AI before each session: the zones to watch, the plan, and every zone scored afterwards.</p><span class="state live">Live</span></div>
+      <div class="feature"><b>Snap to log</b><p>Send a screenshot of your chart and TCP AI reads the indicator's panel to fill in the setup: zone, fib, confirmations.</p><span class="state soon-tag">Soon</span></div>
+      <div class="feature"><b>AI trade reviews</b><p>After every trade: what went to plan, what didn't, and what to change.</p><span class="state soon-tag">Soon</span></div>
+      <div class="feature"><b>Ask TCP AI</b><p>Ask about a level, a setup or your risk, and get answers built on the engine's numbers.</p><span class="state soon-tag">Soon</span></div>
+      <div class="feature"><b>Your AI coach</b><p>A weekly look at your habits: best sessions, overtrading, and how well you keep to your stops.</p><span class="state soon-tag">Soon</span></div>
+      <button class="notify" type="button">Notify me</button>
+    </div>
+    <p class="note">TCP AI reads the charts Lewis sends; it doesn't place trades. The odds on each zone come from the terminal's engine, not from AI. The engine briefing on Markets is written from the numbers.</p>
+  </section>
+
+  <!-- ============================================================ Account -->
+  <!-- ============================================================ Ranks -->
+  <section id="ranks" hidden>
+    <div class="card rk-hero">
+      <div class="row spread"><h2 class="label">Leaderboard</h2><span class="state soon-tag" id="rkDemoTag" hidden>Demo</span></div>
+      <div class="chips rk-periods" id="rkPeriod"><button type="button" data-v="day">Day</button><button type="button" data-v="week">Week</button><button type="button" data-v="month">Month</button></div>
+      <div class="rk-sub">
+        <div class="chips rk-small" id="rkWhen"></div>
+        <div class="chips rk-small" id="rkBy"><button type="button" data-v="gain">Gain</button><button type="button" data-v="steady">Consistency</button></div>
+      </div>
+      <div class="rk-split" id="rkSplit"></div>
+      <p class="rk-you" id="rkYou" hidden></p>
+      <p class="meta" id="rkSync"></p>
+    </div>
+    <div class="card rk-board" id="rkBoard"></div>
+    <div class="card rk-join" id="rkJoin" hidden>
+      <h2 class="label">Join the leaderboard</h2>
+      <p>Connect your MT5 account read-only. Only percentages are shared, never your balance, and you choose the name it shows.</p>
+      <button class="cta pb-submit" id="rkJoinGo" type="button">CONNECT MT5</button>
+    </div>
+    <div class="card rk-hidden" id="rkHidden" hidden></div>
+    <div class="card rk-how">
+      <h2 class="label">How it's measured</h2>
+      <ul>
+        <li>Closed trades only, read from each account's own history with its investor (read-only) password.</li>
+        <li>Each day's gain is on the balance at the start of the day. Deposits and withdrawals don't count as gains or losses.</li>
+        <li>Weeks and months compound the days. The day table is the last full trading day, which ends at 17:00 New York.</li>
+        <li>Each trader's worst day and open trades show beside the gain: a list of gains alone rewards gambling, and closed trades alone can hide losers left open.</li>
+        <li>Consistency is the average day over how much the days vary, scaled by how many there were. Above 2 over 20 or more days, luck alone gets there about 1 time in 40.</li>
+      </ul>
+      <p class="fine">No prizes for the biggest gain: size your risk as if nobody is watching. Past results don't predict future returns. Trading carries risk.</p>
+    </div>
+  </section>
+
+  <section id="account" hidden>
+    <div class="card profile">
+      <span class="avatar big-avatar" id="profileInitial">?</span>
+      <div><b id="profileName">Member</b><small id="profileRole">TCP Inner Circle</small></div>
+    </div>
+    <div class="card mt-card" id="mtCard" data-feature="connect">
+      <div class="row spread"><h2 class="label">MT5 connection</h2><span class="state soon-tag" id="mtState">Loading</span></div>
+      <div id="mtBody"><p class="mt-text">Checking…</p></div>
+      <button class="notify" type="button" id="mtNotify" hidden>Notify me</button>
+    </div>
+    <div class="card mt-measured" id="mtMeasured">
+      <div class="row spread"><h2 class="label">Your trading, measured</h2><span class="state soon-tag" id="mtMeasuredTag">After connecting</span></div>
+      <div class="rk-stats" id="mtStats"></div>
+      <div class="rk-periodline" id="mtPeriods" hidden></div>
+      <canvas class="rk-curve" id="mtCurve" hidden></canvas>
+      <div id="mtVerdict"></div>
+      <p class="fine" id="mtMeasuredNote">From the day you connect: closed trades only, as percentages of your balance. Your equity curve, win rate, profit factor and consistency show here.</p>
+    </div>
+    <div class="card soon-card" data-feature="alerts">
+      <div class="row spread"><h2 class="label">Price and odds alerts</h2><span class="state soon-tag">Coming soon</span></div>
+      <p>A Telegram message when gold reaches a level you pick, or when the odds of a touch climb past your line.</p>
+      <button class="notify" type="button">Notify me</button>
+    </div>
+  </section>
+</main>
+
+<button class="pb-fab" id="pbNew" type="button" hidden>+ LOG A SETUP</button>
+<button class="pb-fab" id="brNew" type="button" hidden>+ SEND CHARTS</button>
+
+<div class="sheet" id="pbSheet" role="dialog" aria-modal="true" aria-labelledby="pbSheetTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="pbSheetTitle">Log a setup</h2><button class="link" id="pbClose" type="button">Close</button></div>
+    <div class="field"><label>Market</label><div class="chips" id="pbSymbol"><button type="button" data-v="XAUUSD">Gold</button><button type="button" data-v="BTCUSD">Bitcoin</button></div></div>
+    <div class="field"><label>Direction</label><div class="chips" id="pbSide"><button type="button" data-v="buy">Buy</button><button type="button" data-v="sell">Sell</button></div></div>
+    <div class="field"><label>Order</label><div class="chips" id="pbKind"><button type="button" data-v="market">Market</button><button type="button" data-v="limit">Limit</button><button type="button" data-v="stop">Stop</button></div></div>
+    <div class="pb-prices">
+      <div class="field"><label for="pbEntry">Entry</label><input id="pbEntry" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="pbSl">Stop</label><input id="pbSl" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="pbTp">Target</label><input id="pbTp" inputmode="decimal" autocomplete="off"></div>
+    </div>
+    <div class="pb-plan" id="pbPlan">Enter the stop and the target.</div>
+    <div class="field" id="pbExpiryField" hidden><label>Waits for its price</label><div class="chips" id="pbExpiry"><button type="button" data-v="4">4 hours</button><button type="button" data-v="24">A day</button><button type="button" data-v="168">A week</button></div></div>
+    <div class="field"><label>Reasons</label><div class="tagpick" id="pbTags"></div>
+      <input id="pbTagNew" placeholder="Add your own reason" maxlength="24" autocomplete="off" enterkeyhint="done"></div>
+    <div class="field"><label for="pbNote">Why</label><textarea id="pbNote" rows="3" maxlength="400" placeholder="The reason for this trade, in a sentence or two. It goes out with the setup."></textarea></div>
+    <div class="field"><label>Chart</label>
+      <label class="pb-photo" id="pbPhotoLabel"><input type="file" id="pbPhoto" accept="image/*" hidden><span id="pbPhotoText">Add a screenshot of your chart</span><img id="pbPhotoPreview" alt="Your chart" hidden></label></div>
+    <div class="pb-error" id="pbError" role="alert" hidden></div>
+    <button class="cta pb-submit" id="pbSubmit" type="button">LOG AND POST</button>
+    <p class="fine" id="pbSubmitNote"></p>
+  </div>
+</div>
+
+<div class="sheet" id="brSheet" role="dialog" aria-modal="true" aria-labelledby="brSheetTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="brSheetTitle">Session brief</h2><button class="link" id="brClose" type="button">Close</button></div>
+
+    <div id="brStep_charts">
+      <div class="field"><label>Session</label><div class="chips" id="brSession"></div></div>
+      <div class="field"><label>Market</label><div class="chips" id="brSymbol"><button type="button" data-v="XAUUSD">Gold</button><button type="button" data-v="BTCUSD">Bitcoin</button></div></div>
+      <div class="field"><label>Charts</label>
+        <p class="br-askline" id="brAskLine"></p>
+        <div class="br-thumbs" id="brThumbs"></div>
+        <label class="pb-photo"><input type="file" id="brFiles" accept="image/*" multiple hidden><span id="brPickText">Add your chart screenshots</span></label></div>
+      <div class="field"><label for="brNote">Your read (optional)</label><textarea id="brNote" rows="2" maxlength="600" placeholder="Anything TCP AI should know: your bias, news, what you're waiting for."></textarea></div>
+      <div class="pb-error" id="brError" role="alert" hidden></div>
+      <button class="cta pb-submit" id="brRead" type="button" disabled>READ MY CHARTS</button>
+      <p class="fine" id="brReadNote"></p>
+    </div>
+
+    <div id="brStep_reading" hidden>
+      <div class="br-reading" aria-live="polite">
+        <div class="br-scan" aria-hidden="true"><i></i></div>
+        <b id="brReadingWhat">TCP AI is reading your charts</b>
+        <span class="br-elapsed" id="brElapsed">0:00</span>
+        <p class="fine">It reads each chart and the panel, checks them against the terminal's numbers, and drafts the brief. Usually under a minute. You can close the app: the bot tells you when the draft is ready.</p>
+      </div>
+    </div>
+
+    <div id="brStep_draft" hidden>
+      <div class="br-failed" id="brFailed" hidden>
+        <p id="brFailedText"></p>
+        <div class="pb-buttons"><button type="button" class="gold" id="brRetry">TRY AGAIN</button><button type="button" id="brManual">WRITE IT MYSELF</button></div>
+      </div>
+      <div class="br-warnings" id="brWarnings" hidden></div>
+      <details class="br-readcard" id="brReadCard" hidden><summary>What TCP AI read</summary><div id="brReadBody"></div></details>
+      <div class="field"><label for="brHeadline">Headline</label><input id="brHeadline" maxlength="120" autocomplete="off" placeholder="One line for the Inner Circle"></div>
+      <div class="field"><label>Bias</label><div class="chips" id="brBias"><button type="button" data-v="long">Long</button><button type="button" data-v="short">Short</button><button type="button" data-v="neutral">Neutral</button></div>
+        <input id="brReason" maxlength="240" autocomplete="off" placeholder="Why, in a sentence"></div>
+      <div class="field"><label>Zones to watch</label><div id="brZones"></div><button type="button" class="pb-more" id="brAddZone">+ ADD A ZONE</button></div>
+      <div class="field"><label for="brPlan">Plan · one line each</label><textarea id="brPlan" rows="4" maxlength="900" placeholder="If … then …"></textarea></div>
+      <div class="field" id="brChartField"><label>Chart to post with it</label><div class="br-chartpick" id="brChartPick"></div></div>
+      <div class="field"><label for="brLesson">What it got wrong (optional)</label><textarea id="brLesson" rows="2" maxlength="400" placeholder="e.g. The Asia high only matters once it has been swept."></textarea>
+        <div class="hint">TCP AI reads this, and what you changed above, before its next brief.</div></div>
+      <button class="cta pb-submit" id="brPost" type="button">POST</button>
+      <p class="fine" id="brPostNote"></p>
+      <button type="button" class="link br-drop" id="brDrop">Drop this draft</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="brTeachSheet" role="dialog" aria-modal="true" aria-labelledby="brTeachTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="brTeachTitle">Teach TCP AI</h2><button class="link" id="brTeachClose" type="button">Close</button></div>
+    <div class="field"><label for="brGuide">How to read your charts</label>
+      <textarea id="brGuide" rows="9" maxlength="6000" placeholder="What your indicator's panel shows and what each row means, the colours, which zones you trust, what you never trade…"></textarea>
+      <div class="hint">TCP AI reads this before every brief. It stays in the terminal's database, not in any public file.</div></div>
+    <div class="field"><label>Reminders before each session</label>
+      <div class="chips" id="brRemind"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+      <div class="chips" id="brRemindSessions"></div>
+      <div class="chips" id="brLead"><button type="button" data-v="30">30 min before</button><button type="button" data-v="45">45 min</button><button type="button" data-v="60">1 hour</button></div></div>
+    <div class="field"><label for="brNewLesson">Add a lesson</label><input id="brNewLesson" maxlength="400" autocomplete="off" placeholder="Something TCP AI should always remember"></div>
+    <button class="cta pb-submit" id="brTeachSave" type="button">SAVE</button>
+    <div class="field" style="margin-top:18px"><label>What it has learned from you</label><div id="brLessons"></div></div>
+  </div>
+</div>
+
+<div class="sheet" id="mtSheet" role="dialog" aria-modal="true" aria-labelledby="mtSheetTitle" hidden>
+  <div class="sheet-body">
+    <div class="row spread sheet-head"><h2 id="mtSheetTitle">Connect MT5</h2><button class="link" id="mtClose" type="button">Close</button></div>
+    <div class="mt-promise">
+      <p><b>Read-only.</b> TCP uses your investor password, which can see trades but can't place them or move money.</p>
+      <p><b>Encrypted on this phone.</b> Only TCP's bridge can open it. The terminal never sees it.</p>
+      <p><b>Percentages only.</b> Your balance never leaves your account.</p>
+    </div>
+    <details class="mt-help"><summary>Where's my investor password?</summary>
+      <p>In MT5, open your account's settings and choose Change password, then the investor (read-only) one. PU Prime's and Vantage's client areas can set it too. Your master password stays with you: never share it.</p></details>
+    <div class="field"><label for="mtLogin">Account number</label><input id="mtLogin" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="e.g. 12345678"></div>
+    <div class="field"><label for="mtServer">Server</label><input id="mtServer" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" placeholder="e.g. PUPrime-Live 3">
+      <div class="hint">Exactly as MT5 shows it under your account.</div></div>
+    <div class="field"><label for="mtPassword">Investor password</label><input id="mtPassword" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64"></div>
+    <div class="field"><label for="mtNick">Leaderboard name</label><input id="mtNick" autocomplete="off" maxlength="20" placeholder="e.g. Aurum">
+      <div class="hint">2 to 20 letters or numbers. Pick one you don't mind others seeing.</div></div>
+    <div class="field"><label>Show me on the leaderboard</label><div class="chips" id="mtPublic"><button type="button" data-v="on">Yes</button><button type="button" data-v="off">No, just my stats</button></div></div>
+    <label class="mt-consent"><input type="checkbox" id="mtConsent"><span>This is my investor (read-only) password, not my master password.</span></label>
+    <div class="pb-error" id="mtError" role="alert" hidden></div>
+    <button class="cta pb-submit" id="mtSubmit" type="button">ENCRYPT AND CONNECT</button>
+    <p class="fine">Disconnect any time under Account: your link and every day recorded for it are deleted.</p>
+  </div>
+</div>
+
+<div class="viewer" id="pbViewer" hidden><img id="pbViewerImg" alt="The chart for this setup"><button class="link" id="pbViewerClose" type="button">Close</button></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<nav aria-label="Terminal">
+  <button data-tab="markets" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 3v4M6 17v4M12 6v3M12 17v3M18 4v3M18 14v6"/><rect x="4" y="7" width="4" height="10" rx="1"/><rect x="10" y="9" width="4" height="8" rx="1"/><rect x="16" y="7" width="4" height="7" rx="1"/></svg>MARKETS</button>
+  <button data-tab="risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>RISK</button>
+  <button data-tab="signals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>SIGNALS</button>
+  <button data-tab="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z"/></svg>AI</button>
+  <button data-tab="ranks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v6a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 14v4M8.5 21h7M9.5 18h5"/></svg>RANKS</button>
+  <button data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>ACCOUNT</button>
+</nav>
+
+<div class="gate" id="gate">
+  <div>
+    <span data-crown></span>
+    <h1 id="gateTitle">Checking your membership…</h1>
+    <p id="gateText">One moment.</p>
+    <a class="cta" id="gateCta" hidden></a>
+  </div>
+</div>
+
+<script type="module">
+/*SCRIPT*/
+</script>
+</body>
+</html>

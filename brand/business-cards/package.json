@@ -1,0 +1,7 @@
+{
+  "name": "tcp-business-cards",
+  "private": true,
+  "description": "Builds print-ready TCP business cards with a tracked QR code",
+  "scripts": { "build": "node build.js" },
+  "dependencies": { "qrcode": "1.5.4", "jsqr": "1.4.0", "playwright": "^1.56.0" }
+}
