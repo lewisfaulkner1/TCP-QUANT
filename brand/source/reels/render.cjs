@@ -154,7 +154,8 @@ function ffmpeg(list) {
   // ---------------------------------------------------------------- videos
   fs.mkdirSync(OUT, { recursive: true });
   const video = ['-framerate', String(FPS), '-i', path.join(frameDir, '%05d.jpg')];
-  const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-movflags', '+faststart', '-r', String(FPS)];
+  // capped at 8 Mbps so a bright, grainy reel still comes in under 30 MB (TikTok and Instagram recompress anyway)
+  const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-maxrate', '8M', '-bufsize', '16M', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-movflags', '+faststart', '-r', String(FPS)];
   const loud = ['-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'];
   const made = [];
   if (VOICE) {
