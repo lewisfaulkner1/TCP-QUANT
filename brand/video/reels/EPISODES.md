@@ -439,8 +439,8 @@ The plan below was for the first cut:
 
 ## This week: one episode a day
 
-Five new episodes, made from the approved founder, the sets and the real app, for Tuesday 6 to
-Saturday 10 October. EP08 follows once its new ending is made. Each one has the same files as the
+Seven new episodes, made from the approved founder, the sets and the real app, for Tuesday 6 to
+Monday 12 October. EP08 follows once its new ending is made. Each one has the same files as the
 others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the covers).
 
 | Day | Episode | TCP account | Founder's account |
@@ -450,7 +450,9 @@ others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the cov
 | Thu 8 Oct | EP13 · The App Inside Telegram | the same | the same |
 | Fri 9 Oct | EP14 · POV: You Finally Stop Chasing Candles | the same | the same |
 | Sat 10 Oct | EP15 · The Market Keeps Calling Me | the same | the same |
-| Sun 11 Oct | EP08 · The Day I Deleted 27 Indicators, with its new ending | the same | the same |
+| Sun 11 Oct | EP16 · Trading Group Chat at 3 AM | the same | the same |
+| Mon 12 Oct | EP17 · Fake Trader vs Real Trader | the same | the same |
+| Next free day | EP08 · The Day I Deleted 27 Indicators, with its new ending | the same | the same |
 
 UK times. On TCP's account each episode takes the day's 19:30 slot and that day's batch 1 reel moves
 to 12:30. Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -598,6 +600,64 @@ Education, not financial advice. Trading carries risk. Example chart, not real t
 Gold called. Then again. Then Bitcoin. 📵
 
 I only answer the calls I planned for.
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+### EP16 · Trading Group Chat at 3 AM (21 s)
+
+`specs/ep16-group-chat.js`. 3am, phone in hand, and the chat won't stop: *KING_FX · BUY GOLD NOW*,
+*MOONBOY · it's going to 5,000*, *PIP_LORD · SELL SELL SELL*, *who's still in??*, *post your PnL*. The
+side-eye, in silence. *GROUP MUTED · for 8 hours.* *Noise isn't a plan. If it's not in your plan, it's
+not your trade.* *mute → sleep → plan*. The chat's names are made up, and the end card says so.
+
+**TCP account (K):**
+```
+3am. The group chat: BUY. SELL. 5,000. Post your PnL. 📵
+
+Noise isn't a plan. If it's not in your plan, it's not your trade.
+
+What's the wildest thing your group chat has said? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+**Founder's account (J):**
+```
+Muted for 8 hours. Best decision I made all night. 😴
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+### EP17 · Fake Trader vs Real Trader (21 s)
+
+`specs/ep17-fake-vs-real.js`. The founder plays both, four quick pairs: *27 indicators* or *1 plan*;
+*chases the breakout* or *waits for the pullback*; *posts the wins* or *logs every trade*; *blames the
+market* or *checks the plan*. Then the brief's line: *the difference happens before the entry.* *plan
+first → click last*.
+
+**TCP account (K):**
+```
+Fake trader vs real trader. 🤔
+
+27 indicators or 1 plan. Chasing the breakout or waiting for the pullback. Posting the wins or logging every trade. Blaming the market or checking the plan.
+
+The difference happens before the entry.
+
+Which one were you last week? 👇
+
+#trading #daytrading #tradingtips #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades.
+```
+
+**Founder's account (J):**
+```
+I've been both. 😅
+
+The difference happens before the entry.
 
 #trading #daytrader #tradinglife #forex
 Education, not financial advice. Trading carries risk. Example chart, not real trades.
