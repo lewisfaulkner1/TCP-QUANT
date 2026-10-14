@@ -11,7 +11,8 @@ const T = { cabin: 2.86, face: 5.71, wait: 8.57, alert: 11.43, phone: 14.29, fre
 const RELAX = { arms: 'phone', lean: -1, look: [0.6, 0.3], lid: 0.04, brow: [0.2, 0.3], mouth: { smile: 0.1 } };
 const CALM = { arms: 'fold', lean: -3, look: [0.5, 0.15], lid: 0.32, brow: [0, 0.15], mouth: { smile: 0.12 } };
 const GAZE = { arms: 'fold', lean: -3.5, look: [-1, -0.05], lid: 0.3, brow: [0.05, 0.15], mouth: { smile: 0.18 } };
-const ALERT = { arms: 'desk', lean: 3, look: [1, 0.25], lid: 0.18, brow: [0.35, 0.45], mouth: { smile: 0 } };
+// the alert lands on his phone: he looks down at it, brows up
+const ALERT = { arms: 'phone', lean: 1, look: [0.4, 0.62], lid: 0.1, brow: [0.4, 0.5], mouth: { smile: 0 } };
 const P = (t, pose, ease) => ({ t, pose, ease });
 const POSE = [
   P(0, RELAX), P(T.face - 0.02, { ...RELAX, look: [0.35, 0.6] }),

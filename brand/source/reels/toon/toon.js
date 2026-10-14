@@ -1023,9 +1023,13 @@
       <text x="965" y="676" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="38" fill="${GOLD}">TCP</text>
       <ellipse cx="300" cy="640" rx="560" ry="520" fill="url(#${id}jlight)" opacity="0.7"/>`;
     const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    // his near arm goes over the table only when his hands rest on it; held up or hanging, the table's
+    // edge hides whatever of it is below the tabletop, as it would from where we sit
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
     const subject = `
       ${jetSeat(id)}
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
       <!-- the laptop on the side table, its screen turned towards him and us -->
       <g transform="translate(700 1130) skewY(-9) scale(0.66 1)">${monitor(st, id + 'c', 440)}</g>
       <path d="M 700 1118 L 693 1122 L 693 1396 L 700 1392 Z" fill="#9AA0A8"/>
@@ -1039,7 +1043,7 @@
         <path d="M -34 -46 L 34 -46 L 28 0 C 20 8, -20 8, -28 0 Z" fill="#FBF9F5" stroke="#D8D2C8" stroke-width="2"/><ellipse cx="0" cy="-46" rx="34" ry="7" fill="#3B2416"/>
         <path d="M 32 -36 C 54 -36, 54 -12, 30 -12" fill="none" stroke="#FBF9F5" stroke-width="8"/>${crown(0, -22, 0.08)}</g>
       ${steam(1120, 1440, t, id)}
-      <g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>
+      ${onTable ? nearArm : ''}
       <!-- the table's front, in cream leather -->
       <path d="M -300 1600 L 1400 1600 L 1400 2400 L -300 2400 Z" fill="#E3D6C3"/><path d="M -300 1600 L 1400 1600" stroke="#B49A78" stroke-width="5"/>
       ${[0, 1, 2].map((i) => `<path d="M -300 ${1700 + i * 120} L 1400 ${1700 + i * 120}" stroke="#CBB89C" stroke-width="3" opacity="0.7"/>`).join('')}
