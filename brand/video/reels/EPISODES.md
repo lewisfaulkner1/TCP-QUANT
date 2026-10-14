@@ -779,7 +779,7 @@ Education, not financial advice. Trading carries risk.
 
 ## The trading emotions: a new cast, new places, new sound
 
-Six episodes for Saturday 17 to Thursday 22 October, after EP08 on Friday 16. Each is somewhere
+Seven episodes for Saturday 17 to Friday 23 October, after EP08 on Friday 16. Each is somewhere
 new, with its own music, and three come straight from the master brief (EP06, EP09 and the line-up
 that brings in the brief's FOMO character). The founder is in every one, as approved on sheet V6.
 
@@ -807,6 +807,7 @@ saying "join".
 | Tue 20 Oct | EP18 · Revenge Trading | a boxing ring at night | fight night | the same | the same |
 | Wed 21 Oct | EP19 · Greed at the Take Profit | a TV game show | big-band swing | the same | the same |
 | Thu 22 Oct | EP21 · Fear Closes Winners Early | a cinema at night, a horror film | horror score | the same | the same |
+| Fri 23 Oct | EP22 · The Rarest Trader in the Wild | a savanna's watering hole, a wildlife film | wildlife score, birds | the same | the same |
 
 Same files as the others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the
 covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -818,8 +819,9 @@ covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the h
   and *if FOMO was a person*. The text sits in the top third, clear of the buttons, and the first
   frame already shows the joke, so the cover works as a thumbnail too.
 - **Characters people come back for.** A recurring cast turns single videos into a series: people
-  follow to see what FOMO does next. Each emotion gets its own episode; they cross over (the line-up
-  has all four); PATIENCE always wins. Keep their looks fixed (the sheet) and their lines in
+  follow to see what FOMO does next. Each emotion has its own episode now (FOMO EP09, REVENGE EP18,
+  GREED EP19, FEAR EP21, PATIENCE EP22: pin them as a playlist); they cross over (the line-up has
+  four, EP22 has two); PATIENCE always wins. Keep their looks fixed (the sheet) and their lines in
   character.
 - **A loop.** EP09 ends where it began (FOMO pops back up: *every. single. time.*), so the second
   watch starts before people notice. Rewatches count towards watch time, which both apps reward.
@@ -1072,10 +1074,54 @@ When did you last close a winner too early? 👇
 Education, not financial advice. Trading carries risk. A drawn chart, not a real trade. The characters are made up.
 ```
 
+### EP22 · The Rarest Trader in the Wild (23.4 s, wildlife score)
+
+`specs/ep22-patience.js`, PATIENCE's own episode. A wildlife film at a savanna's watering hole in
+the golden hour: PATIENCE fishing from the bank with its tea, the rod propped on a forked stick, and
+the film-maker's hide in the bushes with the founder's cap (the crown) peeking over the top. *The
+rarest trader in the wild:* FOMO runs in (*THERE'S ONE!!*), dives at a ripple and comes up with an old
+boot: *GOT ONE!!* *The young ones chase every ripple.* In the hide, the founder whispers: *this one
+hasn't moved in 4 hours.* Night comes and goes in a time-lapse (*still waiting*), FOMO shivering in
+the water with its boot. At dawn the float goes under: *the setup.* PATIENCE puts its tea down and
+lands one gold fish: *one trade. Then it goes home*, past FOMO. *Most of trading is waiting. Be
+honest: which one are you?* The captions are the narration (no voice, and no impression of any real
+presenter); the score is strings, marimba and a flute over the savanna's birds and insects, and the
+music stops for the bite.
+
+Why it should travel: the wildlife-film voice is a format everyone knows, and the boot is the laugh;
+the time-lapse is something to watch twice; *which one are you?* has a one-word answer (FOMO or
+PATIENCE), so the comments fill up; and the gold character with the crown wins, quietly, in TCP's
+colours.
+
+**TCP account (K):**
+```
+The rarest trader in the wild. 🎣
+
+The young ones chase every ripple. (One came up with a boot.)
+This one waited all night for one bite.
+
+Most of trading is waiting.
+
+Be honest: which one are you, FOMO or Patience? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+I used to be the one that dives in and comes up with a boot. 🥾
+
+Now I bring a tea and wait for one bite.
+
+Which one are you right now? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
 ### Next ideas
 
-- **PATIENCE's episode:** a nature documentary on the rarest trader of all, the one that waits
-  (captions as the narrator; no impression of any real presenter's voice).
 - **The emotions' group chat:** FOMO, REVENGE, GREED and FEAR in one chat at 3am; PATIENCE has it
   muted.
 - **The race:** FOMO against PATIENCE, the hare and the tortoise, to the take profit.

@@ -12,7 +12,8 @@
 //   Cast.WHO                     their names, colours and builds
 //
 // A pose: { arms, legs, face (1 or -1: the way it turns), lean, squash, hop, shake, look: [x, y], lid,
-// brow: { raise, angry, worry }, mouth: { smile, open, teeth, wavy, o }, card, screen, popcorn, drop, spill }. Arms: down,
+// brow: { raise, angry, worry }, mouth: { smile, open, teeth, wavy, o }, card, screen, popcorn, drop, spill,
+// rod, line, bite, bend, reel, holds }. Arms: down,
 // point, pull, phone, guard, punch, grab, rub, hug, tea, shrug, up, sign, hips, wave. Legs: stand,
 // walk, run, sit, tuck. Blinks and breathing are added.
 //
@@ -316,6 +317,55 @@
         prop.push(`<circle cx="${n(px)}" cy="${n(py)}" r="7" fill="#FFF4D6" stroke="${INK}" stroke-width="2" opacity="${n(p.spill * (1 - u))}"/>`);
       }
     }
+    // a gold fish (head first along x-, tail at x+) and an old boot (held by the top of its shaft)
+    const fishSVG = (x, y, rot) => `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)})">
+        <path d="M -42 0 C -28 -24, 22 -26, 38 -5 L 62 -24 L 56 0 L 62 24 L 38 5 C 22 26, -28 24, -42 0 Z" fill="#E8B33C" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
+        <path d="M -8 -17 C -2 -30, 12 -30, 18 -19" fill="#C98F1F" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M 6 -9 Q 11 0, 6 9 M 17 -11 Q 22 0, 17 11" stroke="#B57D16" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M -30 -12 C -26 -16, -16 -18, -8 -16" stroke="#FFF1C4" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <circle cx="-24" cy="-4" r="6" fill="${WHITE}" stroke="${INK}" stroke-width="2"/><circle cx="-25" cy="-4" r="2.8" fill="${INK}"/>
+        <path d="M -40 5 Q -35 9, -31 5" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/></g>`;
+    const drips = (x, y) => [0, 1].map((i) => { const u = (t * 1.4 + i * 0.5) % 1; return `<path d="M ${n(x + (i ? 10 : -12))} ${n(y + u * 70)} c 4 6, 4 10, 0 10 c -4 0, -4 -4, 0 -10 Z" fill="#BFE3F5" stroke="${INK}" stroke-width="1.6" opacity="${n(1 - u)}"/>`; }).join('');
+    const bootSVG = (x, y, rot) => `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)})">
+        <path d="M -18 0 L 16 0 L 16 50 L 48 58 C 60 61, 62 80, 48 82 L -20 82 C -27 82, -27 72, -22 64 Z" fill="#6B4A2E" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
+        <path d="M -18 0 L 16 0 L 16 12 L -18 12 Z" fill="#4E3420" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M -12 24 L 12 30 M -12 38 L 12 44" stroke="#E8DCC4" stroke-width="3" stroke-linecap="round"/>
+        <path d="M -24 72 L 58 72" stroke="${INK}" stroke-width="3"/>
+        <path d="M 30 60 C 36 52, 44 56, 40 62" fill="#3D2A1A"/></g>${drips(x, y + 84)}`;
+    // a fishing rod: pose.rod 'propped' on a forked stick in front of it, or 'held' in both hands; its line
+    // runs to pose.line ([forward, down] from its feet) where a float bobs, and dips when pose.bite is up;
+    // reeled in (pose.reel 0 to 1), a gold fish rides the line up to the tip. pose.bend bows the rod.
+    if (p.rod) {
+      const held = p.rod === 'held';
+      const B = held ? [mid[0] - 30 * f, mid[1] + 26] : [84 * f, -6];
+      const dir = held ? [0.72 * f, -0.7] : [0.71 * f, -0.7];
+      const dl = Math.hypot(dir[0], dir[1]), bend = cl(p.bend ?? (p.bite || 0) * 0.5);
+      const tip = [B[0] + (dir[0] / dl) * 380, B[1] + (dir[1] / dl) * 380 + bend * 80];
+      const ctl = [(B[0] + tip[0]) / 2 + bend * 30 * f, (B[1] + tip[1]) / 2 - 10 + bend * 26];
+      if (!held) {
+        const sx3 = 176 * f;
+        prop.push(`<path d="M ${n(sx3)} 4 L ${n(sx3 - 4 * f)} -86 M ${n(sx3 - 4 * f)} -86 L ${n(sx3 - 18 * f)} -110 M ${n(sx3 - 4 * f)} -86 L ${n(sx3 + 14 * f)} -112" stroke="${INK}" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <path d="M ${n(sx3)} 4 L ${n(sx3 - 4 * f)} -86 M ${n(sx3 - 4 * f)} -86 L ${n(sx3 - 18 * f)} -110 M ${n(sx3 - 4 * f)} -86 L ${n(sx3 + 14 * f)} -112" stroke="#8A6238" stroke-width="5" stroke-linecap="round" fill="none"/>`);
+      }
+      const rodD = `M ${n(B[0])} ${n(B[1])} Q ${n(ctl[0])} ${n(ctl[1])} ${n(tip[0])} ${n(tip[1])}`;
+      prop.push(`<path d="${rodD}" stroke="${INK}" stroke-width="8" fill="none" stroke-linecap="round"/><path d="${rodD}" stroke="#7A5530" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M ${n(B[0])} ${n(B[1])} L ${n(B[0] + (dir[0] / dl) * 70)} ${n(B[1] + (dir[1] / dl) * 70)}" stroke="${INK}" stroke-width="13" stroke-linecap="round"/>
+        <path d="M ${n(B[0])} ${n(B[1])} L ${n(B[0] + (dir[0] / dl) * 70)} ${n(B[1] + (dir[1] / dl) * 70)}" stroke="#D9B98A" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="${n(B[0] + (dir[0] / dl) * 40 + 12 * f)}" cy="${n(B[1] + (dir[1] / dl) * 40 + 12)}" r="11" fill="#C9CDD2" stroke="${INK}" stroke-width="3"/>`);
+      const L = p.line || [430, 40], W0 = [L[0] * f, L[1]], rl = cl(p.reel || 0), bite = cl(p.bite || 0);
+      const end = [mix(W0[0], tip[0], rl), mix(W0[1], tip[1] + 86, rl)];
+      const slack = rl > 0.02 || bite > 0.3 ? 0 : 1;
+      prop.push(`<path d="M ${n(tip[0])} ${n(tip[1])} Q ${n((tip[0] + end[0]) / 2 + slack * 26 * f)} ${n((tip[1] + end[1]) / 2 + slack * 18)} ${n(end[0])} ${n(end[1])}" stroke="#F4F1E8" stroke-width="2.4" fill="none" opacity="0.9"/>`);
+      if (rl > 0.02) prop.push(fishSVG(end[0], end[1] + 40, 90 + Math.sin(t * 22) * (22 - rl * 10)) + drips(end[0], end[1] + 70));
+      else {
+        const by2 = end[1] + Math.sin(t * 2.6) * 2.5 + bite * 16, ring = (t * 0.8) % 1;
+        prop.push(`<ellipse cx="${n(end[0])}" cy="${n(end[1] + 4)}" rx="${n(18 + ring * 40 + bite * 30)}" ry="${n(4 + ring * 8 + bite * 6)}" fill="none" stroke="#FFFFFF" stroke-width="2.4" opacity="${n((1 - ring) * 0.55 + bite * 0.3)}"/>
+          <g transform="translate(${n(end[0])} ${n(by2)})" opacity="${n(1 - bite * 0.75)}"><path d="M -9 -2 A 9 9 0 0 1 9 -2 Z" fill="#E0412F" stroke="${INK}" stroke-width="2.4"/><path d="M -9 -2 A 9 9 0 0 0 9 -2 Z" fill="${WHITE}" stroke="${INK}" stroke-width="2.4"/><path d="M 0 -11 L 0 -20" stroke="${INK}" stroke-width="2.4"/></g>`);
+      }
+    }
+    // something held up in the hand on its facing side: pose.holds 'boot' or 'fish'
+    if (p.holds === 'boot') prop.push(bootSVG(hands[1].hx, hands[1].hy - 6, Math.sin(t * 3) * 4));
+    if (p.holds === 'fish') prop.push(fishSVG(hands[1].hx, hands[1].hy + 54, -90 + Math.sin(t * 9) * 8));
     if (p.arms === 'sign' && p.card) {
       prop.push(`<g transform="translate(${n(mid[0])} ${n(mid[1] + 10)})"><rect x="-44" y="-30" width="88" height="56" rx="6" fill="${WHITE}" stroke="${INK}" stroke-width="3.6"/>
         <text x="0" y="16" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="${INK}">${p.card}</text></g>`);

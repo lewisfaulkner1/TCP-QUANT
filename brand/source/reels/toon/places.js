@@ -11,9 +11,12 @@
 //   gameshow  TAKE IT OR LEAVE IT: him at a podium, the trade on the big screen, the two buttons
 //   cinema    a horror film's late showing: him in a red velvet seat, the screen's cold flicker
 //   film      that film up close, THE TRADE, from the row behind: his cap and FEAR in silhouette
+//   waterhole a savanna's watering hole for a wildlife film: the sky by the hour, the water, the near bank
+//   hide      inside the film-maker's hide on that bank: canvas, the long lens, the slit's bright view
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
+  const INK = '#1A120C';
 
   // the cast of a shot, in depth order (further back first), each from its own track
   function castOf(s, t, id, filter = () => true) {
@@ -503,6 +506,172 @@
       <rect width="1080" height="1920" fill="url(#${id}sl)" opacity="${n(cl(flick, 0, 1.6) * 0.5)}" style="mix-blend-mode:screen"/>
       <rect width="1080" height="1920" fill="url(#${id}cv)"/>`;
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 0, svg: glow }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the watering hole
+  // A savanna's watering hole, for a wildlife film. The sky and its light follow the hour (s.hour:
+  // [{ t, h }], h in hours, past 24 the next day): the sun, the moon and the stars, clouds that race
+  // when the hours do. The far bank and its acacias, the water (y 1120 to 1660), the near bank, and the
+  // hide on the left with his cap peeking out. A cast member whose pose has `wade` stands in the water
+  // up to that height (its own units). s.splash: [[t, x, y]].
+  const SKY = [ // hour, top, bottom, dark, stars
+    [0, '#060B1E', '#131D3E', 0.7, 1], [4.6, '#0B1230', '#2A2A55', 0.64, 0.9], [5.6, '#2C3570', '#D27A78', 0.36, 0.3],
+    [6.6, '#5C77B8', '#FFC48A', 0.1, 0], [8.5, '#5E9BD8', '#D6EAF2', 0, 0], [12, '#4C8ED8', '#C4E2F2', 0, 0],
+    [15.5, '#4F8CD6', '#F4D9A6', 0, 0], [17.6, '#5B6FC0', '#FFB56A', 0.06, 0], [18.9, '#3A3C78', '#F08A5E', 0.28, 0.1],
+    [20.2, '#141A44', '#4A3A72', 0.58, 0.6], [21.5, '#070C22', '#18204A', 0.68, 0.95], [24, '#060B1E', '#131D3E', 0.7, 1]];
+  const hexMix = (a, b, k) => {
+    const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+    const c = (sh) => Math.round(mix((pa >> sh) & 255, (pb >> sh) & 255, cl(k)));
+    return `#${((1 << 24) + (c(16) << 16) + (c(8) << 8) + c(0)).toString(16).slice(1)}`;
+  };
+  function skyAt(h) {
+    const hh = ((h % 24) + 24) % 24;
+    let i = 0;
+    while (i < SKY.length - 2 && SKY[i + 1][0] <= hh) i++;
+    const a = SKY[i], b = SKY[i + 1], k = cl((hh - a[0]) / (b[0] - a[0]));
+    return { h, hh, top: hexMix(a[1], b[1], k), bottom: hexMix(a[2], b[2], k), dark: mix(a[3], b[3], k), stars: mix(a[4], b[4], k) };
+  }
+  function hourAt(keys, t) {
+    const ks = (keys || [{ t: 0, h: 15 }]).map((k) => ({ ...k, at: at(k.t) }));
+    if (t <= ks[0].at) return ks[0].h;
+    for (let i = 0; i < ks.length - 1; i++) {
+      const a = ks[i], b = ks[i + 1];
+      if (t < b.at) { const u = cl((t - a.at) / (b.at - a.at)); return mix(a.h, b.h, u * u * (3 - 2 * u)); }
+    }
+    return ks[ks.length - 1].h;
+  }
+  const acacia = (x, y, k, col) => `<g transform="translate(${x} ${y}) scale(${k})" fill="${col}"><path d="M -7 0 L -5 -110 Q -30 -142 -62 -164 L -55 -171 Q -22 -152 -1 -132 Q 16 -164 52 -180 L 57 -173 Q 26 -154 7 -116 L 9 0 Z"/>
+    <ellipse cx="0" cy="-186" rx="150" ry="24"/><ellipse cx="-66" cy="-196" rx="84" ry="19"/><ellipse cx="74" cy="-193" rx="92" ry="21"/><ellipse cx="8" cy="-204" rx="70" ry="16"/></g>`;
+  // the sky, the sun or the moon, the stars and clouds, the far hills: shared with the hide's slit
+  function savannaFar(sky, id) {
+    const sunK = (sky.hh - 12) / 6.4, moonH = sky.hh < 12 ? sky.hh + 24 : sky.hh, moonK = (moonH - 24.5) / 5.8;
+    const sun = Math.abs(sunK) < 1.05 ? [540 + sunK * 720, 1010 - Math.cos(cl(Math.abs(sunK), 0, 1) * Math.PI / 2) * 660] : null;
+    const moon = Math.abs(moonK) < 1.05 ? [540 + moonK * 720, 1010 - Math.cos(cl(Math.abs(moonK), 0, 1) * Math.PI / 2) * 600] : null;
+    const low = sun ? cl((sun[1] - 520) / 480) : 0;
+    const stars = sky.stars > 0.02 ? Array.from({ length: 46 }, (_, i) => {
+      const x = (i * 137.5 + 40) % 1080, y = 60 + ((i * 251) % 820), tw = 0.6 + 0.4 * Math.sin(i * 1.7 + sky.h * 9);
+      return `<circle cx="${n(x)}" cy="${n(y)}" r="${1.6 + (i % 3) * 0.8}" fill="#FFFFFF" opacity="${n(sky.stars * tw)}"/>`;
+    }).join('') : '';
+    const drift = (sky.h * 260) % 2600;
+    const clouds = [[0, 300, 1], [900, 430, 0.8], [1700, 220, 1.2]].map(([x0, y, k]) => {
+      const x = ((x0 + drift) % 2600) - 700;
+      const col = hexMix(sky.bottom, '#FFFFFF', 0.75 - sky.dark * 0.6);
+      return `<g transform="translate(${n(x)} ${y}) scale(${k * 0.8})" fill="${col}" opacity="${n(0.6 - sky.dark * 0.4)}"><ellipse cx="0" cy="0" rx="150" ry="34"/><ellipse cx="-70" cy="-18" rx="80" ry="34"/><ellipse cx="60" cy="-26" rx="90" ry="40"/></g>`;
+    }).join('');
+    const hill = hexMix(sky.bottom, '#3B3A40', 0.55 + sky.dark * 0.3), hill2 = hexMix(sky.bottom, '#2C2C2A', 0.72 + sky.dark * 0.2);
+    return `<defs><linearGradient id="${id}sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky.top}"/><stop offset="1" stop-color="${sky.bottom}"/></linearGradient>
+        <radialGradient id="${id}sg"><stop offset="0" stop-color="#FFE7B0" stop-opacity="0.8"/><stop offset="1" stop-color="#FFE7B0" stop-opacity="0"/></radialGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="1700" fill="url(#${id}sk)"/>${stars}
+      ${sun ? `<circle cx="${n(sun[0])}" cy="${n(sun[1])}" r="230" fill="url(#${id}sg)"/><circle cx="${n(sun[0])}" cy="${n(sun[1])}" r="62" fill="${hexMix('#FFF4D6', '#FF9B4A', low)}"/>` : ''}
+      ${moon ? `<g opacity="${n(cl(sky.dark * 1.6))}"><circle cx="${n(moon[0])}" cy="${n(moon[1])}" r="44" fill="#F3EED8"/><circle cx="${n(moon[0] + 20)}" cy="${n(moon[1] - 10)}" r="40" fill="${sky.top}" opacity="0.9"/></g>` : ''}
+      ${clouds}
+      <path d="M -600 1000 L -600 930 Q -300 860 -40 930 Q 240 880 470 950 Q 700 890 940 940 Q 1200 870 1680 930 L 1680 1000 Z" fill="${hill}"/>
+      <path d="M -600 1060 L -600 990 Q -200 960 160 1000 Q 520 960 860 1004 Q 1200 970 1680 996 L 1680 1060 Z" fill="${hill2}"/>`;
+  }
+  SETS.waterhole = (s, t, st, p, id) => {
+    const sky = skyAt(hourAt(s.hour, t));
+    const tree = hexMix(sky.bottom, '#1E1A14', 0.78 + sky.dark * 0.2);
+    const grass = hexMix('#D8B460', '#2A2E3A', sky.dark), grassD = hexMix('#A4823C', '#1A1E28', sky.dark);
+    const bank = hexMix('#8C7636', '#1C2026', sky.dark), bankD = hexMix('#5E4E22', '#12151A', sky.dark);
+    const sunK = (sky.hh - 12) / 6.4, sunX = 540 + sunK * 720, sunUp = Math.abs(sunK) < 1;
+    const far = `${savannaFar(sky, id)}
+      ${acacia(150, 1068, 1.25, tree)}${acacia(800, 1050, 0.62, tree)}${acacia(1010, 1062, 0.9, tree)}`;
+    const blades = (x0, x1, y, h, col, seed) => {
+      let d = '';
+      for (let x = x0, i = 0; x < x1; x += 14, i++) { const hh2 = h * (0.6 + 0.4 * Math.abs(Math.sin(i * 1.9 + seed))), lean = Math.sin(t * 1.3 + i * 0.7) * 4; d += `M ${x} ${y} L ${n(x + 5 + lean)} ${n(y - hh2)} L ${x + 10} ${y} `; }
+      return `<path d="${d}Z" fill="${col}"/>`;
+    };
+    const shine = (k) => hexMix(sky.bottom, '#FFFFFF', k);
+    const water = `<defs><linearGradient id="${id}wt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hexMix(sky.bottom, '#3C8296', 0.45)}"/><stop offset="1" stop-color="${hexMix(sky.top, '#0E3442', 0.5)}"/></linearGradient></defs>
+      <rect x="-600" y="1110" width="2280" height="600" fill="url(#${id}wt)"/>
+      ${Array.from({ length: 12 }, (_, i) => { const y = 1150 + i * 42 + (i % 2) * 8, w = 160 + (i * 73) % 220, x = ((i * 311 + t * (10 + i * 3)) % 1500) - 260; return `<path d="M ${n(x)} ${y} L ${n(x + w)} ${y}" stroke="${shine(0.5)}" stroke-width="3" opacity="${n(0.22 - sky.dark * 0.12)}" stroke-linecap="round"/>`; }).join('')}
+      ${sunUp ? Array.from({ length: 9 }, (_, i) => `<path d="M ${n(sunX - 40 + Math.sin(t * 3 + i) * 30)} ${1140 + i * 30} l ${60 + (i % 3) * 30} 0" stroke="#FFE3A8" stroke-width="5" opacity="${n(0.5 - i * 0.04)}" stroke-linecap="round"/>`).join('') : ''}
+      <path d="M -600 1110 L 1680 1110 L 1680 1136 Q 1000 1150 540 1132 Q 100 1150 -600 1134 Z" fill="${hexMix(grassD, '#000000', 0.35)}" opacity="0.7"/>
+      ${blades(-600, 1680, 1118, 34, grass, 1)}
+      ${[[-30, 1136], [70, 1130], [960, 1132], [1040, 1138]].map(([x, y]) => `<path d="M ${x} ${y} q -6 -60 -2 -110 M ${x + 10} ${y} q 6 -70 14 -120 M ${x + 20} ${y} q 2 -50 0 -90" stroke="${grassD}" stroke-width="5" fill="none"/>`).join('')}`;
+    // the near bank, rising to the right where PATIENCE sits; the hide on the left
+    const leaf = (i) => hexMix(i % 2 ? '#5E7032' : '#3E4C22', '#141A12', sky.dark);
+    const hideBush = `<g transform="translate(200 1700)">
+        <path d="M -190 0 C -200 -60, -150 -120, -60 -110 C -20 -150, 70 -150, 110 -100 C 170 -110, 210 -50, 200 0 Z" fill="${hexMix('#4A5A2A', '#141A12', sky.dark)}"/>
+        ${Array.from({ length: 18 }, (_, i) => { const a2 = (i / 18) * Math.PI, r = 120 + (i % 3) * 14, lx = Math.cos(a2) * -r * 1.4 + 10, ly = -Math.sin(a2) * r * 0.9; return `<ellipse cx="${n(lx)}" cy="${n(ly)}" rx="34" ry="16" transform="rotate(${n(-a2 * 57 + 90)} ${n(lx)} ${n(ly)})" fill="${leaf(i)}"/>`; }).join('')}
+        <rect x="-70" y="-74" width="150" height="20" rx="8" fill="#0C0E0A"/>
+        <path d="M 74 -64 L 128 -60 L 128 -50 L 74 -54 Z" fill="#1A1C20"/>
+        <g transform="translate(-6 -150) scale(1.35)"><path d="M -40 8 C -40 -30, 40 -30, 44 6 Z" fill="#141518"/><path d="M 32 2 Q 60 0 76 8 L 36 10 Z" fill="#101114"/>${crown(2, -12, 0.12, '#D8AD4E')}</g>
+        ${[3, 7, 11, 15].map((i) => { const a2 = (i / 18) * Math.PI, r = 150, lx = Math.cos(a2) * -r * 1.2 + 10, ly = -Math.sin(a2) * r * 0.85; return `<ellipse cx="${n(lx)}" cy="${n(ly)}" rx="30" ry="14" transform="rotate(${n(-a2 * 57 + 90)} ${n(lx)} ${n(ly)})" fill="${leaf(i + 1)}"/>`; }).join('')}</g>`;
+    const tufts = [[-20, 1760, 1.2], [330, 1720, 0.9], [560, 1800, 1.4], [980, 1760, 1.1], [1180, 1840, 1.3], [120, 1880, 1.5], [760, 1900, 1.2]].map(([x, y, k]) =>
+      `<path d="M ${x - 30 * k} ${y} L ${x - 16 * k} ${y - 60 * k} L ${x - 8 * k} ${y} L ${x} ${y - 80 * k} L ${x + 8 * k} ${y} L ${x + 18 * k} ${y - 56 * k} L ${x + 30 * k} ${y} Z" fill="${grassD}"/>`).join('');
+    const nearBank = `<path d="M -600 1690 Q -100 1668 300 1676 Q 620 1680 760 1648 Q 900 1626 1100 1632 L 1680 1640 L 1680 2500 L -600 2500 Z" fill="${bank}"/>
+      <path d="M -600 1690 Q -100 1668 300 1676 Q 620 1680 760 1648 Q 900 1626 1100 1632 L 1680 1640" stroke="${bankD}" stroke-width="8" fill="none"/>
+      ${[[-120, 1820, 260, 40], [420, 1760, 200, 26], [700, 1880, 300, 44], [1100, 1790, 220, 30]].map(([x, y, w, h]) => `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${h}" fill="${bankD}" opacity="0.35"/>`).join('')}
+      ${[[260, 1780, 16], [292, 1790, 10], [640, 1840, 20], [1010, 1880, 14], [40, 1900, 18], [1060, 1730, 11]].map(([x, y, r]) => `<ellipse cx="${x}" cy="${y}" rx="${r * 1.4}" ry="${r}" fill="${hexMix('#9C9488', '#20232A', sky.dark)}"/><ellipse cx="${x - r * 0.3}" cy="${y - r * 0.35}" rx="${r * 0.6}" ry="${r * 0.3}" fill="#FFFFFF" opacity="${n(0.25 - sky.dark * 0.2)}"/>`).join('')}
+      ${blades(-600, 1680, 1700, 30, grass, 3)}${tufts}`;
+    // the cast, each from its track; in the water up to its pose's `wade`
+    const list = Object.entries(s.cast || {}).map(([who, track]) => ({ who, q: C.at(who, track, t) })).sort((a, b) => a.q.y - b.q.y);
+    const cast = list.map(({ who, q }) => {
+      q.pose.__full = true;
+      const g = `<g transform="translate(${n(q.x)} ${n(q.y)}) scale(${n(q.s)})">${C.svg(who, q.pose, t, id + who)}</g>`;
+      const wade = q.pose.wade || 0;
+      if (wade <= 1) return g;
+      const wy = q.y - wade * q.s, rx = C.WHO[who].W * q.s * 0.62, ring = (t * 0.9) % 1;
+      const bubbles = wade > 200 ? [0, 1, 2].map((i) => { const u = (t * 1.6 + i * 0.33) % 1; return `<circle cx="${n(q.x + Math.sin(t * 5 + i * 2) * 14 + (i - 1) * 16)}" cy="${n(wy - u * 40)}" r="${5 + i * 2}" fill="none" stroke="#FFFFFF" stroke-width="2.4" opacity="${n(1 - u)}"/>`; }).join('') : '';
+      return `<clipPath id="${id}${who}w"><rect x="-600" y="-600" width="2280" height="${n(wy + 600)}"/></clipPath><g clip-path="url(#${id}${who}w)">${g}</g>
+        <ellipse cx="${n(q.x)}" cy="${n(wy)}" rx="${n(rx)}" ry="${n(rx * 0.16)}" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>
+        <ellipse cx="${n(q.x)}" cy="${n(wy + 2)}" rx="${n(rx * (1.1 + ring * 0.9))}" ry="${n(rx * 0.16 * (1.1 + ring * 0.9))}" fill="none" stroke="#FFFFFF" stroke-width="2.2" opacity="${n(0.5 * (1 - ring))}"/>${bubbles}`;
+    }).join('');
+    // splashes: spray up and out, and a ring
+    const splashes = (s.splash || []).map(([t0, x, y]) => {
+      const d = t - at(t0);
+      if (d < 0 || d > 0.9) return '';
+      const u = d / 0.9;
+      const drops = Array.from({ length: 16 }, (_, i) => {
+        const a2 = -Math.PI / 2 + (i - 7.5) * 0.17, v = 330 + (i % 4) * 60;
+        const px = x + Math.cos(a2) * v * d * 1.1, py = y + Math.sin(a2) * v * d + 900 * d * d;
+        return py < y + 10 ? `<circle cx="${n(px)}" cy="${n(py)}" r="${7 + (i % 3) * 2}" fill="#E8F6FF" stroke="${INK}" stroke-width="2" opacity="${n(1 - u * 0.6)}"/>` : '';
+      }).join('');
+      const crownH = 110 * Math.sin(Math.min(1, d / 0.45) * Math.PI);
+      return `<path d="M ${x - 90} ${y} Q ${x - 70} ${n(y - crownH)} ${x - 46} ${y} Q ${x - 24} ${n(y - crownH * 1.3)} ${x} ${y} Q ${x + 24} ${n(y - crownH * 1.25)} ${x + 46} ${y} Q ${x + 70} ${n(y - crownH * 0.95)} ${x + 90} ${y} Z" fill="#E8F6FF" stroke="${INK}" stroke-width="3" opacity="${n(1 - u * 0.5)}"/>
+        ${drops}<ellipse cx="${x}" cy="${y + 4}" rx="${n(80 + u * 160)}" ry="${n(14 + u * 26)}" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="${n(0.8 * (1 - u))}"/>`;
+    }).join('');
+    const fg = `${blades(-600, 1680, 2070, 260, hexMix('#7E6A30', '#151820', sky.dark), 5)}`;
+    const night = `<rect x="-600" y="-600" width="2280" height="3120" fill="#081028" opacity="${n(sky.dark * 0.5)}"/>`;
+    return [{ f: 0.3, svg: far, blur: s.dof && s.dof.bg }, { f: 0.75, svg: water, blur: s.dof && s.dof.mid },
+      { f: 1, svg: `${hideBush}${nearBank}${cast}${splashes}`, blur: s.dof && s.dof.all }, { f: 1.3, svg: fg, blur: 6 }, { f: 1, svg: night }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the hide
+  // Inside the film-maker's hide on that bank: olive canvas and netting, the slit on the right with the
+  // watering hole bright beyond it at the hour (s.hour), the long lens on its tripod, and him at the
+  // ledge (its top at y 1448) with binoculars, a flask with the crown and a notebook.
+  SETS.hide = (s, t, st, p, id) => {
+    const sky = skyAt(hourAt(s.hour, t));
+    p.light = { ...p.light, tint: hexMix('#E6F0D4', '#B8C4E8', sky.dark * 1.2), rim: 1 };
+    const view = `<svg x="700" y="640" width="720" height="260" viewBox="0 640 1080 390" preserveAspectRatio="xMidYMid slice">${savannaFar(sky, id + 'v')}
+        <rect x="0" y="1000" width="1080" height="120" fill="${hexMix('#C9A55A', '#22283A', sky.dark)}"/><rect x="0" y="1050" width="1080" height="80" fill="${hexMix(sky.bottom, '#2F4A52', 0.35)}"/></svg>`;
+    const bg = `<defs><linearGradient id="${id}cv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1F2516"/><stop offset="0.6" stop-color="#2E3620"/><stop offset="1" stop-color="#263019"/></linearGradient>
+        <linearGradient id="${id}ray" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hexMix(sky.bottom, '#FFFFFF', 0.4)}" stop-opacity="${n(0.22 - sky.dark * 0.18)}"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="url(#${id}cv)"/>
+      ${Array.from({ length: 12 }, (_, i) => `<path d="M ${-300 + i * 150} -600 Q ${-280 + i * 150 + (i % 2 ? 30 : -30)} 600 ${-300 + i * 150} 2400" stroke="#151A0F" stroke-width="${10 + (i % 3) * 6}" fill="none" opacity="0.55"/>`).join('')}
+      <rect x="686" y="626" width="748" height="288" rx="18" fill="#141810"/>
+      ${view}
+      ${Array.from({ length: 16 }, (_, i) => `<path d="M ${700 + i * 48} 640 l 24 260" stroke="#2A3220" stroke-width="2" opacity="0.5"/>`).join('')}
+      <path d="M 700 900 L 1400 900 L 900 1700 L 0 1700 Z" fill="url(#${id}ray)"/>
+      <g transform="translate(1060 790)"><rect x="-90" y="-60" width="150" height="110" rx="14" fill="#1A1C1F"/><rect x="40" y="-44" width="300" height="80" rx="10" fill="#26292D"/>
+        <rect x="320" y="-50" width="40" height="92" rx="8" fill="#101113"/><circle cx="-40" cy="-6" r="22" fill="#0E0F11" stroke="#3A3E44" stroke-width="4"/>
+        <path d="M -10 50 L -120 690 M -10 50 L 40 690 M -10 50 L 140 690" stroke="#15171A" stroke-width="12"/></g>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const subject = `
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
+      <path d="M -300 1448 L 1400 1448 L 1400 1520 L -300 1520 Z" fill="#7A5A36"/>${T.grain(-300, 1452, 1400, 1516, 41)}
+      <path d="M -300 1450 L 1400 1450" stroke="#B48C5C" stroke-width="3"/>
+      <g transform="translate(700 1448)"><rect x="-58" y="-62" width="44" height="62" rx="14" fill="#202226"/><rect x="-6" y="-62" width="44" height="62" rx="14" fill="#202226"/><rect x="-18" y="-46" width="16" height="20" fill="#2C2F34"/>
+        <circle cx="-36" cy="-62" r="16" fill="#3A4048"/><circle cx="16" cy="-62" r="16" fill="#3A4048"/></g>
+      <g transform="translate(900 1448)"><rect x="-34" y="-150" width="68" height="150" rx="16" fill="#2B4A3A"/><rect x="-26" y="-176" width="52" height="30" rx="8" fill="#1C2A22"/>${crown(0, -80, 0.2, '#D8AD4E')}</g>
+      <g transform="translate(1040 1448) skewX(-20)"><rect x="-70" y="-20" width="130" height="20" fill="#E8E0CC"/><rect x="-70" y="-24" width="130" height="6" fill="#C9583A"/></g>
+      ${onTable ? nearArm : ''}
+      <path d="M -300 1520 L 1400 1520 L 1400 2400 L -300 2400 Z" fill="#20261A"/>`;
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 
   T.castOf = castOf;

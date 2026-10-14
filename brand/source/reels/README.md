@@ -24,7 +24,7 @@ Instagram play at). The captions and posting plan are in `brand/video/reels/POST
 | `reel.html`, `reel.js` | The engine: draws any moment of a reel from its script, in Chromium. Background, headlines, stamps, tables, coin grids, compounding curves, lists, a phone playing app footage, the probability swarm, the end card, and the subtitles |
 | `toon/` | The animated founder and his sets, for the episodes |
 | `voice.py` | The voice: Kokoro through sherpa-onnx, offline. Speaks each line, trims it, and times every word for the subtitles |
-| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s); `noir` (a detective's jazz), `bounce` (a cartoon's oom-pah), `news` (a news theme), `fight` (fight-night drums and brass), `gameshow` (big-band swing) and `horror` (a drone, a heartbeat, a music box and string clusters). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt, a game's blips, a line-up buzzer, a boing, a sad trombone, camera flashes, a boxing bell, a punch, a drum roll, applause, a horror film's stinger, a heartbeat and a creak, and `ambience: 'cabin'` for an airliner's roar. Ducks under the voice |
+| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s); `noir` (a detective's jazz), `bounce` (a cartoon's oom-pah), `news` (a news theme), `fight` (fight-night drums and brass), `gameshow` (big-band swing), `horror` (a drone, a heartbeat, a music box and string clusters) and `nature` (a wildlife film's strings, marimba and flute). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt, a game's blips, a line-up buzzer, a boing, a sad trombone, camera flashes, a boxing bell, a punch, a drum roll, applause, a horror film's stinger, a heartbeat, a creak, a splash, a float's plop, a fishing reel and a bird, and `ambience: 'cabin'` for an airliner's roar or `'savanna'` for a breeze, insects and birds. Ducks under the voice |
 | `render.cjs` | Runs the lot: voice, frames (4 browsers at once), sound, and the videos with ffmpeg |
 | `capture.cjs` | Records the terminal in demo mode, as a phone shows it, frame by frame, for the phone scenes |
 | `hear.py` | Transcribes a voice track, to check the voice read the script |
@@ -104,8 +104,10 @@ loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
   keeps inside the frame).
 - `toon/places.js` adds the new places: `lineup` and `observe` (a police line-up and the room behind
   its glass), `cafe`, `press` (a press conference, with flashes kept under three a second),
-  `ring` (a boxing ring), `gameshow`, and `cinema` and `film` (a horror film's late showing, and the
-  film itself seen over the audience's heads in silhouette). Load it after the other three:
+  `ring` (a boxing ring), `gameshow`, `cinema` and `film` (a horror film's late showing, and the
+  film itself seen over the audience's heads in silhouette), and `waterhole` and `hide` (a savanna's
+  watering hole whose sky follows the hour, a night in a few seconds if you like, and the
+  film-maker's hide beside it). Load it after the other three:
   `modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js']`.
 - `node toon/sheet.cjs <out.png>` draws the founder's character sheet, `node toon/cast-sheet.cjs
   <out.png>` the cast's, to check a change to them.

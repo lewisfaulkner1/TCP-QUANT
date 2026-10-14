@@ -1358,7 +1358,9 @@
       s.hit.style.opacity = n(hit * 0.9);
       // a hard cut (fi and fo near 0) is fully on from its first frame to its last; otherwise it fades
       const cut = (s.fi ?? 0.35) <= 0.02;
-      s.node.style.opacity = cut ? (t >= s.a && t < s.b ? 1 : 0) : s.p;
+      // a hard cut in can still fade out (fo above 0.02) over what comes next
+      const fo = s.fo ?? 0, u = cl((t - (s.b - fo)) / Math.max(fo, 1e-6)), out = cut && fo > 0.02 ? 1 - u * u * (3 - 2 * u) : 1;
+      s.node.style.opacity = cut ? (t >= s.a && t < s.b ? n(out) : 0) : s.p;
     },
   };
 
