@@ -34,7 +34,7 @@ can't pay for services yet: prefer free tiers, and ask before anything that cost
 | `bridge/` | TCP bridge for a Windows PC with MT5: reads connected members' accounts read-only and sends the Worker percentages only | `cd bridge && python3.12 -m unittest -v` |
 | `signals/` | Signal publisher for the VPS: the algo's signals and results as branded cards | `cd signals && npm install && npm test` |
 | `tools/card-studio/` | Card Studio (a private Claude artifact) for signal and results images | — |
-| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music; `toon/` adds the animated founder for the TikTok episodes (`brand/video/reels/EPISODES.md`) | see its README |
+| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music; `toon/` adds the animated founder and his cast for the TikTok episodes (`brand/video/reels/EPISODES.md`) | see its README |
 | `brand/`, `community/` | Logo pack, videos and reels (`brand/video/reels/POSTS.md`), captions, business cards; the Inner Circle kit, pinned posts and socials setup | — |
 
 The terminal builds into one file, `terminal/dist/worker.js`, which Lewis pastes into the Cloudflare
