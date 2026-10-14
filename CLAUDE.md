@@ -64,7 +64,10 @@ dashboard. Always run `npm test` (it builds first) and commit the rebuilt `dist/
   the bot do that, with the disclosures. Label AI voices and demo data.
 - The animated founder (`toon/founder.js`) is canonical: Lewis approved character sheet V6 on
   5 October 2026. Change his look only on purpose. His reference photos are personal: keep them out
-  of the repo.
+  of the repo. So is his cast, the trading emotions (`toon/cast.js`: FOMO, REVENGE, GREED, FEAR and
+  PATIENCE): Lewis approved cast sheet V1 (`brand/video/reels/tcp-cast-sheet.png`) on 14 October 2026.
+- Every episode ships with its post descriptions for both accounts (TCP and the founder's), in
+  `brand/video/reels/EPISODES.md`.
 
 ## Where things stand
 

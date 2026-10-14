@@ -2,7 +2,8 @@
 (nothing sampled or licensed), with the voice on top and the music ducking under it.
 
 usage: python3 music.py --dur 28.5 --out mix.wav [--voice voice.wav] [--cues cues.json]
-                        [--style pulse|drive|calm|lofi|lounge|trap] [--bpm 120] [--seed 1]
+                        [--style pulse|drive|calm|lofi|lounge|trap|noir|bounce|news|fight|gameshow]
+                        [--bpm 120] [--seed 1]
                         [--amb cabin] [--bed bed.wav] [--sfx sfx.wav]
 
   pulse   a light bed for voiceovers (kick on 1 and 3, hats, pad, plucks), D minor
@@ -11,8 +12,15 @@ usage: python3 music.py --dur 28.5 --out mix.wav [--voice voice.wav] [--cues cue
   lofi    lazy and warm, F major sevenths: electric piano, upright bass, swung hats, vinyl crackle
   lounge  a bossa in B flat: jazz chords pushed off the beat, rim clave, shaker, upright bass
   trap    half time in C sharp minor: 808s, a clap on 3, rolling hats and a dark bell
+  noir    a detective's jazz in D minor: walking bass, brushes, vibraphone, a muted horn line
+  bounce  a cartoon's bounce in F: oom-pah tuba, pizzicato, marimba runs, a woodblock
+  news    a news theme in C minor: ticking sixteenths, timpani, brass stabs, strings
+  fight   a fight night in E minor: heavy half-time drums, a growling bass, brass hits
+  gameshow  big-band swing in B flat: brass shouts, walking bass, ride cymbal, snare fills
 Cues are {t, sfx} with sfx one of tick, pop, slam, whoosh, rise, click, chime (an airliner's cabin
-chime), ding (one soft bell), gps (a sat nav's prompt), blip, level and error (a game's), or
+chime), ding (one soft bell), gps (a sat nav's prompt), blip, level and error (a game's), buzzer (a
+line-up's), boing, wah (a sad trombone), flash (a camera), ring (a boxing bell, twice), punch,
+drumroll, applause, or
 {t, sfx: 'mute', until}, which drops the music out (a beat of silence for a punchline; the effects
 carry on). --amb cabin lays an airliner cabin's steady roar under everything, with the effects.
 --bed also writes the music and effects without the voice, and --sfx the effects alone.
@@ -314,6 +322,184 @@ def trap_style():
         k += 1
 
 
+def brush(gain=1.0):
+    # a brush swept across the snare: a soft swish of high noise
+    n = int(0.22 * SR)
+    x = bandpass(rng.standard_normal(n), 2500, 9000) * env(n, 0.03, 0.18)
+    return x * 0.5 * gain
+
+
+def horn(m, start, length, gain=0.05, pan=0.0, mute=True):
+    # a muted horn: a saw through a closing filter, a little breath and vibrato
+    n = int(length * SR)
+    t = tt(n)
+    f = midi(m) * (1 + 0.004 * np.sin(2 * np.pi * 5.2 * t) * np.clip(t / 0.25, 0, 1))
+    ph = np.cumsum(f) / SR
+    x = 2 * (ph % 1) - 1
+    x = lowpass(x, 1400 if mute else 2600) * env(n, 0.04, 0.12, hold=max(0.0, length - 0.2))
+    x += bandpass(rng.standard_normal(n), 800, 2400) * env(n, 0.02, 0.1) * 0.08
+    put(music, start, x * gain, pan=pan, rv=0.3)
+
+
+def stab(notes, start, length=0.18, gain=0.05, pan=0.0, bright=3200):
+    # a brass section's hit: detuned saws, bright then closing
+    n = int(length * SR)
+    x = sum(saw(midi(m), n, detune=0.004) for m in notes)
+    x = lowpass(x, bright) * env(n, 0.006, length * 0.7)
+    put(music, start, x * gain, pan=pan, rv=0.2)
+
+
+def marimba(m, start, gain=0.06, pan=0.0):
+    n = int(0.5 * SR)
+    t = tt(n)
+    x = (np.sin(2 * np.pi * midi(m) * t) + 0.25 * np.sin(2 * np.pi * midi(m) * 4 * t) * np.exp(-t * 30)) * np.exp(-t * 9)
+    put(music, start, x * gain, pan=pan)
+
+
+def timp(m, start, gain=0.5):
+    n = int(0.9 * SR)
+    t = tt(n)
+    f = midi(m) * (1 + 0.06 * np.exp(-t * 20))
+    x = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 4) + lowpass(rng.standard_normal(n), 300) * np.exp(-t * 30) * 0.3
+    put(music, start, x * gain, rv=0.3)
+    kicks.append(start)
+
+
+def noir_style():
+    # D minor, a bar each: Dm9, Bbmaj7, Gm9, A7b9; walking bass in quarters, swung brushes, vibes on
+    # the offbeats, and a muted horn line every other bar
+    prog = [([53, 57, 60, 64], [38, 41, 45, 43]), ([50, 53, 57, 58], [34, 38, 41, 40]),
+            ([46, 50, 53, 57], [31, 34, 38, 37]), ([49, 52, 55, 58], [33, 37, 40, 39])]
+    line = [[69, 67, 65, 62], [65, 64, 62, 58], [62, 65, 67, 70], [69, 67, 64, 61]]
+    sw = beat * 0.16
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, walk = prog[k % 4]
+        for b in range(4):
+            tb = t0 + b * beat
+            if tb >= args.dur:
+                break
+            upright(walk[b], tb, beat * 0.9, gain=0.3)
+            put(music, tb, brush(0.5 if b % 2 else 0.3), pan=-0.2)
+            put(music, tb + beat * 0.5 + sw, hat(0.06), pan=0.3)
+            if b in (1, 3):
+                put(music, tb, rim(0.12), pan=0.2)
+            if b == 0:
+                put(music, tb, lowpass(kick(0.35), 900))
+                kicks.append(tb)
+        for off in (0.5, 2.5):
+            for j, m in enumerate(chord):
+                bell(m + 12, t0 + off * beat + sw + j * 0.012, gain=0.022, pan=0.25, decay=1.6)
+        if k % 2 == 1:
+            for j, m in enumerate(line[(k // 2) % 4]):
+                horn(m, t0 + j * beat + (sw if j % 2 else 0), beat * (1.4 if j == 3 else 0.8), gain=0.05, pan=-0.15)
+        t0 += bar
+        k += 1
+
+
+def bounce_style():
+    # F major, a bar each: F, Bb, C7, F; oom-pah tuba, pizzicato offbeats, a marimba running sixteenths
+    prog = [([53, 57, 60], 41), ([50, 53, 58], 46), ([52, 55, 58, 60], 48), ([53, 57, 60], 41)]
+    run = [72, 69, 72, 74, 72, 69, 67, 69]
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, root = prog[k % 4]
+        for b in range(4):
+            tb = t0 + b * beat
+            if tb >= args.dur:
+                break
+            bass(root - 12 if b % 2 == 0 else root - 5, tb, beat * 0.45, gain=0.3)
+            if b % 2 == 0:
+                put(music, tb, kick(0.55))
+                kicks.append(tb)
+            else:
+                put(music, tb, clap(0.35), rv=0.15)
+            for j, m in enumerate(chord):
+                pluck(m + 12, tb + beat * 0.5 + j * 0.008, gain=0.035, pan=0.25)
+            put(music, tb + beat * 0.75, rim(0.16), pan=-0.3)
+        for q in range(8 if k % 2 else 4):
+            marimba(run[(q + k * 3) % len(run)] + (0 if k % 4 < 2 else 2), t0 + q * beat / 2, gain=0.05, pan=-0.2 + 0.05 * q)
+        t0 += bar
+        k += 1
+
+
+def news_style():
+    # C minor: Cm, Ab, Eb, Bb; ticking sixteenths, timpani on 1, brass stabs, strings under
+    prog = [([48, 51, 55], 36), ([44, 48, 51], 32), ([51, 55, 58], 39), ([46, 50, 53], 34)]
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, root = prog[k % 4]
+        pad_chord([m + 12 for m in chord], t0, bar + 0.3, gain=0.07)
+        timp(root, t0, gain=0.45)
+        if k % 2 == 1:
+            timp(root, t0 + 2.5 * beat, gain=0.3)
+        for q in range(16):
+            tq = t0 + q * beat / 4
+            if tq < args.dur:
+                put(music, tq, hat(0.1 if q % 4 else 0.16), pan=0.3)
+        for off in (0, 1.5, 3):
+            stab([m + 12 for m in chord] + [chord[0] + 24], t0 + off * beat, length=0.22, gain=0.045)
+        put(music, t0 + beat, clap(0.25), rv=0.2)
+        put(music, t0 + 3 * beat, clap(0.25), rv=0.2)
+        bass(root, t0, beat * 1.5, gain=0.25)
+        bass(root, t0 + 2 * beat, beat * 1.5, gain=0.2)
+        t0 += bar
+        k += 1
+
+
+def fight_style():
+    # E minor, half time: Em, C, D, B7; a heavy kick and snare, a growling bass, brass hits on the turns
+    prog = [([52, 55, 59], 28), ([48, 52, 55], 24), ([50, 54, 57], 26), ([47, 51, 54, 57], 23)]
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, root = prog[k % 4]
+        for off in ((0, 1.5, 2.75) if k % 2 == 0 else (0, 0.75, 2.5)):
+            tb = t0 + off * beat
+            if tb < args.dur:
+                put(music, tb, kick(1.0))
+                kicks.append(tb)
+                b808(root + 12, tb, beat * 0.6, gain=0.32)
+        put(music, t0 + 2 * beat, snare(0.9), rv=0.35)
+        put(music, t0 + 2 * beat, clap(0.45), rv=0.3)
+        for e8 in range(8):
+            put(music, t0 + e8 * beat / 2, hat(0.13 if e8 % 2 == 0 else 0.08, open_=e8 == 7), pan=0.25)
+        stab([m + 12 for m in chord], t0, length=0.32, gain=0.06, bright=2400)
+        if k % 2 == 1:
+            stab([m + 12 for m in chord], t0 + 3.5 * beat, length=0.16, gain=0.05, bright=2400)
+            stab([m + 14 for m in chord], t0 + 3.75 * beat, length=0.2, gain=0.05, bright=2600)
+        t0 += bar
+        k += 1
+
+
+def gameshow_style():
+    # B flat major swing: Bb6, G7, Cm7, F7; shout chords on the offbeats, walking bass, the ride
+    prog = [([58, 62, 65, 67], [34, 38, 41, 42]), ([55, 59, 62, 65], [31, 35, 38, 37]),
+            ([48, 51, 55, 58], [36, 39, 43, 42]), ([53, 57, 60, 63], [29, 33, 36, 34])]
+    sw = beat * 0.17
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, walk = prog[k % 4]
+        for b in range(4):
+            tb = t0 + b * beat
+            if tb >= args.dur:
+                break
+            upright(walk[b] + 12, tb, beat * 0.85, gain=0.28)
+            put(music, tb, hat(0.14, open_=True), pan=0.3)
+            put(music, tb + beat * 0.5 + sw, hat(0.08), pan=0.3)
+            if b in (1, 3):
+                put(music, tb, snare(0.25), rv=0.2)
+            if b == 0:
+                put(music, tb, kick(0.5))
+                kicks.append(tb)
+        stab(chord, t0 + beat * 0.5 + sw, length=0.2, gain=0.05)
+        stab(chord, t0 + beat * 2.5 + sw, length=0.3, gain=0.055)
+        if k % 4 == 3:
+            for r in range(6):
+                put(music, t0 + 3 * beat + r * beat / 6, snare(0.15 + r * 0.04), rv=0.15)
+        t0 += bar
+        k += 1
+
+
 # D minor: i - VI - III - VII, two bars each
 PROG = [([50, 53, 57], 38), ([46, 50, 53], 34), ([53, 57, 60], 41), ([48, 52, 55], 36)]
 style = args.style
@@ -324,6 +510,16 @@ elif style == 'lounge':
     lounge_style()
 elif style == 'trap':
     trap_style()
+elif style == 'noir':
+    noir_style()
+elif style == 'bounce':
+    bounce_style()
+elif style == 'news':
+    news_style()
+elif style == 'fight':
+    fight_style()
+elif style == 'gameshow':
+    gameshow_style()
 else:
     t0 = 0.0
     k = 0
@@ -487,10 +683,105 @@ def sfx_error():
     return lowpass(signal.square(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, t / 0.01) * np.exp(-t * 4), 2500) * 0.3
 
 
+def sfx_buzzer():
+    # a line-up's buzzer: a hard square wave at 120 Hz, a little detuned against itself
+    n = int(0.55 * SR)
+    t = tt(n)
+    x = np.sign(np.sin(2 * np.pi * 120 * t)) + 0.6 * np.sign(np.sin(2 * np.pi * 121.5 * t))
+    return lowpass(x, 2400) * env(n, 0.005, 0.05, hold=0.45) * 0.5
+
+
+def sfx_boing():
+    # a spring: a low tone shooting up, then wobbling as it settles
+    n = int(0.42 * SR)
+    t = tt(n)
+    f = 180 + 420 * (1 - np.exp(-t * 30)) + 60 * np.sin(2 * np.pi * 14 * t) * np.exp(-t * 7)
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 6) * 0.8
+
+
+def sfx_wah():
+    # a sad trombone: four notes falling, the last one long and wobbling
+    out = np.zeros(int(1.9 * SR))
+    for i, (m, a, ln) in enumerate(((58, 0.0, 0.3), (57, 0.32, 0.3), (56, 0.64, 0.3), (55, 0.96, 0.9))):
+        n = int(ln * SR)
+        t = tt(n)
+        f = midi(m) * (1 + (0.02 * np.sin(2 * np.pi * 6 * t) if i == 3 else 0))
+        x = 2 * ((np.cumsum(f) / SR) % 1) - 1
+        # the mute opening and closing: a dark copy and a bright one, crossfaded
+        mod = np.sin(np.pi * np.clip(t / ln, 0, 1))
+        dark, bright = lowpass(x, 600), lowpass(x, 2200)
+        y = dark + (bright - dark) * mod
+        s0 = int(a * SR)
+        out[s0:s0 + n] += y * env(n, 0.03, 0.12, hold=ln - 0.15)
+    return out * 0.6
+
+
+def sfx_flash():
+    # a camera: the shutter's two clicks and the flash's whine
+    n = int(0.5 * SR)
+    t = tt(n)
+    x = np.zeros(n)
+    for a in (0.0, 0.035):
+        s0 = int(a * SR)
+        x[s0:s0 + int(0.01 * SR)] += highpass(rng.standard_normal(int(0.01 * SR)), 2000) * 0.8
+    x += np.sin(2 * np.pi * (2400 + 4000 * t) * t) * np.exp(-t * 7) * 0.07
+    return x
+
+
+def sfx_ring():
+    # a boxing ring's bell, struck twice
+    out = np.zeros(int(1.4 * SR))
+    for a in (0.0, 0.32):
+        n = int(1.0 * SR)
+        t = tt(n)
+        x = sum(np.sin(2 * np.pi * 760 * r * t) * np.exp(-t * d) * g for r, d, g in ((1, 2.5, 1), (2.76, 4, 0.5), (5.4, 7, 0.25)))
+        s0 = int(a * SR)
+        out[s0:s0 + n] += x * 0.45
+    return out
+
+
+def sfx_punch():
+    n = int(0.28 * SR)
+    t = tt(n)
+    x = np.sin(2 * np.pi * np.cumsum(90 + 120 * np.exp(-t * 40)) / SR) * np.exp(-t * 14)
+    x += lowpass(rng.standard_normal(n), 1800) * np.exp(-t * 45) * 0.6
+    return x * 0.9
+
+
+def sfx_drumroll():
+    # a snare roll that swells, then the hit
+    out = np.zeros(int(1.8 * SR))
+    for i in range(48):
+        a = i / 32
+        g = 0.15 + 0.6 * (i / 48) ** 1.5
+        s0 = int(a * SR)
+        x = snare(g)
+        out[s0:s0 + len(x)] += x[:len(out) - s0]
+    s0 = int(1.5 * SR)
+    hit = snare(1.0) + kick(0.8)[:len(snare(1.0))]
+    out[s0:s0 + len(hit)] += hit[:len(out) - s0]
+    return out * 0.55
+
+
+def sfx_applause():
+    # a room clapping, swelling and dying away: hundreds of short claps at random
+    n = int(2.4 * SR)
+    out = np.zeros(n)
+    for _ in range(420):
+        a = int(rng.uniform(0, 2.1) * SR)
+        c = bandpass(rng.standard_normal(int(0.02 * SR)), 900, 5000) * env(int(0.02 * SR), 0.001, 0.015)
+        out[a:a + len(c)] += c * rng.uniform(0.3, 1.0)
+    t = tt(n)
+    return out * np.sin(np.pi * np.clip(t / 2.3, 0, 1)) ** 0.6 * 0.35
+
+
 SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise, 'click': sfx_click,
-       'chime': sfx_chime, 'ding': sfx_ding, 'gps': sfx_gps, 'blip': sfx_blip, 'level': sfx_level, 'error': sfx_error}
+       'chime': sfx_chime, 'ding': sfx_ding, 'gps': sfx_gps, 'blip': sfx_blip, 'level': sfx_level, 'error': sfx_error,
+       'buzzer': sfx_buzzer, 'boing': sfx_boing, 'wah': sfx_wah, 'flash': sfx_flash, 'ring': sfx_ring, 'punch': sfx_punch,
+       'drumroll': sfx_drumroll, 'applause': sfx_applause}
 GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55, 'click': 0.6,
-        'chime': 1.0, 'ding': 0.55, 'gps': 0.8, 'blip': 0.5, 'level': 0.6, 'error': 0.55}
+        'chime': 1.0, 'ding': 0.55, 'gps': 0.8, 'blip': 0.5, 'level': 0.6, 'error': 0.55,
+        'buzzer': 0.35, 'boing': 0.45, 'wah': 0.6, 'flash': 0.6, 'ring': 0.6, 'punch': 0.7, 'drumroll': 0.6, 'applause': 0.7}
 cues = json.load(open(args.cues)) if args.cues else []
 for c in cues:
     if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
@@ -524,7 +815,8 @@ for c in cues:
         fade *= gate
 bed = (music + wet) * fade + sfx
 
-mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55}.get(style, 0.35)
+mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55, 'noir': 0.5, 'bounce': 0.5,
+             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5}.get(style, 0.35)
 if args.voice:
     vsr, v = wavfile.read(args.voice)
     v = v.astype(np.float64) / (32768.0 if v.dtype == np.int16 else 1.0)
@@ -541,7 +833,7 @@ if args.voice:
     duck = 1 - 0.55 * np.clip(e, 0, 1)
     mix = mix * duck + np.vstack([v, v])
 
-if style in ('lofi', 'lounge', 'trap'):
+if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow'):
     # the newer styles are sparser, so one bright effect can set the peak and the loudness pass then
     # pushes it over: a peak limiter holds anything above 3.5 times the mix's RMS (1 ms look-ahead,
     # 120 ms release)

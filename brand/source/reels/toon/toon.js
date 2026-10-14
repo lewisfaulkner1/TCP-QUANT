@@ -1533,6 +1533,9 @@
     return { back, front };
   }
 
+  // for the new places and the cast (toon/places.js, toon/cast.js): the sets and the helpers they share
+  window.Toon = { SETS, HIM, keyed, numBlend, founderAt, roomDefs, bokeh, crown, monitor, chartSVG, steam, grain, glowOf, topShade, n, cl, mix, easeIO, easeOut, UP, DOWN, GOLD, GOLDHI };
+
   KINDS.handPhone = {
     make(s, root) {
       KINDS.phone.make(s, root);
