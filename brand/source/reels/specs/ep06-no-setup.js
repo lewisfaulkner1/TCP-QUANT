@@ -26,9 +26,9 @@ const CHART = [{ t: 0, story: 'clutter', i: 50, ind: 0 }, { t: T.plan, story: 'c
 const SCREEN = [[0, 'logo'], [T.later, 'chart'], [T.plan, 'plan']];
 // the cameras: busy, then one in the silence, then the whole room
 const FLASHES = [0.25, 0.7, 1.15, 1.6, 1.95, 2.3, 2.75, 3.1, 3.55, 3.85, T.no + 0.7,
-  ...Array.from({ length: 14 }, (_, k) => T.setup + 0.05 + k * 0.1), T.chat + 0.2, T.chat + 0.9, T.chat + 1.5];
+  ...Array.from({ length: 6 }, (_, k) => T.setup + 0.05 + k * 0.24), T.chat + 0.2, T.chat + 0.9, T.chat + 1.5];
 
-const shot = (a, b, cam, more = {}) => ({ kind: 'toon', set: 'press', from: a, to: b, cam, pose: POSE, chart: CHART, screen: SCREEN, flashes: FLASHES, fi: 0.01, fo: 0.01, ...more });
+const shot = (a, b, cam, more = {}) => ({ kind: 'toon', set: 'press', from: a, to: b, cam, pose: POSE, chart: CHART, screen: SCREEN, flashes: FLASHES, bigFlashes: [T.setup + 0.05], fi: 0.01, fo: 0.01, ...more });
 const WIDE = (a, b) => shot(a, b, [{ t: a, s: 1.0, x: 540, y: 1000 }, { t: b, s: 1.04, x: 540, y: 1000, ease: 'linear' }]);
 const CROWD = (a, b) => shot(a, b, [{ t: a, s: 1.3, x: 560, y: 1180 }, { t: b, s: 1.36, x: 556, y: 1176, ease: 'linear' }], { dof: { fg: 4 } });
 const FACE = (a, b) => shot(a, b, [{ t: a, s: 2.05, x: 400, y: 900 }, { t: b, s: 2.2, x: 400, y: 894, ease: 'linear' }], { dof: { bg: 6 } });

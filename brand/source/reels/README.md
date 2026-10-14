@@ -24,7 +24,7 @@ Instagram play at). The captions and posting plan are in `brand/video/reels/POST
 | `reel.html`, `reel.js` | The engine: draws any moment of a reel from its script, in Chromium. Background, headlines, stamps, tables, coin grids, compounding curves, lists, a phone playing app footage, the probability swarm, the end card, and the subtitles |
 | `toon/` | The animated founder and his sets, for the episodes |
 | `voice.py` | The voice: Kokoro through sherpa-onnx, offline. Speaks each line, trims it, and times every word for the subtitles |
-| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt and a game's blips, and `ambience: 'cabin'` for an airliner's roar. Ducks under the voice |
+| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s); `noir` (a detective's jazz), `bounce` (a cartoon's oom-pah), `news` (a news theme), `fight` (fight-night drums and brass) and `gameshow` (big-band swing). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt, a game's blips, a line-up buzzer, a boing, a sad trombone, camera flashes, a boxing bell, a punch, a drum roll and applause, and `ambience: 'cabin'` for an airliner's roar. Ducks under the voice |
 | `render.cjs` | Runs the lot: voice, frames (4 browsers at once), sound, and the videos with ffmpeg |
 | `capture.cjs` | Records the terminal in demo mode, as a phone shows it, frame by frame, for the phone scenes |
 | `hear.py` | Transcribes a voice track, to check the voice read the script |
@@ -96,8 +96,18 @@ loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
 - `toon/toon.js` adds the `toon` kind (a shot: a set, a camera that moves by keys, his pose track and
   the story chart's track, depth of field, and a shake when a stop is hit), `caption` (meme text, a
   numbered lesson `note`, or a line of `steps`) and `handPhone` (the phone scene, held in his hand).
-  Sets: `desk`, `ots` (over the shoulder), `screen` and `mouse`.
-- `node toon/sheet.cjs <out.png>` draws the character sheet, to check a change to him.
+  Sets: `desk`, `ots` (over the shoulder), `screen` and `mouse`; the jet's `cabin`, `window` and
+  `panel`; and `map` (a game's city from above).
+- `toon/cast.js` adds his cast, the trading emotions (FOMO, REVENGE, GREED, FEAR and PATIENCE):
+  candlesticks with rubber-hose limbs, drawn from a pose like him, on tracks (`cast: { fomo: [{ t, x,
+  y, s, pose }] }` in a shot), and the `bubble` kind (a speech bubble with its speaker's name tag that
+  keeps inside the frame).
+- `toon/places.js` adds the new places: `lineup` and `observe` (a police line-up and the room behind
+  its glass), `cafe`, `press` (a press conference, with flashes kept under three a second),
+  `ring` (a boxing ring) and `gameshow`. Load it after the other three:
+  `modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js']`.
+- `node toon/sheet.cjs <out.png>` draws the founder's character sheet, `node toon/cast-sheet.cjs
+  <out.png>` the cast's, to check a change to them.
 
 ## Rules
 

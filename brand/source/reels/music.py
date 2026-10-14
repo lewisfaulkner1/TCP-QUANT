@@ -717,14 +717,15 @@ def sfx_wah():
 
 
 def sfx_flash():
-    # a camera: the shutter's two clicks and the flash's whine
+    # a camera: the shutter's two soft clicks and the flash's faint whine (the clicks band-limited and
+    # eased in, so they can't spike past the limiter once encoded)
     n = int(0.5 * SR)
     t = tt(n)
     x = np.zeros(n)
     for a in (0.0, 0.035):
-        s0 = int(a * SR)
-        x[s0:s0 + int(0.01 * SR)] += highpass(rng.standard_normal(int(0.01 * SR)), 2000) * 0.8
-    x += np.sin(2 * np.pi * (2400 + 4000 * t) * t) * np.exp(-t * 7) * 0.07
+        s0, m = int(a * SR), int(0.012 * SR)
+        x[s0:s0 + m] += bandpass(rng.standard_normal(m), 1500, 6000) * env(m, 0.0015, 0.008) * 0.35
+    x += np.sin(2 * np.pi * (2400 + 4000 * t) * t) * np.exp(-t * 7) * 0.035
     return x
 
 

@@ -8,6 +8,7 @@
 //   cafe      a café by day: him at the counter in the window, a flat white, the laptop, the street
 //   press     a press conference: the TCP backdrop and its screen, the microphones, the press, flashes
 //   ring      a boxing ring at night: him in his corner, gold ropes, the big screen, the towel
+//   gameshow  TAKE IT OR LEAVE IT: him at a podium, the trade on the big screen, the two buttons
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -183,7 +184,8 @@
   // Him at a press table under the lights, the TCP backdrop behind (crowns, the big screen on the
   // right), microphones with their flags in front, the press in silhouette at the bottom, flashes.
   // The table's top is at y 1448. s.screen: [[t, 'chart' | 'plan'], …]; s.flashes: [t, …] (a camera
-  // goes off; the last ones are a room going off at once when there are many close together).
+  // goes off: a small burst in the crowd); s.bigFlashes: [t, …] (the whole room lights up once: kept
+  // rare, never more than 3 a second, for viewers sensitive to flashing).
   const FLAGS = [['PIP NEWS', '#C8281E'], ['CANDLE TV', '#1F6FD1'], ['WICK FM', '#E8A317'], ['THE SPREAD', '#2E9E6A']];
   function planCard(id) {
     const row = (y, a, b, col = '#E9E4D8') => `<text x="28" y="${y}" font-family="JB Mono" font-weight="600" font-size="22" fill="#8C8577">${a}</text><text x="412" y="${y}" text-anchor="end" font-family="JB Mono" font-weight="600" font-size="24" fill="${col}">${b}</text>`;
@@ -256,7 +258,8 @@
       return `<circle cx="${x}" cy="${y}" r="${n(160 * r)}" fill="url(#${id}flash)"/><circle cx="${x}" cy="${y}" r="${n(26 * r)}" fill="#FFFFFF"/>`;
     }).join('');
     const pressLayer = `<defs><radialGradient id="${id}flash" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>${press}${fl}`;
-    const wash = flashes.length ? `<rect width="1080" height="1920" fill="#FFFFFF" opacity="${n(Math.min(0.32, 0.12 * flashes.length) * (1 - Math.min(...flashes) / 0.16))}"/>` : '';
+    const big = (s.bigFlashes || []).map((f) => t - at(f)).filter((d) => d >= 0 && d < 0.2);
+    const wash = big.length ? `<rect width="1080" height="1920" fill="#FFFFFF" opacity="${n(0.22 * (1 - Math.min(...big) / 0.2))}"/>` : '';
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 1.25, svg: pressLayer, blur: s.dof && s.dof.fg }, T.topShade(id), { f: 0, svg: wash }];
   };
 
@@ -285,7 +288,7 @@
         <radialGradient id="${id}rg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE9C2" stop-opacity="0.28"/><stop offset="1" stop-color="#FFE9C2" stop-opacity="0"/></radialGradient></defs>
       <rect x="-600" y="-600" width="2280" height="3120" fill="#07080C"/>
       ${crowd.join('')}
-      <g transform="translate(300 160)"><rect x="-20" y="-20" width="520" height="320" rx="10" fill="#020203"/>${scr}<rect x="-20" y="-20" width="520" height="320" rx="10" fill="none" stroke="#1E2028" stroke-width="6"/></g>
+      <g transform="translate(600 470) scale(0.88)"><rect x="-20" y="-20" width="520" height="320" rx="10" fill="#020203"/>${scr}<rect x="-20" y="-20" width="520" height="320" rx="10" fill="none" stroke="#1E2028" stroke-width="6"/></g>
       <path d="M 400 -400 L 680 -400 L 1100 1500 L -20 1500 Z" fill="url(#${id}rb)"/>
       <ellipse cx="560" cy="1300" rx="700" ry="380" fill="url(#${id}rg)"/>`;
     const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
@@ -303,8 +306,8 @@
     if (s.towel) {
       const [a, b] = s.towel.map(at), u = cl((t - a) / (b - a));
       if (t >= a) {
-        const x = mix(380, 760, u), y = mix(1080, 1380, u) - Math.sin(u * Math.PI) * 260, r = u * 540;
-        towel = `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(r)}) scale(${n(u >= 1 ? 1.2 : 1)} ${n(u >= 1 ? 0.45 : 1)})"><path d="M -60 -34 C -20 -48, 30 -40, 62 -30 C 56 0, 60 20, 66 38 C 20 30, -24 44, -62 34 C -54 10, -58 -12, -60 -34 Z" fill="#F7F5F0" stroke="#1A120C" stroke-width="4"/>
+        const x = mix(470, 560, u), y = mix(1230, 1432, u) - Math.sin(u * Math.PI) * 130, r = u * 400;
+        towel = `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(r)}) scale(${n(u >= 1 ? 1.6 : 1.3)} ${n(u >= 1 ? 0.55 : 1.3)})"><path d="M -60 -34 C -20 -48, 30 -40, 62 -30 C 56 0, 60 20, 66 38 C 20 30, -24 44, -62 34 C -54 10, -58 -12, -60 -34 Z" fill="#F7F5F0" stroke="#1A120C" stroke-width="4"/>
           <path d="M -50 -20 C -10 -30, 30 -24, 54 -18 M -48 22 C -8 14, 30 22, 56 26" stroke="#C8BFAE" stroke-width="4" fill="none"/></g>`;
       }
     }
@@ -316,8 +319,78 @@
       ${towel}
       ${ropes}
       ${apron}
-      ${castOf(s, t, id)}`;
+      <clipPath id="${id}edge"><rect x="-600" y="-600" width="2280" height="2072"/></clipPath>
+      <g clip-path="url(#${id}edge)">${castOf(s, t, id)}</g>`;
     return [{ f: 0.3, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the game show
+  // TAKE IT OR LEAVE IT: him at a contestant's podium (its top at y 1448), the big screen beside his
+  // head with the trade on it, the stage's rays and chasing bulbs behind. On the podium, TAKE IT (gold)
+  // and LEAVE IT (purple). s.board: [{ t, k, g, badge, press }]: how far the price line has run (k, 0
+  // to 1), where GREED has dragged the target (g, screen units, or null), a badge ('hit' or 'taken'),
+  // and the TAKE IT button pressed (press, 0 to 1). Numbers blend between keys; badges switch.
+  // the price's path on the screen (440 x 300): up to the target at y 110, a little past it, then down
+  const PATH = [[24, 262], [60, 240], [92, 250], [126, 214], [160, 222], [196, 176], [226, 186], [258, 138], [286, 112], [304, 96], [322, 104], [342, 150], [364, 196], [388, 238], [414, 270]];
+  function boardAt(keys, t) {
+    const ks = keys.map((k) => ({ ...k, at: at(k.t) }));
+    let a = ks[0], b = ks[0];
+    for (const k of ks) { if (k.at <= t) a = k; if (k.at > t) { b = k; break; } b = k; }
+    const u = b.at > a.at ? cl((t - a.at) / (b.at - a.at)) : 1;
+    const num = (key, d = 0) => mix(a[key] ?? d, b[key] ?? a[key] ?? d, u);
+    return { k: num('k'), g: a.g == null && b.g == null ? null : num('g', 110), press: num('press'), badge: a.badge || null };
+  }
+  function gameScreen(q, t, id) {
+    const pts = [], L = PATH.length - 1, end = q.k * L;
+    for (let i = 0; i <= Math.floor(end); i++) pts.push(PATH[i]);
+    if (end < L && end > 0) { const i = Math.floor(end), f = end - i; pts.push([mix(PATH[i][0], PATH[i + 1][0], f), mix(PATH[i][1], PATH[i + 1][1], f)]); }
+    const last = pts[pts.length - 1] || PATH[0], down = pts.length > 11;
+    const line = (y, col, label, dash = '10 8') => `<path d="M 16 ${n(y)} L 424 ${n(y)}" stroke="${col}" stroke-width="4" stroke-dasharray="${dash}"/><rect x="${300 - label.length * 5}" y="${n(y - 30)}" width="${label.length * 10 + 24}" height="24" rx="5" fill="${col}"/>
+      <text x="${312 - label.length * 5 + label.length * 5}" y="${n(y - 12)}" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="15" fill="#0B0A1F">${label}</text>`;
+    const badge = q.badge === 'hit'
+      ? `<g opacity="${n(0.6 + 0.4 * Math.abs(Math.sin(t * 9)))}"><rect x="14" y="14" width="196" height="44" rx="9" fill="#F6E3A3"/><text x="112" y="45" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="24" fill="#1A120C">TARGET HIT</text></g>`
+      : q.badge === 'taken'
+        ? `<rect x="14" y="14" width="168" height="44" rx="9" fill="#35A68C"/><path d="M 32 36 L 44 48 L 64 24" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="120" y="45" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="24" fill="#FFFFFF">TAKEN</text>` : '';
+    return `<rect width="440" height="300" fill="#0B0A1F"/>
+      ${[1, 2, 3, 4].map((i) => `<path d="M 0 ${i * 60} L 440 ${i * 60}" stroke="#1E1B3A" stroke-width="2"/>`).join('')}
+      ${line(110, '#D8AD4E', 'TARGET')}
+      ${q.g != null ? line(q.g, '#A47CFF', 'GREED’S TARGET', '6 6') : ''}
+      ${pts.length > 1 ? `<path d="M ${pts.map((p) => `${n(p[0])} ${n(p[1])}`).join(' L ')}" fill="none" stroke="${down ? '#E0613F' : '#35D08F'}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${n(last[0])}" cy="${n(last[1])}" r="9" fill="${down ? '#E0613F' : '#35D08F'}"/>` : ''}
+      ${badge}`;
+  }
+  SETS.gameshow = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#F2E9FF', rim: 1 };
+    const q = boardAt(s.board || [{ t: 0, k: 0 }], t);
+    const rays = Array.from({ length: 16 }, (_, i) => { const a = (i / 16) * Math.PI * 2 + t * 0.08, a2 = a + 0.11; return `<path d="M 540 700 L ${n(540 + Math.cos(a) * 1800)} ${n(700 + Math.sin(a) * 1800)} L ${n(540 + Math.cos(a2) * 1800)} ${n(700 + Math.sin(a2) * 1800)} Z" fill="#FFFFFF" opacity="${i % 2 ? 0.035 : 0.07}"/>`; }).join('');
+    const bulbs = [];
+    for (let i = 0; i < 40; i++) {
+      const u = i / 40, x = u < 0.5 ? -200 + u * 2 * 1480 : -200 + (1 - (u - 0.5) * 2) * 1480, y = u < 0.5 ? 160 : 1300;
+      const on = Math.floor(t * 8 + i) % 3 === 0;
+      bulbs.push(`<circle cx="${n(x)}" cy="${y}" r="12" fill="${on ? '#FFE9A8' : '#6B5A2A'}"/>${on ? `<circle cx="${n(x)}" cy="${y}" r="26" fill="#FFE9A8" opacity="0.25"/>` : ''}`);
+    }
+    const bg = `<defs><radialGradient id="${id}gs" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#3B1F7A"/><stop offset="1" stop-color="#0D0820"/></radialGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="url(#${id}gs)"/>${rays}${bulbs.join('')}`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const dome = (x, col, dark, label, press) => `<g transform="translate(${x} 1508)"><ellipse cx="0" cy="10" rx="62" ry="17" fill="#09060F"/><ellipse cx="0" cy="${n(4 + press * 6)}" rx="50" ry="14" fill="${dark}"/>
+      <path d="M -46 ${n(2 + press * 6)} C -46 ${n(-34 + press * 18)}, 46 ${n(-34 + press * 18)}, 46 ${n(2 + press * 6)} Z" fill="${col}"/>${press > 0.5 ? `<circle cx="0" cy="-8" r="70" fill="${col}" opacity="0.3"/>` : ''}
+      <ellipse cx="-14" cy="${n(-16 + press * 14)}" rx="16" ry="6" fill="#FFFFFF" opacity="0.5"/>
+      <text x="0" y="52" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="20" fill="${col}">${label}</text></g>`;
+    const subject = `
+      <g transform="translate(616 640)"><rect x="-18" y="-18" width="476" height="336" rx="10" fill="#050308" stroke="#D8AD4E" stroke-width="4"/>${gameScreen(q, t, id)}</g>
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${nearArm}
+      <!-- the podium -->
+      <path d="M -300 1448 L 1400 1448 L 1400 1570 L -300 1570 Z" fill="#20163F"/><path d="M -300 1450 L 1400 1450" stroke="#D8AD4E" stroke-width="6"/>
+      ${dome(560, '#F2C24E', '#8C6A1E', 'TAKE IT', q.press)}${dome(740, '#A47CFF', '#4B2C99', 'LEAVE IT', 0)}
+      <clipPath id="${id}pod"><rect x="-600" y="-600" width="2280" height="2172"/></clipPath>
+      <g clip-path="url(#${id}pod)">${castOf(s, t, id)}</g>
+      <path d="M -300 1570 L 1400 1570 L 1400 2400 L -300 2400 Z" fill="#170F30"/><path d="M -300 1570 L 1400 1570" stroke="#3A2A6B" stroke-width="6"/>
+      ${Array.from({ length: 22 }, (_, i) => `<circle cx="${-280 + i * 80}" cy="1600" r="9" fill="${Math.floor(t * 6 + i) % 2 ? '#FFE9A8' : '#5E4B22'}"/>`).join('')}
+      ${crown(540, 1700, 0.28)}<text x="540" y="1790" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="52" fill="#F6E3A3">TAKE IT</text>
+      <text x="540" y="1846" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="34" fill="#C9B5FF">OR LEAVE IT</text>`;
+    return [{ f: 0.35, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 
   T.castOf = castOf;

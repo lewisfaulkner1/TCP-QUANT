@@ -774,3 +774,268 @@ Took every wrong turn before I found Patience Way. 🎮
 Education, not financial advice. Trading carries risk.
 ```
 
+
+---
+
+## The trading emotions: a new cast, new places, new sound
+
+Five episodes for Saturday 17 to Wednesday 21 October, after EP08 on Friday 16. Each is somewhere
+new, with its own music, and three come straight from the master brief (EP06, EP09 and the line-up
+that brings in the brief's FOMO character). The founder is in every one, as approved on sheet V6.
+
+**The cast** (`toon/cast.js`; Lewis approved cast sheet V1, `tcp-cast-sheet.png`, on 14 October 2026):
+the trading emotions, candlesticks come to life, with rubber-hose arms and legs, white gloves and
+trainers. They're made up, drawn in code like him, so they look the same in every shot.
+
+| Who | Look | What it says |
+|---|---|---|
+| FOMO | a tall green candle, its wick sparking, can't keep still | *it's pumping!* |
+| REVENGE | a red candle in boxing gloves and a headband, its wick smoking | *win it back!* |
+| GREED | a fat purple candle in a top hat, dollars for eyes | *just a bit more…* |
+| FEAR | a small pale doji, sweating, its wick drooping | *close it!!* |
+| PATIENCE | a short gold candle, the TCP crown on its chest, a lit wick, a cup of tea | *no setup.* |
+
+PATIENCE is TCP's: gold, the crown, calm. Whenever the founder wins the argument, PATIENCE is the
+idea he's standing for, so the brand ends up on the right side of every story without anyone
+saying "join".
+
+| Day | Episode | Place | Sound | TCP account | Founder's account |
+|---|---|---|---|---|---|
+| Sat 17 Oct | EP20 · The Line-Up | a police line-up, the room behind the glass | noir jazz | TikTok 19:30, Instagram 20:00 | TikTok 21:00, Instagram 21:30 |
+| Sun 18 Oct | EP09 · If FOMO Was a Person | a café by day, a London street | cartoon bounce | the same | the same |
+| Mon 19 Oct | EP06 · Why We Don't Post Every Trade | a press conference | news theme | the same | the same |
+| Tue 20 Oct | EP18 · Revenge Trading | a boxing ring at night | fight night | the same | the same |
+| Wed 21 Oct | EP19 · Greed at the Take Profit | a TV game show | big-band swing | the same | the same |
+
+Same files as the others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the
+covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
+
+### What works on TikTok and Reels, and how this set uses it
+
+- **The first second decides it.** A strange picture and a line that opens a question: a police
+  line-up of 40 cm candles and *every bad trade has a suspect*; a candle popping up behind a coffee
+  and *if FOMO was a person*. The text sits in the top third, clear of the buttons, and the first
+  frame already shows the joke, so the cover works as a thumbnail too.
+- **Characters people come back for.** A recurring cast turns single videos into a series: people
+  follow to see what FOMO does next. Each emotion gets its own episode; they cross over (the line-up
+  has all four); PATIENCE always wins. Keep their looks fixed (the sheet) and their lines in
+  character.
+- **A loop.** EP09 ends where it began (FOMO pops back up: *every. single. time.*), so the second
+  watch starts before people notice. Rewatches count towards watch time, which both apps reward.
+- **Short, one idea.** 18 to 23 s, one lesson, the lesson in the last third, cuts on the beat about
+  every 2 s. Nothing to explain: the picture tells the joke without sound (most people scroll muted).
+- **A question people can answer in one word.** *Which one's in your line-up?* *Ever let greed move
+  your target?* One-word answers get comments, and comments push the video out. Reply to the best
+  ones with a video reply (TikTok) using the same characters: easy follow-ups.
+- **Something to send.** Instagram weighs sends heavily: *tag the friend who…* lines and relatable
+  moments (FOMO pulling your sleeve) get shared in DMs. Saves come from a clear takeaway (*your
+  target was set when you were calm*).
+- **Sound.** The `-music` cut has TCP's own track. The `-sfx` cut keeps just the effects so a
+  trending sound can go under it at about 50%: trending audio can help reach, and the effects keep
+  the timing.
+- **Two accounts, two voices.** The TCP account teaches (*One lesson an episode, from TCP*); the
+  founder's account confesses (*put my last bad trade in a line-up*). The same file, a different
+  caption, a different crowd.
+- **Consistency.** One a day at the same times; reply in the first hour; pin a good comment.
+
+### Promoting TCP without breaking the rules
+
+The ask is always *Follow*. Joining the Inner Circle means opening a broker account through the
+partner link, and asking TikTok or Instagram viewers to do that is a regulated financial promotion
+in the UK, so the reels never say join, VIP, signals or link in bio, and never show profits. The bio
+and the bot do the joining, with the disclosures. What the reels can do, and do:
+
+- show TCP's world: the crown on his cap, the backdrop and podium and ring apron in TCP gold, the
+  gold PATIENCE with the crown;
+- show TCP's habits as the right answer: no setup, no trade; a plan logged before the result
+  (EP06's card says so); done for the day after a loss; taking the target;
+- show that there's a group behind him (the press asking for setups in EP06) without naming it or
+  asking anyone in;
+- end on *Follow TCP* and a question.
+
+The captions follow the same rules and end with the risk line.
+
+### EP20 · The Line-Up (22.8 s, noir jazz)
+
+`specs/ep20-line-up.js`. *Every bad trade has a suspect.* Four of the emotions in a police line-up,
+40 cm tall against the height chart; the founder watches through the one-way glass. *Number 1, step
+forward.* FOMO: *it was pumping!!* REVENGE: *I just wanted it back!* GREED: *it was going higher…*
+FEAR: *I closed it too early…* *…it was all of them.* The only one with an alibi is PATIENCE, on his
+desk with its tea: *I was waiting for the setup.* *Which one's in your line-up?*
+
+**TCP account (K):**
+```
+Every bad trade has a suspect. 🕵️
+
+FOMO: "it was pumping."
+REVENGE: "I just wanted it back."
+GREED: "it was going higher."
+FEAR: "I closed it too early."
+
+Only one has an alibi: patience. It was waiting for the setup.
+
+Which one's in your line-up? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+Put my last bad trade in a line-up. It was all of them. 😅
+
+Which one gets you most: FOMO, Revenge, Greed or Fear? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
+### EP09 · If FOMO Was a Person (17.8 s, cartoon bounce)
+
+`specs/ep09-fomo.js`, the master brief's EP09. In a café by day, FOMO pops up from behind his flat
+white: *it's pumping!!* It shoves its phone at him (*everyone's in!*), pulls his sleeve towards the
+laptop (*come onnn!*), shouts *last chance!!* at the green candle, and the chart turns: *…nvm*, to a
+sad trombone. *FOMO buys the top. The plan waits for the pullback.* Then the next green candle and
+FOMO's back: *every. single. time.* The end runs into the start. The chart is EP08's example chart.
+
+**TCP account (K):**
+```
+If FOMO was a person. 🫠
+
+It's always pumping. Everyone's always in. It's always the last chance.
+
+FOMO buys the top. The plan waits for the pullback.
+
+Tag the friend whose FOMO talks the loudest 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example chart, not real trades. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+My FOMO, every time a candle goes green. ☕
+
+The plan waits for the pullback.
+
+What does your FOMO say? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example chart, not real trades. The characters are made up.
+```
+
+### EP06 · Why We Don't Post Every Trade (19.3 s, news theme)
+
+`specs/ep06-no-setup.js`, the master brief's EP06. A press conference: the founder at the table
+under the lights, the TCP backdrop behind, microphones with made-up outlets' flags (PIP NEWS, CANDLE
+TV, WICK FM, THE SPREAD), the press shouting. *Setup today?! Gold long?! What's the entry?!* He leans
+in: *no setup.* Silence, one flash. *4 hours later…* *setup.* The room goes off, and the plan comes up
+on the big screen, *logged before the result* (an example, stamped EXAMPLE). *We post when the plan
+says. Not when the chat does. No setup is a decision too.* The camera flashes stay small and below
+three a second; the whole room lights up once.
+
+**TCP account (K):**
+```
+"Setup today?" Most days, the honest answer is no. 🎤
+
+No setup is a decision too. We post when the plan says, not when the chat does.
+
+Would you rather have 1 setup you trust or 10 you don't? 👇
+
+#trading #daytrading #tradingtips #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example plan with example prices, not a real trade.
+```
+
+**Founder's account (J):**
+```
+Every day: "setup today?" 😅
+
+Most days: no setup. That's the job.
+
+How many trades did you take this week? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example plan with example prices, not a real trade.
+```
+
+### EP18 · Revenge Trading (20.3 s, fight night)
+
+`specs/ep18-revenge.js`. Fight night: the founder on his stool in the corner, gold ropes, the big
+screen over the ring: ROUND 1 · STOPPED OUT. *You take a loss. Then he turns up:* REVENGE jumps up on
+the apron in its gloves: *get back in there! Double the size! Win it back!* *Nah.* The towel goes in.
+*You're quitting?!* *Not quitting. Done for today.* REVENGE walks off. *A loss is a cost. Not a
+fight. The market's open again tomorrow.*
+
+**TCP account (K):**
+```
+You take a loss. Then he turns up. 🥊
+
+"Get back in there. Double the size. Win it back."
+
+A loss is a cost, not a fight. The market's open again tomorrow.
+
+Ever had a round two you regret? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+Revenge always turns up after a loss. 🥊
+
+The towel goes in: done for the day.
+
+What's your rule after a loss? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
+### EP19 · Greed at the Take Profit (18.8 s, big-band swing)
+
+`specs/ep19-greed.js`. A game show: TAKE IT OR LEAVE IT. *Target hit. Greed has a say:* the host
+asks *take it… or leave it?*; GREED pops up on the podium (*leave it!! it's going higher!*) and drags
+its own target up the big screen (*just a bit more…*). *Take it.* The button, the applause, TAKEN.
+The price turns and falls through both lines, and GREED faints. *Your target was set when you were
+calm. Ever let greed move your target?* The chart is a drawing, not a market.
+
+**TCP account (K):**
+```
+Target hit. Then greed gets a say. 🎯
+
+"Leave it! It's going higher!"
+
+Your target was set when you were calm. Stick to it.
+
+Ever let greed move your target? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. A drawn chart, not a real trade. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+Greed always wants to move my target. 🎯
+
+I take it anyway.
+
+Do you move yours? Be honest 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. A drawn chart, not a real trade. The characters are made up.
+```
+
+### Next ideas
+
+- **FEAR's episode:** a horror film. A winning trade, a dark corridor, FEAR closing it at the first
+  creak; the price walks on to the target without him.
+- **PATIENCE's episode:** a nature documentary on the rarest trader of all, the one that waits
+  (captions as the narrator; no impression of any real presenter's voice).
+- **The emotions' group chat:** FOMO, REVENGE, GREED and FEAR in one chat at 3am; PATIENCE has it
+  muted.
+- **The race:** FOMO against PATIENCE, the hare and the tortoise, to the take profit.
+- **EP03 · The Trading Guru Olympics** (the brief): needs human contestants (RSI Guy, News Guy,
+  Signal Guy…), drawn as a second cast.
+- **EP10** (the brief): reworked without the word "free" (joining needs a broker account): *what a
+  good trading group actually looks like*, showing habits, not a sign-up.
