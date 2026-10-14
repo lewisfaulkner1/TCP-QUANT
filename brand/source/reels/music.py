@@ -631,6 +631,45 @@ def classical_style():
         t0 += bar
         k += 1
 
+
+def calliope(m, start, length, gain=0.04, pan=0.0):
+    # a fairground organ's pipe: a breathy square-ish tone with a quick vibrato
+    n = int((length + 0.08) * SR)
+    t = tt(n)
+    f = midi(m) * (1 + 0.006 * np.sin(2 * np.pi * 6.5 * t))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    x = np.sin(ph) + 0.35 * np.sin(3 * ph) + 0.18 * np.sin(5 * ph) + bandpass(rng.standard_normal(n), midi(m), midi(m) * 4) * 0.05
+    e = np.minimum(1, t / 0.015) * np.clip((length + 0.08 - t) / 0.08, 0, 1)
+    put(music, start, lowpass(x, 4000) * e * gain, pan=pan, rv=0.25)
+
+
+def fair_style():
+    # a fairground organ: C major, a bar each: C, G, F, G; oom-pah, the organ's chords on the off-beats
+    # and a bouncing tune over the top
+    prog = [([60, 64, 67], 36), ([59, 62, 67], 43), ([60, 65, 69], 41), ([59, 62, 67], 43)]
+    tune = [(76, 1), (79, 0.5), (77, 0.5), (76, 1), (72, 1), (74, 1), (77, 0.5), (76, 0.5), (74, 1), (71, 1),
+            (72, 1), (76, 0.5), (74, 0.5), (72, 1), (69, 1), (71, 1), (74, 0.5), (72, 0.5), (71, 2)]
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, root = prog[k % 4]
+        for b in range(4):
+            tb = t0 + b * beat
+            if tb >= args.dur:
+                break
+            bass(root if b % 2 == 0 else root + 7, tb, beat * 0.4, gain=0.26)
+            if b % 2 == 0:
+                put(music, tb, kick(0.3))
+            for m in chord:
+                calliope(m, tb + beat / 2, beat * 0.32, gain=0.016, pan=-0.2)
+        t0 += bar
+        k += 1
+    tb, j = 0.0, 0
+    while tb < args.dur:
+        m, ln = tune[j % len(tune)]
+        calliope(m + 12, tb, ln * beat * 0.9, gain=0.032, pan=0.2)
+        tb += ln * beat
+        j += 1
+
 # D minor: i - VI - III - VII, two bars each
 PROG = [([50, 53, 57], 38), ([46, 50, 53], 34), ([53, 57, 60], 41), ([48, 52, 55], 36)]
 style = args.style
@@ -659,6 +698,8 @@ elif style == 'sport':
     sport_style()
 elif style == 'classical':
     classical_style()
+elif style == 'fair':
+    fair_style()
 else:
     t0 = 0.0
     k = 0
@@ -695,7 +736,7 @@ else:
 
 # sidechain pump: music dips on each kick
 pump = np.ones(N)
-DEPTH = {'lofi': 0.2, 'lounge': 0.1, 'trap': 0.3, 'nature': 0.08, 'sport': 0.15, 'classical': 0.0}.get(style, 0.45)
+DEPTH = {'lofi': 0.2, 'lounge': 0.1, 'trap': 0.3, 'nature': 0.08, 'sport': 0.15, 'classical': 0.0, 'fair': 0.1}.get(style, 0.45)
 for tb in kicks:
     i = int(tb * SR)
     n = int(beat * 0.9 * SR)
@@ -1020,15 +1061,23 @@ def sfx_alarm():
     x = signal.square(2 * np.pi * np.cumsum(f) / SR) * 0.25
     return lowpass(x, 3000) * np.minimum(1, t / 0.01) * np.clip((1.5 - t) / 0.1, 0, 1)
 
+
+def sfx_slide():
+    # a slide whistle going down: the big drop
+    n = int(1.1 * SR)
+    t = tt(n)
+    f = 1700 * 2 ** (-t / t[-1] * 2.2) * (1 + 0.02 * np.sin(2 * np.pi * 7 * t))
+    return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, t / 0.03) * np.clip((t[-1] - t) / 0.15, 0, 1) * 0.35
+
 SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise, 'click': sfx_click,
        'chime': sfx_chime, 'ding': sfx_ding, 'gps': sfx_gps, 'blip': sfx_blip, 'level': sfx_level, 'error': sfx_error,
        'buzzer': sfx_buzzer, 'boing': sfx_boing, 'wah': sfx_wah, 'flash': sfx_flash, 'ring': sfx_ring, 'punch': sfx_punch,
        'drumroll': sfx_drumroll, 'applause': sfx_applause, 'stinger': sfx_stinger, 'heartbeat': sfx_heartbeat, 'creak': sfx_creak,
-       'splash': sfx_splash, 'plop': sfx_plop, 'reel': sfx_reel, 'bird': sfx_bird, 'gun': sfx_gun, 'cheer': sfx_cheer, 'alarm': sfx_alarm}
+       'splash': sfx_splash, 'plop': sfx_plop, 'reel': sfx_reel, 'bird': sfx_bird, 'gun': sfx_gun, 'cheer': sfx_cheer, 'alarm': sfx_alarm, 'slide': sfx_slide}
 GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55, 'click': 0.6,
         'chime': 1.0, 'ding': 0.55, 'gps': 0.8, 'blip': 0.5, 'level': 0.6, 'error': 0.55,
         'buzzer': 0.35, 'boing': 0.45, 'wah': 0.6, 'flash': 0.6, 'ring': 0.6, 'punch': 0.7, 'drumroll': 0.6, 'applause': 0.7,
-        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5, 'splash': 0.7, 'plop': 0.6, 'reel': 0.45, 'bird': 0.35, 'gun': 0.8, 'cheer': 0.7, 'alarm': 0.4}
+        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5, 'splash': 0.7, 'plop': 0.6, 'reel': 0.45, 'bird': 0.35, 'gun': 0.8, 'cheer': 0.7, 'alarm': 0.4, 'slide': 0.6}
 cues = json.load(open(args.cues)) if args.cues else []
 for c in cues:
     if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
@@ -1088,7 +1137,7 @@ for c in cues:
 bed = (music + wet) * fade + sfx
 
 mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55, 'noir': 0.5, 'bounce': 0.5,
-             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5, 'sport': 0.5, 'classical': 0.5}.get(style, 0.35)
+             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5, 'sport': 0.5, 'classical': 0.5, 'fair': 0.5}.get(style, 0.35)
 if args.voice:
     vsr, v = wavfile.read(args.voice)
     v = v.astype(np.float64) / (32768.0 if v.dtype == np.int16 else 1.0)
@@ -1105,7 +1154,7 @@ if args.voice:
     duck = 1 - 0.55 * np.clip(e, 0, 1)
     mix = mix * duck + np.vstack([v, v])
 
-if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror', 'nature', 'sport', 'classical'):
+if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror', 'nature', 'sport', 'classical', 'fair'):
     # the newer styles are sparser, so one bright effect can set the peak and the loudness pass then
     # pushes it over: a peak limiter holds anything above 3.5 times the mix's RMS (1 ms look-ahead,
     # 120 ms release)

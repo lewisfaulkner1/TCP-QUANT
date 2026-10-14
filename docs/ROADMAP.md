@@ -14,9 +14,9 @@ What's built, what comes next, and the decisions behind it. Updated as work land
 - **Animated episodes** (`brand/source/reels/toon`, `brand/video/reels/EPISODES.md`): the founder as an
   animated character, drawn in code so he looks the same in every shot, for the TikTok series in the
   animated master brief. Every episode is made in two cuts (TCP's account and the founder's), with
-  its production package, descriptions and posting times: EP01, EP02, EP04 and EP06 to EP23 so far,
+  its production package, descriptions and posting times: EP01, EP02, EP04 and EP06 to EP24 so far,
   in many places (his desk, a jet, a city map, a café, a press conference, a boxing ring, a game show,
-  a cinema, a watering hole, a stadium, a museum) with their own music. Lewis approved character sheet V6 on 5 October 2026, and on
+  a cinema, a watering hole, a stadium, a museum, a theme park) with their own music. Lewis approved character sheet V6 on 5 October 2026, and on
   14 October his cast, the trading emotions (FOMO, REVENGE, GREED, FEAR and PATIENCE).
 - **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner), and
   the pinned posts for Start here (`community/PINNED.md`).

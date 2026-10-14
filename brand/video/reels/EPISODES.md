@@ -779,7 +779,7 @@ Education, not financial advice. Trading carries risk.
 
 ## The trading emotions: a new cast, new places, new sound
 
-Nine episodes for Saturday 17 to Sunday 25 October, after EP08 on Friday 16. Each is somewhere
+Ten episodes for Saturday 17 to Monday 26 October, after EP08 on Friday 16. Each is somewhere
 new, with its own music, and three come straight from the master brief (EP06, EP09 and the line-up
 that brings in the brief's FOMO character). The founder is in every one, as approved on sheet V6.
 
@@ -810,6 +810,7 @@ saying "join".
 | Fri 23 Oct | EP22 · The Rarest Trader in the Wild | a savanna's watering hole, a wildlife film | wildlife score, birds | the same | the same |
 | Sat 24 Oct | EP23 · The Race | a floodlit stadium, race night | sports theme, the crowd | the same | the same |
 | Sun 25 Oct | EP10 · The Museum of Red Flags | a museum, two galleries | a harpsichord minuet | the same | the same |
+| Mon 26 Oct | EP24 · The Rollercoaster | a theme park at sunset | a fairground organ | the same | the same |
 
 Same files as the others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the
 covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -1205,6 +1206,49 @@ Which red flag have you seen most? 👇
 
 #trading #daytrader #tradinglife #forex
 Education, not financial advice. Trading carries risk. Example plan and record, not real trades. The characters are made up.
+```
+
+### EP24 · The Rollercoaster (22.2 s, fairground organ)
+
+`specs/ep24-coaster.js`. A theme park at sunset, and a rollercoaster whose track is a price chart:
+from START up the first climb, down the big drop (a safety net under it, marked STOP), up again and
+on to the TARGET station, higher than the first peak. *Every trade is a rollercoaster:* PATIENCE (front
+seat, with its tea) and FEAR set off up the chain lift; FOMO waits on a platform at the very top and
+leaps in (*WAIT FOR MEEE!!*): *FOMO gets on at the top.* The drop: *LET ME OFF!!* At the bottom FEAR
+jumps off, and FOMO with it, dizzy by the net: *FEAR gets off at the bottom.* *PATIENCE rides the
+plan* to TARGET. The founder at the ride's controls (a sign: RIDE AT YOUR OWN RISK): *FOMO buys the
+top. FEAR sells the bottom.* The whole ride from above: *the stop was the net. It never got there.*
+*Which seat are you in?*
+
+Why it should travel: buying the top and selling the bottom is the most relatable pain in trading,
+and here it's a picture people get in a second (the track is the chart); the safety net shows the
+stop without a lecture; three seats make a one-word answer; and RIDE AT YOUR OWN RISK is the risk
+warning as a joke.
+
+**TCP account (K):**
+```
+Every trade is a rollercoaster. 🎢
+
+FOMO gets on at the top.
+FEAR gets off at the bottom.
+PATIENCE rides the plan, with the stop as the safety net.
+
+Which seat are you in? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. A drawn track, not a real market. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+I've sat in every seat on this ride. 🎢
+
+FOMO's at the top, FEAR's at the bottom. These days I bring a tea.
+
+Which seat are you in? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. A drawn track, not a real market. The characters are made up.
 ```
 
 ### Next ideas

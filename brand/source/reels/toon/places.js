@@ -17,6 +17,8 @@
 //   booth     the commentary box above it: him at the desk with a microphone, the stadium behind
 //   museum    the museum of red flags, side on: gallery 1's exhibits in glass cases, gallery 2's green flags
 //   gallery   him in gallery 2 as the guide, at a lectern, the green wall and its frames behind him
+//   coaster   a theme park at sunset: a rollercoaster whose track is a price chart, START to TARGET
+//   operator  him at the ride's controls: the lever, RIDE AT YOUR OWN RISK, the ride through the glass
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -889,6 +891,94 @@
       <path d="M 200 1448 L 760 1448 L 720 2400 L 240 2400 Z" fill="#5C3A22"/><path d="M 180 1436 L 780 1436 L 780 1460 L 180 1460 Z" fill="#7A5232"/>
       <g transform="translate(480 1560)"><rect x="-110" y="0" width="220" height="46" rx="4" fill="#B8913E"/><text x="0" y="31" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="20" fill="#2A1C0C">GUIDED TOURS</text></g>
       ${onTable ? nearArm : ''}`;
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the rollercoaster
+  // A theme park at sunset and a rollercoaster whose track is a price chart. s.ride: { track: points
+  // along the rail (from the spec), car: [x, y, angle] for every frame (30 a second), seats: { who:
+  // [from, to, seat] } }: a rider in a seat (0 at the front) rides in the car, tilted with it; outside
+  // those times it stands where its own track says. The START station is at the left, the TARGET
+  // station at the top right; a safety net marked STOP hangs under the bottom of the big drop.
+  SETS.coaster = (s, t, st, p, id) => {
+    const R = s.ride || { track: [], car: [[0, 0, 0]], seats: {} };
+    const car = R.car[Math.min(R.car.length - 1, Math.max(0, Math.round(t * 30)))];
+    const pts = R.track;
+    // the sky, the far side of the park
+    const lights = Array.from({ length: 34 }, (_, i) => { const x = -600 + i * 150, y = 1300 + Math.sin(i * 0.9) * 18; return `<circle cx="${x}" cy="${n(y)}" r="7" fill="#FFE3A0" opacity="${n(0.6 + 0.3 * Math.sin(t * 3 + i))}"/>`; }).join('');
+    const wheel = (cx, cy, r) => `<g transform="translate(${cx} ${cy})"><circle r="${r}" fill="none" stroke="#3A2440" stroke-width="10"/>
+      ${Array.from({ length: 12 }, (_, i) => { const a2 = (i / 12) * Math.PI * 2 + t * 0.15; return `<path d="M 0 0 L ${n(Math.cos(a2) * r)} ${n(Math.sin(a2) * r)}" stroke="#3A2440" stroke-width="5"/><rect x="${n(Math.cos(a2) * r - 22)}" y="${n(Math.sin(a2) * r)}" width="44" height="34" rx="6" fill="#4A2C50"/>`; }).join('')}
+      <path d="M -60 ${r + 200} L 0 0 L 60 ${r + 200}" stroke="#3A2440" stroke-width="14" fill="none"/></g>`;
+    const bg = `<defs><linearGradient id="${id}ss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2A6E"/><stop offset="0.55" stop-color="#E8735A"/><stop offset="1" stop-color="#FFC27A"/></linearGradient>
+        <radialGradient id="${id}sun"><stop offset="0" stop-color="#FFE7B0"/><stop offset="1" stop-color="#FFE7B0" stop-opacity="0"/></radialGradient></defs>
+      <rect x="-1500" y="-800" width="8000" height="3200" fill="url(#${id}ss)"/>
+      <circle cx="2600" cy="1180" r="320" fill="url(#${id}sun)" opacity="0.8"/><circle cx="2600" cy="1180" r="110" fill="#FFF0C8"/>
+      ${wheel(-150, 900, 420)}${wheel(4300, 980, 340)}
+      ${[[400, 1330, 1.0, '#C8281E'], [1300, 1340, 0.8, '#2E5FB0'], [3300, 1330, 0.9, '#C8281E'], [3900, 1340, 0.7, '#E8A317']].map(([x, y, k, c]) => `<g transform="translate(${x} ${y}) scale(${k})"><path d="M -160 0 L 0 -150 L 160 0 Z" fill="${c}"/><path d="M -160 0 L 0 -150 L 0 0 Z" fill="#000" opacity="0.15"/><rect x="-140" y="0" width="280" height="90" fill="#F2EEE4"/></g>`).join('')}
+      <path d="M -1500 1420 L 6500 1420 L 6500 2400 L -1500 2400 Z" fill="#3E2F48"/>${lights}`;
+    // the track: supports to the ground, the spine, the rail, the ties
+    const step = 3, path = pts.length ? `M ${pts.map(([x, y]) => `${x} ${y}`).join(' L ')}` : '';
+    const supports = [], ties = [];
+    for (let i = 0; i < pts.length - 1; i += step) {
+      const [x, y] = pts[i], [x1, y1] = pts[Math.min(pts.length - 1, i + 1)], a2 = Math.atan2(y1 - y, x1 - x);
+      ties.push(`<path d="M ${n(x - Math.sin(a2) * 12)} ${n(y + Math.cos(a2) * 12)} L ${n(x + Math.sin(a2) * 14)} ${n(y - Math.cos(a2) * 14)}" stroke="#5A4A3A" stroke-width="5"/>`);
+      if (i % (step * 5) === 0 && y < 1780) supports.push(`<path d="M ${x} ${y + 20} L ${x - 30} 1800 M ${x} ${y + 20} L ${x + 30} 1800" stroke="#6E6A78" stroke-width="9"/><path d="M ${x - 22} ${n(y + (1800 - y) * 0.5)} L ${x + 22} ${n(y + (1800 - y) * 0.5)}" stroke="#6E6A78" stroke-width="6"/>`);
+    }
+    const track = `${supports.join('')}<path d="${path}" stroke="#2A2230" stroke-width="22" fill="none" stroke-linejoin="round"/>${ties.join('')}
+      <path d="${path}" stroke="#E8A317" stroke-width="7" fill="none" stroke-linejoin="round"/>`;
+    // the stations, FOMO's platform at the top, the safety net
+    const station = (x0, x1, y, label, gold) => `<rect x="${x0}" y="${y + 14}" width="${x1 - x0}" height="40" fill="#5A4A3A"/>
+      ${Array.from({ length: Math.floor((x1 - x0) / 140) + 1 }, (_, i) => `<path d="M ${x0 + 20 + i * 140} ${y + 54} L ${x0 + 20 + i * 140} 1800" stroke="#6E6A78" stroke-width="12"/>`).join('')}
+      <path d="M ${x0 - 20} ${y - 230} L ${x1 + 20} ${y - 230} L ${x1} ${y - 190} L ${x0} ${y - 190} Z" fill="${gold ? '#D8AD4E' : '#C8281E'}"/>${[x0 + 20, x1 - 20].map((x) => `<rect x="${x - 6}" y="${y - 190}" width="12" height="204" fill="#2A2230"/>`).join('')}
+      <g transform="translate(${(x0 + x1) / 2} ${y - 300})"><rect x="-150" y="-50" width="300" height="100" rx="10" fill="#0B0B0D" stroke="${gold ? '#D8AD4E' : '#F2EEE4'}" stroke-width="5"/>
+        ${gold ? crown(-112, 0, 0.15) : ''}<text x="${gold ? 30 : 0}" y="18" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="48" fill="${gold ? '#D8AD4E' : '#F2EEE4'}">${label}</text></g>`;
+    const fomoDeck = `<rect x="1080" y="650" width="150" height="16" fill="#5A4A3A"/><path d="M 1100 666 L 1100 1800 M 1210 666 L 1210 1800" stroke="#6E6A78" stroke-width="8"/>
+      ${Array.from({ length: 22 }, (_, i) => `<path d="M 1100 ${700 + i * 50} L 1210 ${700 + i * 50}" stroke="#6E6A78" stroke-width="5"/>`).join('')}`;
+    const net = `<g transform="translate(1640 1700)"><path d="M -230 0 L -230 100 M 230 0 L 230 100" stroke="#6E6A78" stroke-width="12"/>
+      <path d="M -230 10 Q 0 70 230 10" stroke="#E9E4D8" stroke-width="5" fill="none"/>${Array.from({ length: 9 }, (_, i) => `<path d="M ${-200 + i * 50} ${14 + Math.sin(((i + 0.5) / 9) * Math.PI) * 44} L ${-200 + i * 50} 0" stroke="#E9E4D8" stroke-width="3"/>`).join('')}
+      <g transform="translate(-230 -30)"><rect x="-56" y="-26" width="112" height="52" rx="6" fill="#C8281E" stroke="#1A120C" stroke-width="3"/><text x="0" y="14" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="34" fill="#FFFFFF">STOP</text></g></g>`;
+    // the car and its riders
+    const seatX = [140, 30, -80];
+    const riders = [], loose = [];
+    for (const [who, track] of Object.entries(s.cast || {})) {
+      const q = C.at(who, track, t);
+      q.pose.__full = true;
+      const w = (R.seats || {})[who];
+      if (w && t >= at(w[0]) && t < at(w[1])) riders.push(`<g transform="translate(${seatX[w[2]]} -36) scale(${n(q.s)})">${C.svg(who, q.pose, t, id + who)}</g>`);
+      else loose.push(`<g transform="translate(${n(q.x)} ${n(q.y)}) scale(${n(q.s)})">${C.svg(who, q.pose, t, id + who)}</g>`);
+    }
+    const carSVG = `<g transform="translate(${car[0]} ${car[1]}) rotate(${car[2]})">${riders.join('')}
+      <path d="M -150 -86 L 200 -86 C 226 -86, 236 -60, 232 -14 L -156 -14 C -160 -50, -160 -76, -150 -86 Z" fill="#C8281E" stroke="#1A120C" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M -150 -58 L 228 -58" stroke="#D8AD4E" stroke-width="10"/>${crown(196, -36, 0.1, '#F6E3A3')}
+      ${[-120, -10, 100, 200].map((x) => `<circle cx="${x}" cy="-8" r="14" fill="#2A2230" stroke="#1A120C" stroke-width="3"/>`).join('')}</g>`;
+    const subject = `${station(-200, 300, 1500, 'START', false)}${station(3480, 4200, 500, 'TARGET', true)}${fomoDeck}${net}${track}${carSVG}${loose.join('')}
+      <path d="M -1500 1800 L 6500 1800 L 6500 2600 L -1500 2600 Z" fill="#2F5A3A"/><path d="M -1500 1800 L 6500 1800" stroke="#24452D" stroke-width="8"/>`;
+    return [{ f: 0.3, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // the ride's controls: him at the desk with the big lever, the sign hanging in front, the ride
+  // through the glass behind him at sunset
+  SETS.operator = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#FFE6CC', rim: 1 };
+    const bg = `<defs><linearGradient id="${id}os" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B2A6E"/><stop offset="0.6" stop-color="#E8735A"/><stop offset="1" stop-color="#FFC27A"/></linearGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="#2A2230"/>
+      <rect x="-200" y="200" width="1500" height="1000" fill="url(#${id}os)"/>
+      <path d="M -200 1000 Q 100 400 300 360 Q 420 340 520 600 Q 700 1100 900 820 Q 1050 600 1300 500" stroke="#2A2230" stroke-width="26" fill="none"/>
+      <path d="M -200 1000 Q 100 400 300 360 Q 420 340 520 600 Q 700 1100 900 820 Q 1050 600 1300 500" stroke="#E8A317" stroke-width="8" fill="none"/>
+      ${[-200, 360, 920].map((x) => `<rect x="${x - 14}" y="200" width="28" height="1000" fill="#1A1620"/>`).join('')}<rect x="-200" y="186" width="1500" height="28" fill="#1A1620"/><rect x="-200" y="1190" width="1500" height="40" fill="#1A1620"/>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const subject = `
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
+      <path d="M -300 1448 L 1400 1448 L 1400 1530 L -300 1530 Z" fill="#3A3442"/><path d="M -300 1450 L 1400 1450" stroke="#5A5266" stroke-width="3"/>
+      <g transform="translate(860 1448)"><rect x="-80" y="-30" width="160" height="30" rx="6" fill="#1A1620"/><path d="M -10 -30 L 40 -200" stroke="#9CA3AE" stroke-width="16" stroke-linecap="round"/><circle cx="44" cy="-208" r="30" fill="#C8281E" stroke="#1A120C" stroke-width="4"/></g>
+      ${[[640, '#22C55E'], [700, '#E8A317'], [760, '#C8281E']].map(([x, c]) => `<circle cx="${x}" cy="1440" r="16" fill="${c}" stroke="#1A120C" stroke-width="3"/>`).join('')}
+      ${onTable ? nearArm : ''}
+      <path d="M -300 1530 L 1400 1530 L 1400 2400 L -300 2400 Z" fill="#221E28"/>
+      <g transform="translate(600 548)"><path d="M -34 -60 L -34 -260 M 34 -60 L 34 -260" stroke="#5A5266" stroke-width="4"/><rect x="-46" y="-62" width="92" height="104" rx="6" fill="#F2C230" stroke="#1A120C" stroke-width="4"/>
+        <text x="0" y="-32" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="15" fill="#1A120C">RIDE AT</text><text x="0" y="-12" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="15" fill="#1A120C">YOUR OWN</text>
+        <text x="0" y="12" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="19" fill="#C8281E">RISK</text><path d="M -30 26 L 30 26" stroke="#1A120C" stroke-width="3"/></g>`;
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 
