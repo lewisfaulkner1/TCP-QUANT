@@ -13,6 +13,8 @@
 //   film      that film up close, THE TRADE, from the row behind: his cap and FEAR in silhouette
 //   waterhole a savanna's watering hole for a wildlife film: the sky by the hour, the water, the near bank
 //   hide      inside the film-maker's hide on that bank: canvas, the long lens, the slit's bright view
+//   track     a floodlit stadium on race night, side on: the stands, the boards, the lanes, the finish
+//   booth     the commentary box above it: him at the desk with a microphone, the stadium behind
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -671,6 +673,123 @@
       <g transform="translate(1040 1448) skewX(-20)"><rect x="-70" y="-20" width="130" height="20" fill="#E8E0CC"/><rect x="-70" y="-24" width="130" height="6" fill="#C9583A"/></g>
       ${onTable ? nearArm : ''}
       <path d="M -300 1520 L 1400 1520 L 1400 2400 L -300 2400 Z" fill="#20261A"/>`;
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the race
+  // A floodlit stadium on race night, side on and a little from above: the crowd in the stands, the
+  // scoreboard, the floodlights, the boards along the track (TCP's among made-up sponsors), and the
+  // track itself, x along the race: the start at x 300 (lane 2's staggered on to x 540), the finish
+  // (TAKE PROFIT) at x 3200, lane 2's runner at y 1440, lane 1's at y 1650. s.board: [[t, 'race' | 'result']]; s.tape: when the tape
+  // breaks; s.dust: [[t, x, y]]; s.confetti: when the gold confetti falls.
+  const lean = (x, y) => [x + (1700 - y) * 0.17, y];          // the track's slight slant: further is to the right
+  const boardAd = (x, i, id) => {
+    const ads = [['TCP', '#0B0B0D', '#D8AD4E'], ['PIP NEWS', '#1F4FA8', '#FFFFFF'], ['TCP', '#0B0B0D', '#D8AD4E'], ['CANDLE TV', '#B3261E', '#FFFFFF'], ['TCP', '#0B0B0D', '#D8AD4E'], ['WICK FM', '#2E7D4F', '#FFFFFF']][i % 6];
+    return `<g transform="translate(${x} 1236)"><rect x="0" y="0" width="340" height="92" rx="4" fill="${ads[1]}"/>
+      ${ads[0] === 'TCP' ? `${crown(92, 46, 0.2, ads[2])}<text x="200" y="64" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="52" fill="${ads[2]}">TCP</text>`
+        : `<text x="170" y="62" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="${ads[2]}">${ads[0]}</text>`}
+      <rect x="0" y="0" width="340" height="92" rx="4" fill="url(#${id}bgl)" opacity="0.3"/></g>`;
+  };
+  SETS.track = (s, t, st, p, id) => {
+    const mode = (s.board || []).filter(([a]) => t >= at(a)).map(([, m]) => m).pop() || 'race';
+    const cheer = s.confetti != null && t >= at(s.confetti) ? 1 : 0;
+    // the stands: rows of the crowd, a bit of movement, more after the finish
+    const crowd = [];
+    for (let r = 0; r < 7; r++) {
+      const y = 640 + r * 74, k = 0.75 + r * 0.06;
+      crowd.push(`<rect x="-700" y="${y - 6}" width="3400" height="74" fill="${r % 2 ? '#141B30' : '#18213A'}"/>`);
+      for (let c = 0; c < 70; c++) {
+        const x = -680 + c * 48 + (r % 2 ? 24 : 0), seed = (r * 71 + c * 37) % 97;
+        const col = ['#C9483A', '#E8B33C', '#3F7FD8', '#E9E4D8', '#5BB06A', '#8C5CD8', '#2A2F3E'][seed % 7];
+        const jump = cheer ? Math.max(0, Math.sin(t * 9 + seed)) * 12 : Math.sin(t * 2 + seed) * 1.5;
+        crowd.push(`<circle cx="${x}" cy="${n(y + 22 - jump)}" r="${n(12 * k)}" fill="#2B2420"/><path d="M ${x - 17 * k} ${n(y + 64 - jump)} Q ${x} ${n(y + 30 - jump)} ${x + 17 * k} ${n(y + 64 - jump)} Z" fill="${col}"/>`);
+      }
+    }
+    const tower = (x) => `<g transform="translate(${x} 0)"><path d="M -8 900 L -4 220 L 4 220 L 8 900 Z" fill="#2A3048"/><rect x="-80" y="150" width="160" height="80" rx="6" fill="#2A3048"/>
+      ${[0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => `<circle cx="${-56 + c * 37}" cy="${170 + r * 22}" r="9" fill="#FFF6DA"/>`).join('')).join('')}
+      <circle cx="0" cy="190" r="260" fill="url(#${id}fl)"/></g>`;
+    const board = mode === 'result'
+      ? `<text x="230" y="96" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="26" letter-spacing="6" fill="#9FB3D8">RESULT</text>
+        <text x="40" y="168" font-family="TCP Display" font-weight="800" font-size="50" fill="#F6E3A3">1  PATIENCE</text><text x="40" y="232" font-family="TCP Display" font-weight="800" font-size="50" fill="#6E7894">2  —</text>`
+      : `<text x="230" y="96" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="26" letter-spacing="6" fill="#9FB3D8">FINAL · 100 PIPS</text>
+        <text x="40" y="168" font-family="TCP Display" font-weight="800" font-size="50" fill="#E9E4D8">1  FOMO</text><text x="40" y="232" font-family="TCP Display" font-weight="800" font-size="50" fill="#E9E4D8">2  PATIENCE</text>`;
+    const bg = `<defs><linearGradient id="${id}sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060A1A"/><stop offset="1" stop-color="#1A2547"/></linearGradient>
+        <radialGradient id="${id}fl"><stop offset="0" stop-color="#FFF4D0" stop-opacity="0.5"/><stop offset="1" stop-color="#FFF4D0" stop-opacity="0"/></radialGradient></defs>
+      <rect x="-700" y="-600" width="3600" height="3120" fill="url(#${id}sky)"/>
+      ${tower(-120)}${tower(1240)}${tower(2500)}
+      <rect x="-700" y="600" width="3600" height="580" fill="#0E1426"/>${crowd.join('')}
+      <rect x="-700" y="1150" width="3600" height="40" fill="#0B0F1C"/>
+      <g transform="translate(760 470)"><rect x="-16" y="-16" width="492" height="292" rx="10" fill="#05070C"/><rect width="460" height="260" fill="#0B1020"/>${board}
+        ${crown(400, 50, 0.16)}</g>`;
+    // the boards along the track
+    const boards = `<defs><linearGradient id="${id}bgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>
+      <rect x="-700" y="1226" width="4800" height="112" fill="#0A0D16"/>${Array.from({ length: 13 }, (_, i) => boardAd(-600 + i * 360, i, id)).join('')}`;
+    // the track: lanes, lines, the start and the finish, distance marks
+    const lane = (y0, y1, col) => `<path d="M -700 ${y0} L 4400 ${y0} L 4400 ${y1} L -700 ${y1} Z" fill="${col}"/>`;
+    const line = (x, y0 = 1720, y1 = 1300) => { const a2 = lean(x, y0), b2 = lean(x, y1); return `M ${n(a2[0])} ${a2[1]} L ${n(b2[0])} ${b2[1]}`; };
+    const tapeT = s.tape != null ? t - at(s.tape) : -1;
+    const FX = 3200, near = lean(FX, 1720), far = lean(FX, 1300);
+    const post = (pt, h) => `<rect x="${n(pt[0] - 9)}" y="${pt[1] - h}" width="18" height="${h}" fill="#E9E4D8"/><rect x="${n(pt[0] - 9)}" y="${pt[1] - h}" width="18" height="${h}" fill="none" stroke="#1A120C" stroke-width="3"/>`;
+    const tapeY = (pt) => pt[1] - 150;
+    const tape = tapeT < 0
+      ? `<path d="M ${n(near[0])} ${tapeY(near)} L ${n(far[0])} ${tapeY(far)}" stroke="#E8B33C" stroke-width="9"/>`
+      : [[near, -1], [far, 1]].map(([pt, d]) => { const u = Math.min(1, tapeT / 0.6); return `<path d="M ${n(pt[0])} ${tapeY(pt)} q ${n(30 * d * (1 - u) + 10)} ${n(60 + u * 60)} ${n(14 * d + 6)} ${n(140 * u + 40)}" stroke="#E8B33C" stroke-width="9" fill="none"/>`; }).join('');
+    const arch = `${post(far, 380)}<g transform="translate(${n(far[0])} ${far[1] - 410})"><rect x="-220" y="-10" width="440" height="96" rx="8" fill="#0B0B0D" stroke="#D8AD4E" stroke-width="4"/>
+        ${crown(-176, 38, 0.15)}<text x="-128" y="56" font-family="TCP Display" font-weight="800" font-size="42" fill="#D8AD4E">TAKE PROFIT</text></g>`;
+    const dust = (s.dust || []).map(([t0, x, y]) => {
+      const d = t - at(t0);
+      if (d < 0 || d > 1) return '';
+      return [0, 1, 2, 3, 4].map((i) => `<circle cx="${n(x - 20 - i * 26 - d * 60)}" cy="${n(y - 20 - i * 6 - d * 30)}" r="${n(18 + i * 6 + d * 30)}" fill="#D9B48E" opacity="${n(0.6 * (1 - d))}"/>`).join('');
+    }).join('');
+    const track = `${lane(1260, 1300, '#7E2E1E')}${lane(1300, 1720, '#B8452B')}
+      ${[1300, 1500, 1720].map((y) => `<path d="M -700 ${y} L 4400 ${y}" stroke="#F2EEE4" stroke-width="5"/>`).join('')}
+      ${lane(1720, 2600, '#2F6B3A')}${Array.from({ length: 30 }, (_, i) => `<path d="M ${-700 + i * 180} 1720 l 90 900" stroke="#2A6034" stroke-width="40" opacity="0.5"/>`).join('')}
+      <path d="${line(300, 1720, 1500)}" stroke="#F2EEE4" stroke-width="14"/><path d="${line(540, 1500, 1300)}" stroke="#F2EEE4" stroke-width="14"/>
+      ${[[1025, '25'], [1750, '50'], [2475, '75']].map(([x, l]) => `<g transform="translate(${n(lean(x, 1700)[0])} 1700)"><text x="0" y="0" font-family="TCP Display" font-weight="800" font-size="34" fill="#F2EEE4" opacity="0.75">${l}</text></g>`).join('')}
+      <path d="${line(FX)}" stroke="#F2EEE4" stroke-width="16"/><path d="${line(FX + 16)}" stroke="#1A120C" stroke-width="5" stroke-dasharray="18 18"/>
+      ${[[590, 1428], [360, 1638]].map(([x, y]) => `<g transform="translate(${x} ${y})"><path d="M -40 10 L -10 -26 L 4 -26 L -20 10 Z" fill="#9CA3AE" stroke="#1A120C" stroke-width="3"/><path d="M -6 10 L 22 -20 L 34 -20 L 12 10 Z" fill="#9CA3AE" stroke="#1A120C" stroke-width="3"/></g>`).join('')}`;
+    const confetti = s.confetti != null && t >= at(s.confetti) ? Array.from({ length: 46 }, (_, i) => {
+      const d = t - at(s.confetti), x = FX - 500 + ((i * 137) % 1100) + Math.sin(d * 3 + i) * 30, y = 150 + ((i * 251) % 700) + d * (260 + (i % 5) * 40) - 250;
+      return `<rect x="${n(x)}" y="${n(y)}" width="14" height="22" rx="3" fill="${i % 3 ? '#E8B33C' : '#F6E3A3'}" transform="rotate(${n(d * 200 + i * 40)} ${n(x + 7)} ${n(y + 11)})"/>`;
+    }).join('') : '';
+    const subject = `${track}${arch}${dust}${castOf(s, t, id)}${tape}${post(near, 170)}${confetti}`;
+    const fg = `<rect x="-700" y="2050" width="5200" height="40" fill="#1A1F2C"/>${Array.from({ length: 40 }, (_, i) => `<rect x="${-700 + i * 130}" y="1960" width="14" height="130" fill="#1A1F2C"/>`).join('')}`;
+    return [{ f: 0.25, svg: bg, blur: s.dof && s.dof.bg }, { f: 0.6, svg: boards, blur: s.dof && s.dof.mid }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 1.35, svg: fg, blur: 7 }, T.topShade(id)];
+  };
+
+  // the commentary box: him at the desk, a microphone with TCP's flag, a monitor with the race on it,
+  // and the stadium through the glass behind (floodlights, the crowd as lights)
+  SETS.booth = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#F4EFE6', rim: 1 };
+    const bokeh = Array.from({ length: 40 }, (_, i) => {
+      const x = 60 + ((i * 97) % 1100), y = 640 + ((i * 53) % 420), r = 6 + (i % 4) * 3;
+      const col = ['#E8B33C', '#C9483A', '#3F7FD8', '#E9E4D8'][i % 4];
+      return `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" opacity="${n(0.35 + 0.25 * Math.sin(t * 2 + i))}"/>`;
+    }).join('');
+    const bg = `<defs><linearGradient id="${id}bs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070B1A"/><stop offset="1" stop-color="#1A2547"/></linearGradient>
+        <radialGradient id="${id}bf"><stop offset="0" stop-color="#FFF4D0" stop-opacity="0.55"/><stop offset="1" stop-color="#FFF4D0" stop-opacity="0"/></radialGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="#14161C"/>
+      <rect x="-200" y="200" width="1500" height="1000" fill="url(#${id}bs)"/>
+      ${[[120, 330], [980, 300]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="230" fill="url(#${id}bf)"/>${[0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => `<circle cx="${x - 48 + c * 32}" cy="${y - 20 + r * 20}" r="8" fill="#FFF6DA"/>`).join('')).join('')}`).join('')}
+      <rect x="-200" y="620" width="1500" height="460" fill="#101629"/>${bokeh}
+      <rect x="-200" y="1080" width="1500" height="120" fill="#7E2E1E"/><path d="M -200 1120 L 1300 1120 M -200 1160 L 1300 1160" stroke="#E9E4D8" stroke-width="4" opacity="0.6"/>
+      ${[-200, 360, 920].map((x) => `<rect x="${x - 14}" y="200" width="28" height="1000" fill="#0C0E12"/>`).join('')}
+      <rect x="-200" y="186" width="1500" height="28" fill="#0C0E12"/><rect x="-200" y="1190" width="1500" height="40" fill="#0C0E12"/>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const subject = `
+      <g transform="translate(860 1180)"><rect x="-150" y="-110" width="300" height="200" rx="10" fill="#0B0D11"/><rect x="-136" y="-96" width="272" height="160" fill="#B8452B"/>
+        <path d="M -136 -40 L 136 -40 M -136 20 L 136 20" stroke="#F2EEE4" stroke-width="3"/><circle cx="${n(-60 + ((t * 40) % 200))}" cy="-10" r="10" fill="#D8AD4E"/><circle cx="90" cy="46" r="10" fill="#22C55E"/>
+        <path d="M -20 90 L 20 90 L 34 120 L -34 120 Z" fill="#0B0D11"/></g>
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
+      <path d="M -300 1448 L 1400 1448 L 1400 1520 L -300 1520 Z" fill="#2A2420"/><path d="M -300 1450 L 1400 1450" stroke="#5A4A3C" stroke-width="3"/>
+      <g transform="translate(680 1452)"><ellipse cx="0" cy="0" rx="40" ry="9" fill="#0A0A0B"/><path d="M 0 0 L 0 -120" stroke="#2A2C30" stroke-width="7"/>
+        <rect x="-38" y="-178" width="76" height="50" rx="6" fill="#0B0B0D" stroke="#D8AD4E" stroke-width="3"/>${crown(0, -158, 0.1)}<text x="0" y="-136" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="14" fill="#D8AD4E">TCP</text>
+        <rect x="-16" y="-236" width="32" height="60" rx="16" fill="#1A1B1E"/><rect x="-16" y="-236" width="32" height="32" rx="16" fill="#2C2E33"/></g>
+      <g transform="translate(980 1448) skewX(-18)"><rect x="-70" y="-14" width="140" height="14" fill="#E8E0CC"/><path d="M -56 -10 L 50 -10" stroke="#8C8576" stroke-width="2"/></g>
+      ${onTable ? nearArm : ''}
+      <path d="M -300 1520 L 1400 1520 L 1400 2400 L -300 2400 Z" fill="#1C1A18"/>`;
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 

@@ -779,7 +779,7 @@ Education, not financial advice. Trading carries risk.
 
 ## The trading emotions: a new cast, new places, new sound
 
-Seven episodes for Saturday 17 to Friday 23 October, after EP08 on Friday 16. Each is somewhere
+Eight episodes for Saturday 17 to Saturday 24 October, after EP08 on Friday 16. Each is somewhere
 new, with its own music, and three come straight from the master brief (EP06, EP09 and the line-up
 that brings in the brief's FOMO character). The founder is in every one, as approved on sheet V6.
 
@@ -808,6 +808,7 @@ saying "join".
 | Wed 21 Oct | EP19 · Greed at the Take Profit | a TV game show | big-band swing | the same | the same |
 | Thu 22 Oct | EP21 · Fear Closes Winners Early | a cinema at night, a horror film | horror score | the same | the same |
 | Fri 23 Oct | EP22 · The Rarest Trader in the Wild | a savanna's watering hole, a wildlife film | wildlife score, birds | the same | the same |
+| Sat 24 Oct | EP23 · The Race | a floodlit stadium, race night | sports theme, the crowd | the same | the same |
 
 Same files as the others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the
 covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -821,7 +822,7 @@ covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the h
 - **Characters people come back for.** A recurring cast turns single videos into a series: people
   follow to see what FOMO does next. Each emotion has its own episode now (FOMO EP09, REVENGE EP18,
   GREED EP19, FEAR EP21, PATIENCE EP22: pin them as a playlist); they cross over (the line-up has
-  four, EP22 has two); PATIENCE always wins. Keep their looks fixed (the sheet) and their lines in
+  four, EP22 and EP23 have two); PATIENCE always wins. Keep their looks fixed (the sheet) and their lines in
   character.
 - **A loop.** EP09 ends where it began (FOMO pops back up: *every. single. time.*), so the second
   watch starts before people notice. Rewatches count towards watch time, which both apps reward.
@@ -1120,11 +1121,52 @@ Which one are you right now? 👇
 Education, not financial advice. Trading carries risk. The characters are made up.
 ```
 
+### EP23 · The Race (21.8 s, sports theme)
+
+`specs/ep23-race.js`. FOMO against PATIENCE, the hare and the tortoise, on race night: the final of
+the 100 pips in a floodlit stadium, TCP's boards along the track among made-up sponsors, the finish
+line TAKE PROFIT. *FOMO vs PATIENCE: a race to the target.* At the gun FOMO goes all in and is gone
+(*SEE YA!!*); *PATIENCE is having a tea.* Halfway, FOMO staggers (*NEED… A… BREAK…*) and ends up flat
+on its back: *FOMO has nothing left.* *PATIENCE keeps walking*, past it and through the tape, the
+crowd up, gold confetti: *lovely.* Up in the commentary box the founder calls it: *you don't need to
+be first. You need to still be in the race. Hare or tortoise? Be honest.*
+
+Why it should travel: everyone knows the hare and the tortoise, and the sports commentary sells it
+in a second; FOMO flat on its back is the laugh, *lovely.* is the line people quote; the question has
+a one-word answer; and the lesson is risk without saying risk (going all in is how you end up out
+of the race).
+
+**TCP account (K):**
+```
+FOMO vs PATIENCE: a race to the target. 🏁
+
+FOMO goes all in at the gun. PATIENCE has a tea.
+Halfway, FOMO has nothing left.
+
+You don't need to be first. You need to still be in the race.
+
+Hare or tortoise? Be honest 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+Every trader starts out as the hare. 🐇
+
+The ones who last learn to be the tortoise: still in the race.
+
+Hare or tortoise right now? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. The characters are made up.
+```
+
 ### Next ideas
 
 - **The emotions' group chat:** FOMO, REVENGE, GREED and FEAR in one chat at 3am; PATIENCE has it
   muted.
-- **The race:** FOMO against PATIENCE, the hare and the tortoise, to the take profit.
 - **EP03 · The Trading Guru Olympics** (the brief): needs human contestants (RSI Guy, News Guy,
   Signal Guy…), drawn as a second cast.
 - **EP10** (the brief): reworked without the word "free" (joining needs a broker account): *what a

@@ -576,6 +576,32 @@ def nature_style():
         tb += ln * beat
         j += 1
 
+
+def sport_style():
+    # a sports broadcast's theme: D major, a bar each: D, G, A, D; brass on a ta-ta-taa, strings
+    # running sixteenths, timpani on 1 and 3, a snare roll into every fourth bar
+    prog = [([62, 66, 69], 38), ([62, 67, 71], 43), ([61, 64, 69], 45), ([62, 66, 69], 38)]
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        chord, root = prog[k % 4]
+        for b in range(4):
+            tb = t0 + b * beat
+            if tb >= args.dur:
+                break
+            if b in (0, 2):
+                timp(root, tb, gain=0.24)
+            bass(root, tb, beat * 0.45, gain=0.22)
+            put(music, tb + beat / 2, hat(0.1), pan=0.2)
+            for q in range(4):
+                stab([chord[(b * 4 + q) % 3] + 12], tb + q * beat / 4, length=0.09, gain=0.03, pan=-0.3 if q % 2 else 0.3, bright=3000)
+        for off, ln in ((0, 0.18), (beat / 2, 0.18), (beat, beat * 1.4)):
+            stab([m + 12 for m in chord], t0 + off, length=ln, gain=0.04, bright=2600)
+        if k % 4 == 3:
+            for j in range(8):
+                put(music, t0 + bar - beat + j * beat / 8, snare(0.1 + j * 0.02), pan=-0.1)
+        t0 += bar
+        k += 1
+
 # D minor: i - VI - III - VII, two bars each
 PROG = [([50, 53, 57], 38), ([46, 50, 53], 34), ([53, 57, 60], 41), ([48, 52, 55], 36)]
 style = args.style
@@ -600,6 +626,8 @@ elif style == 'horror':
     horror_style()
 elif style == 'nature':
     nature_style()
+elif style == 'sport':
+    sport_style()
 else:
     t0 = 0.0
     k = 0
@@ -636,7 +664,7 @@ else:
 
 # sidechain pump: music dips on each kick
 pump = np.ones(N)
-DEPTH = {'lofi': 0.2, 'lounge': 0.1, 'trap': 0.3, 'nature': 0.08}.get(style, 0.45)
+DEPTH = {'lofi': 0.2, 'lounge': 0.1, 'trap': 0.3, 'nature': 0.08, 'sport': 0.15}.get(style, 0.45)
 for tb in kicks:
     i = int(tb * SR)
     n = int(beat * 0.9 * SR)
@@ -928,15 +956,39 @@ def sfx_bird():
         out[s0:s0 + m] += np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * u / u[-1]) * 0.5
     return out
 
+
+def sfx_gun():
+    # a starting pistol: a sharp crack, a thump, and the stadium's echo
+    n = int(1.2 * SR)
+    t = tt(n)
+    # (the crack kept under 6 kHz and given a millisecond's attack: a raw click overshoots in AAC)
+    x = lowpass(highpass(rng.standard_normal(n), 1200), 6000) * np.minimum(1, t / 0.001) * np.exp(-t * 90) + np.sin(2 * np.pi * 90 * t) * np.exp(-t * 30) * 0.5
+    x += bandpass(rng.standard_normal(n), 300, 3000) * np.exp(-t * 4) * 0.12 * (t > 0.06)
+    return x * 0.8
+
+
+def sfx_cheer():
+    # a crowd's roar: noise swelling and settling, a few whistles over it
+    n = int(2.6 * SR)
+    t = tt(n)
+    e = np.minimum(1, t / 0.35) * np.exp(-np.clip(t - 1.2, 0, None) * 1.6)
+    x = (bandpass(rng.standard_normal(n), 300, 3500) * 0.5 + bandpass(rng.standard_normal(n), 900, 5000) * 0.25) * e
+    for k in range(3):
+        s0, m = int(rng.uniform(0.2, 1.2) * SR), int(0.5 * SR)
+        u = tt(m)
+        f = 1800 + 900 * np.sin(np.pi * u / u[-1])
+        x[s0:s0 + m] += np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * u / u[-1]) * 0.12
+    return x
+
 SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise, 'click': sfx_click,
        'chime': sfx_chime, 'ding': sfx_ding, 'gps': sfx_gps, 'blip': sfx_blip, 'level': sfx_level, 'error': sfx_error,
        'buzzer': sfx_buzzer, 'boing': sfx_boing, 'wah': sfx_wah, 'flash': sfx_flash, 'ring': sfx_ring, 'punch': sfx_punch,
        'drumroll': sfx_drumroll, 'applause': sfx_applause, 'stinger': sfx_stinger, 'heartbeat': sfx_heartbeat, 'creak': sfx_creak,
-       'splash': sfx_splash, 'plop': sfx_plop, 'reel': sfx_reel, 'bird': sfx_bird}
+       'splash': sfx_splash, 'plop': sfx_plop, 'reel': sfx_reel, 'bird': sfx_bird, 'gun': sfx_gun, 'cheer': sfx_cheer}
 GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55, 'click': 0.6,
         'chime': 1.0, 'ding': 0.55, 'gps': 0.8, 'blip': 0.5, 'level': 0.6, 'error': 0.55,
         'buzzer': 0.35, 'boing': 0.45, 'wah': 0.6, 'flash': 0.6, 'ring': 0.6, 'punch': 0.7, 'drumroll': 0.6, 'applause': 0.7,
-        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5, 'splash': 0.7, 'plop': 0.6, 'reel': 0.45, 'bird': 0.35}
+        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5, 'splash': 0.7, 'plop': 0.6, 'reel': 0.45, 'bird': 0.35, 'gun': 0.8, 'cheer': 0.7}
 cues = json.load(open(args.cues)) if args.cues else []
 for c in cues:
     if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
@@ -950,6 +1002,12 @@ if args.amb == 'savanna':
     sfx[1] += np.roll(wind, 1300) + np.roll(ins, 700)
     for k in range(int(args.dur / 1.9)):
         put(sfx, k * 1.9 + rng.uniform(0.2, 1.4), sfx_bird() * rng.uniform(0.06, 0.12), pan=rng.uniform(-0.7, 0.7), rv=0.3)
+
+if args.amb == 'crowd':
+    # a stadium: the crowd's murmur, rising and falling
+    murmur = bandpass(rng.standard_normal(N), 250, 2500) * 0.018 * (0.8 + 0.2 * np.sin(2 * np.pi * 0.3 * tt(N)))
+    sfx[0] += murmur
+    sfx[1] += np.roll(murmur, 977)
 
 if args.amb == 'cabin':
     # an airliner cabin: the engines' low roar and the air through the vents
@@ -980,7 +1038,7 @@ for c in cues:
 bed = (music + wet) * fade + sfx
 
 mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55, 'noir': 0.5, 'bounce': 0.5,
-             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5}.get(style, 0.35)
+             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5, 'sport': 0.5}.get(style, 0.35)
 if args.voice:
     vsr, v = wavfile.read(args.voice)
     v = v.astype(np.float64) / (32768.0 if v.dtype == np.int16 else 1.0)
@@ -997,7 +1055,7 @@ if args.voice:
     duck = 1 - 0.55 * np.clip(e, 0, 1)
     mix = mix * duck + np.vstack([v, v])
 
-if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror', 'nature'):
+if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror', 'nature', 'sport'):
     # the newer styles are sparser, so one bright effect can set the peak and the loudness pass then
     # pushes it over: a peak limiter holds anything above 3.5 times the mix's RMS (1 ms look-ahead,
     # 120 ms release)
