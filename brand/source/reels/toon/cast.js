@@ -347,8 +347,9 @@
   window.Cast = { WHO, pose, svg, at, place };
 
   // ------------------------------------------------------------ speech bubbles
-  // { kind: 'bubble', who, text, x, y, tail: 'bl' | 'br' | 'b' | 'tl' | 'tr', size }: a white bubble
-  // with its speaker's name tag, centred on (x, y), its tail towards the speaker. It pops in.
+  // { kind: 'bubble', who, text, x, y, tail: 'bl' | 'br' | 'b' | 'tl' | 'tr', size, tag, tagColour }: a
+  // white bubble with its speaker's name tag (or tag, for anyone else), centred on (x, y), its tail
+  // towards the speaker. It pops in.
   if (typeof KINDS !== 'undefined') {
     const st = document.createElement('style');
     st.textContent = `
@@ -372,7 +373,8 @@
         const c = WHO[s.who] || {}, tail = TAILS[s.tail || 'bl'];
         s.node = el('div', 'bubble', root);
         if (s.size) s.node.style.fontSize = `${s.size}px`;
-        const tag = c.name ? `<em style="background:${c.tag};color:${s.who === 'patience' ? '#1A120C' : '#FFFDF6'}">${esc(c.name)}</em>` : '';
+        const name = c.name || s.tag, bg = c.tag || s.tagColour || '#3B4250';
+        const tag = name ? `<em style="background:${bg};color:${s.who === 'patience' ? '#1A120C' : '#FFFDF6'}">${esc(name)}</em>` : '';
         const flat = tail.d.replace(/^M (\S+) (\S+) .* L (\S+) (\S+)$/, 'M $1 $2 L $3 $4');
         s.node.innerHTML = `${tag}<span>${wordsOf(s.text)}</span><svg style="${tail.css}" viewBox="0 0 90 70"><path d="${tail.d}" fill="#FFFDF6" stroke="#1A120C" stroke-width="6" stroke-linejoin="round"/><path d="${flat}" stroke="#FFFDF6" stroke-width="9"/></svg>`;
         css(s.node, { left: `${s.x || 540}px`, top: `${s.y || 600}px`, transformOrigin: tail.origin });

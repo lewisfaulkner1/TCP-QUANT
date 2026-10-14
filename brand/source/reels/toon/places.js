@@ -5,6 +5,8 @@
 //
 //   lineup    the police line-up: the height chart, the numbers, the suspects, seen through the glass
 //   observe   the dark room behind the one-way glass: him at the desk, the line-up bright beyond it
+//   cafe      a café by day: him at the counter in the window, a flat white, the laptop, the street
+//   press     a press conference: the TCP backdrop and its screen, the microphones, the press, flashes
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -17,9 +19,9 @@
   }
 
   // ------------------------------------------------------------ the line-up
-  // Its floor is at y 1380; the five places are at x 140, 340, 540, 740 and 940. The wall's lines are
+  // Its floor is at y 1380; the four places are at x 270, 450, 630 and 810. The wall's lines are
   // 10 cm apart (60 units): the suspects come up to about 40 cm.
-  const SPOTS = [140, 340, 540, 740, 940], FLOOR = 1380;
+  const SPOTS = [270, 450, 630, 810], FLOOR = 1380;
   function lineupWall(id) {
     const rows = [];
     for (let y = 1300 - 60; y > 520; y -= 60) {
@@ -67,6 +69,7 @@
       { f: 1, svg: castOf(s, t, id) },
       { f: 1.12, svg: sill, blur: s.dof && s.dof.fg },
       { f: 0, svg: glass },
+      T.topShade(id),
     ];
   };
 
@@ -109,6 +112,141 @@
     const vig = `<defs><radialGradient id="${id}ov" cx="0.45" cy="0.48" r="0.75"><stop offset="0.5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.7"/></radialGradient></defs>
       <rect width="1080" height="1920" fill="url(#${id}ov)"/>`;
     return [{ f: 0.45, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 0, svg: vig }];
+  };
+
+  // ------------------------------------------------------------ the café
+  // Daytime: him at the oak counter in the window of a café, the laptop on his right, a flat white
+  // (a crown in its foam), the street behind him through steel-framed glass, a red bus going by. The
+  // counter's top is at y 1448; anything standing on it stands at about y 1500.
+  SETS.cafe = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#FFF1DC', rim: 1 };
+    const busX = ((t * 150 + 400) % 2800) - 1100;
+    const houses = [0, 1, 2, 3, 4].map((i) => {
+      const x = -260 + i * 230;
+      const win = [0, 1].map((r) => [0, 1].map((c) => `<rect x="${x + 40 + c * 90}" y="${560 + r * 190}" width="56" height="110" fill="#2E3A44"/><rect x="${x + 40 + c * 90}" y="${560 + r * 190}" width="56" height="110" fill="none" stroke="#F1E9DA" stroke-width="6"/>`).join('')).join('');
+      return `<rect x="${x}" y="470" width="230" height="660" fill="${i % 2 ? '#9C5A44' : '#A86650'}"/><rect x="${x}" y="470" width="230" height="16" fill="#E9DFCF"/>${win}
+        <rect x="${x + 82}" y="960" width="66" height="170" fill="#22303A"/>`;
+    }).join('');
+    const bus = `<g transform="translate(${n(busX)} 0)"><rect x="0" y="760" width="560" height="350" rx="26" fill="#C8281E"/><rect x="0" y="940" width="560" height="10" fill="#9E1C14"/>
+      ${[0, 1, 2, 3].map((i) => `<rect x="${30 + i * 128}" y="790" width="104" height="70" rx="8" fill="#2A3238"/><rect x="${30 + i * 128}" y="970" width="104" height="66" rx="8" fill="#2A3238"/>`).join('')}
+      <circle cx="110" cy="1110" r="40" fill="#151515"/><circle cx="450" cy="1110" r="40" fill="#151515"/></g>`;
+    const bg = `<defs><linearGradient id="${id}cs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFD9EE"/><stop offset="1" stop-color="#F3E7D2"/></linearGradient>
+        <linearGradient id="${id}cw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFE5D3"/><stop offset="1" stop-color="#D9CBB4"/></linearGradient>
+        <radialGradient id="${id}bulb" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFD48A" stop-opacity="0.7"/><stop offset="1" stop-color="#FFD48A" stop-opacity="0"/></radialGradient>
+        <clipPath id="${id}cwin"><rect x="-240" y="180" width="900" height="1060"/></clipPath></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="url(#${id}cw)"/>
+      <g clip-path="url(#${id}cwin)"><rect x="-240" y="180" width="900" height="1060" fill="url(#${id}cs)"/>${houses}
+        <rect x="-240" y="1130" width="900" height="110" fill="#8E8A82"/>${bus}<rect x="-240" y="180" width="900" height="1060" fill="#FFF6E6" opacity="0.18"/></g>
+      ${[-20, 200, 420].map((x) => `<rect x="${x}" y="180" width="14" height="1060" fill="#1C1C1C"/>`).join('')}
+      <rect x="-240" y="520" width="900" height="12" fill="#1C1C1C"/><rect x="-260" y="166" width="940" height="1094" fill="none" stroke="#1C1C1C" stroke-width="28"/>
+      <!-- the chalkboard -->
+      <g transform="translate(770 300)"><rect x="-14" y="-14" width="308" height="540" rx="10" fill="#7A5634"/><rect width="280" height="512" rx="4" fill="#2B302D"/>
+        <text x="140" y="70" text-anchor="middle" font-family="Serif" font-style="italic" font-size="56" fill="#F2EEE4">Menu</text>
+        ${[['flat white', '3.40'], ['cortado', '3.10'], ['oat latte', '3.60'], ['tea', '2.50'], ['patience', 'free']].map(([a, b], i) => `<text x="26" y="${150 + i * 66}" font-family="Serif" font-style="italic" font-size="36" fill="${a === 'patience' ? '#F3D27A' : '#E8E3D8'}">${a}</text><text x="256" y="${150 + i * 66}" text-anchor="end" font-family="Serif" font-style="italic" font-size="36" fill="${a === 'patience' ? '#F3D27A' : '#E8E3D8'}">${b}</text>`).join('')}
+        <path d="M 30 470 Q 140 448 250 470" fill="none" stroke="#E8E3D8" stroke-width="3" opacity="0.6"/></g>
+      <!-- pendant lamps -->
+      ${[330, 690].map((x, i) => `<line x1="${x}" y1="-300" x2="${x}" y2="${300 + i * 40}" stroke="#2A2420" stroke-width="5"/><path d="M ${x - 70} ${360 + i * 40} L ${x - 30} ${300 + i * 40} L ${x + 30} ${300 + i * 40} L ${x + 70} ${360 + i * 40} Z" fill="#2E2A26"/>
+        <circle cx="${x}" cy="${372 + i * 40}" r="120" fill="url(#${id}bulb)"/><circle cx="${x}" cy="${366 + i * 40}" r="16" fill="#FFE8B8"/>`).join('')}
+      <!-- the plant -->
+      <g transform="translate(1040 1448)"><path d="M -70 0 L 70 0 L 56 -130 L -56 -130 Z" fill="#C9B79C"/>
+        ${[[-60, -330, -40], [20, -420, 10], [80, -300, 50], [-110, -230, -70], [110, -200, 70]].map(([x, y, r]) => `<path d="M 0 -130 Q ${x / 2} ${(y - 130) / 2} ${x} ${y}" fill="none" stroke="#2F5A35" stroke-width="7"/>
+          <ellipse cx="${x}" cy="${y}" rx="78" ry="54" transform="rotate(${r} ${x} ${y})" fill="#2F6B3A"/><path d="M ${x - 60} ${y} L ${x + 60} ${y}" transform="rotate(${r} ${x} ${y})" stroke="#24502C" stroke-width="5"/>`).join('')}</g>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const subject = `
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
+      <!-- the laptop, on the right of the counter -->
+      <g transform="translate(790 1130) skewY(-9) scale(0.6 1)">${T.monitor(st, id + 'c', 440)}</g>
+      <path d="M 790 1118 L 783 1122 L 783 1396 L 790 1392 Z" fill="#9AA0A8"/>
+      <path d="M 740 1440 L 1060 1390 L 1090 1420 L 762 1476 Z" fill="#B9BEC5"/><path d="M 762 1432 L 1054 1386 L 1070 1400 L 776 1446 Z" fill="#8E949C"/>
+      <!-- the counter: oak, the window's light along its edge -->
+      <path d="M -300 1448 L 1400 1448 L 1400 1530 L -300 1530 Z" fill="#B88A5A"/>
+      ${T.grain(-300, 1452, 1400, 1526, 23)}
+      <path d="M -300 1450 L 1400 1450" stroke="#E7C89C" stroke-width="3" opacity="0.9"/>
+      <!-- the flat white, a crown in its foam -->
+      <g transform="translate(560 1478)"><ellipse cx="0" cy="12" rx="74" ry="14" fill="#000" opacity="0.15"/><ellipse cx="0" cy="6" rx="66" ry="13" fill="#F6F3EE" stroke="#D8D2C8" stroke-width="2"/>
+        <path d="M -40 -50 L 40 -50 L 33 0 C 24 9, -24 9, -33 0 Z" fill="#FBF9F5" stroke="#D8D2C8" stroke-width="2"/><ellipse cx="0" cy="-50" rx="40" ry="8" fill="#B07A4C"/>
+        ${crown(0, -50, 0.12, '#F6EBDD')}
+        <path d="M 38 -40 C 62 -40, 62 -14, 34 -14" fill="none" stroke="#FBF9F5" stroke-width="9"/></g>
+      ${T.steam(560, 1420, t, id)}
+      ${castOf(s, t, id)}
+      ${onTable ? nearArm : ''}
+      <path d="M -300 1530 L 1400 1530 L 1400 2400 L -300 2400 Z" fill="#7E5A38"/><path d="M -300 1530 L 1400 1530" stroke="#5C4028" stroke-width="6"/>
+      ${Array.from({ length: 20 }, (_, i) => `<path d="M ${-300 + i * 90} 1536 L ${-300 + i * 90} 2400" stroke="#694A2E" stroke-width="4" opacity="0.7"/><path d="M ${-296 + i * 90} 1536 L ${-296 + i * 90} 2400" stroke="#9A7149" stroke-width="2" opacity="0.4"/>`).join('')}
+      <rect x="-300" y="1760" width="1700" height="18" rx="9" fill="#C9A35C"/><rect x="-300" y="1762" width="1700" height="5" rx="2" fill="#F1D89A" opacity="0.8"/>`;
+    return [{ f: 0.35, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the press conference
+  // Him at a press table under the lights, the TCP backdrop behind (crowns, the big screen on the
+  // right), microphones with their flags in front, the press in silhouette at the bottom, flashes.
+  // The table's top is at y 1448. s.screen: [[t, 'chart' | 'plan'], …]; s.flashes: [t, …] (a camera
+  // goes off; the last ones are a room going off at once when there are many close together).
+  const FLAGS = [['PIP NEWS', '#C8281E'], ['CANDLE TV', '#1F6FD1'], ['WICK FM', '#E8A317'], ['THE SPREAD', '#2E9E6A']];
+  function planCard(id) {
+    const row = (y, a, b, col = '#E9E4D8') => `<text x="28" y="${y}" font-family="JB Mono" font-weight="600" font-size="22" fill="#8C8577">${a}</text><text x="412" y="${y}" text-anchor="end" font-family="JB Mono" font-weight="600" font-size="24" fill="${col}">${b}</text>`;
+    return `<rect width="440" height="300" fill="#0B0D11"/><rect x="10" y="10" width="420" height="280" rx="10" fill="#121620" stroke="#D8AD4E" stroke-width="3"/>
+      ${crown(46, 46, 0.14)}<text x="74" y="56" font-family="TCP Display" font-weight="800" font-size="24" fill="#F6E3A3">TCP · PLAYBOOK</text>
+      <g transform="translate(330 30) rotate(8)"><rect x="-10" y="-4" width="96" height="30" rx="4" fill="none" stroke="#E0613F" stroke-width="3"/><text x="38" y="19" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="17" fill="#E0613F">EXAMPLE</text></g>
+      ${row(112, 'GOLD', 'BUY LIMIT', '#35D08F')}${row(156, 'entry', '4,112.40')}${row(198, 'stop', '4,104.90', '#FF8A6E')}${row(240, 'target', '4,127.40', '#35D08F')}
+      <text x="28" y="276" font-family="JB Mono" font-weight="500" font-size="17" fill="#8C8577">logged before the result</text>`;
+  }
+  SETS.press = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#EEF2FF', rim: 1 };
+    const mode = (s.screen || []).filter(([a]) => t >= at(a)).map(([, m]) => m).pop() || 'logo';
+    const pattern = [];
+    for (let r = 0; r < 9; r++) for (let c = 0; c < 7; c++) {
+      const x = -200 + c * 240 + (r % 2 ? 120 : 0), y = -120 + r * 190;
+      pattern.push(`${crown(x, y, 0.16, '#3A3322')}<text x="${x}" y="${y + 44}" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="22" fill="#3A3322">TCP</text>`);
+    }
+    const screen = mode === 'plan' ? planCard(id) : mode === 'chart'
+      ? `<rect width="440" height="300" fill="#0A0D11"/><g transform="translate(6 10) scale(0.5)">${T.chartSVG(st, id + 'sc', true)}</g>`
+      : `<rect width="440" height="300" fill="#0B0D11"/>${crown(220, 120, 0.42)}<text x="220" y="230" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="#F6E3A3">TCP</text>`;
+    const bg = `<defs><radialGradient id="${id}spot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.32"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+        <linearGradient id="${id}beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="#0C1017"/>
+      ${pattern.join('')}
+      <ellipse cx="380" cy="760" rx="560" ry="620" fill="url(#${id}spot)"/>
+      <path d="M 120 -300 L 300 -300 L 640 1448 L -40 1448 Z" fill="url(#${id}beam)"/>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const mic = (x, i) => {
+      const [name, col] = FLAGS[i];
+      return `<g transform="translate(${x} 1452)"><ellipse cx="0" cy="0" rx="34" ry="8" fill="#0A0A0B"/><path d="M 0 0 L 0 -120" stroke="#2A2C30" stroke-width="7"/>
+        <rect x="-34" y="-176" width="68" height="46" rx="6" fill="${col}"/><text x="0" y="-147" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="11.5" fill="#FFFFFF">${name}</text>
+        <rect x="-15" y="-232" width="30" height="58" rx="15" fill="#1A1B1E"/><rect x="-15" y="-232" width="30" height="30" rx="15" fill="#2C2E33"/></g>`;
+    };
+    const subject = `
+      <g transform="translate(610 360)"><rect x="-16" y="-16" width="472" height="332" rx="8" fill="#050608"/>${screen}
+        <rect width="440" height="300" fill="url(#${id}beam)" opacity="0.35"/></g>
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
+      <path d="M -300 1448 L 1400 1448 L 1400 1500 L -300 1500 Z" fill="#15171B"/><path d="M -300 1450 L 1400 1450" stroke="#3A3E46" stroke-width="3"/>
+      ${[600, 690, 780, 870].map(mic).join('')}
+      <g transform="translate(980 1452)"><path d="M -18 0 L -22 -74 L 22 -74 L 18 0 Z" fill="#CFE6F2" opacity="0.55" stroke="#9FB7C4" stroke-width="2"/><rect x="-20" y="-40" width="40" height="38" fill="#9DD3EE" opacity="0.35"/></g>
+      ${castOf(s, t, id)}
+      ${onTable ? nearArm : ''}
+      <path d="M -300 1500 L 1400 1500 L 1400 2400 L -300 2400 Z" fill="#0F1013"/><path d="M -300 1500 L 1400 1500" stroke="#2A2D33" stroke-width="5"/>
+      ${crown(540, 1610, 0.32)}<text x="540" y="1700" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="22" letter-spacing="6" fill="#8C7A50">THE CRYPTO PLAYBOOK</text>`;
+    // the press: heads and shoulders in silhouette, phones and recorders up, lit from the stage
+    const bob = (k) => Math.sin(t * 3.1 + k * 1.7) * 6;
+    const heads = [[-40, 1760, 1.1, 0], [170, 1700, 0.95, 1], [380, 1790, 1.15, 2], [600, 1720, 1.0, 3], [820, 1780, 1.1, 4], [1040, 1710, 0.95, 5]];
+    const press = heads.map(([x, y, k, i]) => {
+      const up = i % 2 === 0, hy = y + bob(i);
+      const arm = up ? `<path d="M ${x + 50 * k} ${hy + 110 * k} C ${x + 70 * k} ${hy + 20 * k}, ${x + 80 * k} ${hy - 90 * k}, ${x + 90 * k} ${hy - 150 * k}" stroke="#07080A" stroke-width="${30 * k}" stroke-linecap="round" fill="none"/>
+          <g transform="translate(${x + 90 * k} ${hy - 190 * k}) rotate(${-8 + i * 3})"><rect x="${-24 * k}" y="${-42 * k}" width="${48 * k}" height="${84 * k}" rx="${8 * k}" fill="#07080A"/><rect x="${-19 * k}" y="${-36 * k}" width="${38 * k}" height="${68 * k}" rx="${4 * k}" fill="#9EC5FF" opacity="0.85"/></g>` : '';
+      return `${arm}<ellipse cx="${x}" cy="${hy}" rx="${58 * k}" ry="${70 * k}" fill="#07080A"/><path d="M ${x - 150 * k} ${hy + 320 * k} C ${x - 140 * k} ${hy + 90 * k}, ${x + 140 * k} ${hy + 90 * k}, ${x + 150 * k} ${hy + 320 * k} Z" fill="#07080A"/>
+        <path d="M ${x - 52 * k} ${hy - 30 * k} C ${x - 40 * k} ${hy - 70 * k}, ${x + 30 * k} ${hy - 76 * k}, ${x + 50 * k} ${hy - 34 * k}" stroke="#2A3142" stroke-width="${5 * k}" fill="none" opacity="0.8"/>`;
+    }).join('');
+    const flashes = (s.flashes || []).map((f) => t - at(f)).filter((d) => d >= 0 && d < 0.16);
+    const fl = flashes.map((d, j) => {
+      const r = 1 - d / 0.16, x = 120 + ((j * 397 + Math.floor(t * 7) * 131) % 860), y = 1560 + ((j * 211) % 160);
+      return `<circle cx="${x}" cy="${y}" r="${n(160 * r)}" fill="url(#${id}flash)"/><circle cx="${x}" cy="${y}" r="${n(26 * r)}" fill="#FFFFFF"/>`;
+    }).join('');
+    const pressLayer = `<defs><radialGradient id="${id}flash" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>${press}${fl}`;
+    const wash = flashes.length ? `<rect width="1080" height="1920" fill="#FFFFFF" opacity="${n(Math.min(0.32, 0.12 * flashes.length) * (1 - Math.min(...flashes) / 0.16))}"/>` : '';
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 1.25, svg: pressLayer, blur: s.dof && s.dof.fg }, T.topShade(id), { f: 0, svg: wash }];
   };
 
   T.castOf = castOf;
