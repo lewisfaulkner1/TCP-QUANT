@@ -39,7 +39,8 @@ function el(tag, cls, parent, html) {
 }
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // Wrap each word so it can move on its own; *word* marks an accent word in gold.
-// *gold* marks a word or a phrase: from the word starting with * to the one ending with it
+// *gold* marks a word or a phrase: from the word starting with * to the one ending with it (punctuation
+// may follow the closing *, as in *FEAR*:)
 const wordsOf = (text, cls = '') => {
   let gold = false;
   return String(text).split(/(\n|[ \t]+)/).map((w) => {
@@ -47,8 +48,8 @@ const wordsOf = (text, cls = '') => {
     if (/^\s+$/.test(w)) return w;
     if (w.startsWith('*')) gold = true;
     const on = gold;
-    if (w.endsWith('*')) gold = false;
-    return `<span class="w${cls || on ? ' foil' : ''}">${esc(w.replace(/^\*|\*$/g, ''))}</span>`;
+    if (/\*[^\w*]*$/.test(w)) gold = false;
+    return `<span class="w${cls || on ? ' foil' : ''}">${esc(w.replace(/^\*/, '').replace(/\*(?=[^\w*]*$)/, ''))}</span>`;
   }).join('');
 };
 // Words stagger in from below, sharpening as they come.

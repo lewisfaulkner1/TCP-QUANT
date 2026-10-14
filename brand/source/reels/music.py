@@ -2,7 +2,7 @@
 (nothing sampled or licensed), with the voice on top and the music ducking under it.
 
 usage: python3 music.py --dur 28.5 --out mix.wav [--voice voice.wav] [--cues cues.json]
-                        [--style pulse|drive|calm|lofi|lounge|trap|noir|bounce|news|fight|gameshow]
+                        [--style pulse|drive|calm|lofi|lounge|trap|noir|bounce|news|fight|gameshow|horror]
                         [--bpm 120] [--seed 1]
                         [--amb cabin] [--bed bed.wav] [--sfx sfx.wav]
 
@@ -17,10 +17,11 @@ usage: python3 music.py --dur 28.5 --out mix.wav [--voice voice.wav] [--cues cue
   news    a news theme in C minor: ticking sixteenths, timpani, brass stabs, strings
   fight   a fight night in E minor: heavy half-time drums, a growling bass, brass hits
   gameshow  big-band swing in B flat: brass shouts, walking bass, ride cymbal, snare fills
+  horror  a horror film's score: a beating low drone, a slow heartbeat, a music box, string tremolo
 Cues are {t, sfx} with sfx one of tick, pop, slam, whoosh, rise, click, chime (an airliner's cabin
 chime), ding (one soft bell), gps (a sat nav's prompt), blip, level and error (a game's), buzzer (a
 line-up's), boing, wah (a sad trombone), flash (a camera), ring (a boxing bell, twice), punch,
-drumroll, applause, or
+drumroll, applause, stinger (a horror film's jump scare), heartbeat, creak (a door), or
 {t, sfx: 'mute', until}, which drops the music out (a beat of silence for a punchline; the effects
 carry on). --amb cabin lays an airliner cabin's steady roar under everything, with the effects.
 --bed also writes the music and effects without the voice, and --sfx the effects alone.
@@ -500,6 +501,38 @@ def gameshow_style():
         k += 1
 
 
+def horror_style():
+    # no beat to dance to: a low drone beating against itself, a heartbeat, a music box in E minor a
+    # little out of tune, and high strings trembling in a cluster that swells every four bars
+    N0 = int(args.dur * SR)
+    t = tt(N0)
+    drone = (np.sin(2 * np.pi * 55 * t) + np.sin(2 * np.pi * 58.3 * t) * 0.8) * 0.06 * (0.7 + 0.3 * np.sin(2 * np.pi * 0.07 * t))
+    drone += lowpass(rng.standard_normal(N0), 120) * 0.05
+    music[0] += drone
+    music[1] += np.roll(drone, 211)
+    hb = beat * 1.4
+    tb = 0.3
+    while tb < args.dur:
+        for off, f0, g in ((0, 62, 0.5), (0.2, 52, 0.38)):
+            n = int(0.25 * SR)
+            u = tt(n)
+            put(music, tb + off, np.sin(2 * np.pi * f0 * u) * np.exp(-u * 18) * g)
+        kicks.append(tb)
+        tb += hb
+    box = [76, 79, 78, 71, 76, 74, 72, 71]
+    for j in range(int(args.dur / (beat * 2)) + 1):
+        bell(box[j % len(box)] + 0.18 * np.sin(j), j * beat * 2 + 0.6, gain=0.028, pan=0.3, decay=2.2)
+    for k in range(int(args.dur / (bar * 4)) + 1):
+        start, ln = k * bar * 4 + bar, bar * 2.5
+        n = int(ln * SR)
+        if start >= args.dur:
+            break
+        u = tt(n)
+        x = sum(saw(midi(m), n, detune=0.003) for m in (83, 84, 85))
+        x = lowpass(x, 5000) * (0.6 + 0.4 * np.sin(2 * np.pi * 8 * u)) * np.sin(np.pi * np.clip(u / ln, 0, 1)) ** 2
+        put(music, start, x * 0.012, pan=-0.2, rv=0.4)
+
+
 # D minor: i - VI - III - VII, two bars each
 PROG = [([50, 53, 57], 38), ([46, 50, 53], 34), ([53, 57, 60], 41), ([48, 52, 55], 36)]
 style = args.style
@@ -520,6 +553,8 @@ elif style == 'fight':
     fight_style()
 elif style == 'gameshow':
     gameshow_style()
+elif style == 'horror':
+    horror_style()
 else:
     t0 = 0.0
     k = 0
@@ -776,13 +811,44 @@ def sfx_applause():
     return out * np.sin(np.pi * np.clip(t / 2.3, 0, 1)) ** 0.6 * 0.35
 
 
+def sfx_stinger():
+    # a horror film's jump scare: a dissonant string stab, a low boom and a burst of noise
+    n = int(1.6 * SR)
+    t = tt(n)
+    x = sum(saw(midi(m), n, detune=0.006) for m in (60, 61, 66, 67, 72, 73))
+    x = lowpass(x, 4200) * np.exp(-t * 3.2) * 0.25
+    x += np.sin(2 * np.pi * np.cumsum(70 * np.exp(-t * 2) + 30) / SR) * np.exp(-t * 3) * 0.9
+    x += bandpass(rng.standard_normal(n), 400, 5000) * np.exp(-t * 12) * 0.4
+    return x
+
+
+def sfx_heartbeat():
+    out = np.zeros(int(0.6 * SR))
+    for off, f0, g in ((0, 62, 1.0), (0.2, 52, 0.75)):
+        m = int(0.25 * SR)
+        u = tt(m)
+        s0 = int(off * SR)
+        out[s0:s0 + m] += np.sin(2 * np.pi * f0 * u) * np.exp(-u * 18) * g
+    return out
+
+
+def sfx_creak():
+    # a door's creak: a rough low tone whose pitch wanders, through a narrow band
+    n = int(0.9 * SR)
+    t = tt(n)
+    f = 110 + 40 * np.sin(2 * np.pi * 1.3 * t) + 25 * rng.standard_normal(n).cumsum() / np.sqrt(n) * 0.2
+    x = 2 * ((np.cumsum(f) / SR) % 1) - 1
+    return bandpass(x, 300, 2400) * env(n, 0.05, 0.25, hold=0.55) * 0.6
+
+
 SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise, 'click': sfx_click,
        'chime': sfx_chime, 'ding': sfx_ding, 'gps': sfx_gps, 'blip': sfx_blip, 'level': sfx_level, 'error': sfx_error,
        'buzzer': sfx_buzzer, 'boing': sfx_boing, 'wah': sfx_wah, 'flash': sfx_flash, 'ring': sfx_ring, 'punch': sfx_punch,
-       'drumroll': sfx_drumroll, 'applause': sfx_applause}
+       'drumroll': sfx_drumroll, 'applause': sfx_applause, 'stinger': sfx_stinger, 'heartbeat': sfx_heartbeat, 'creak': sfx_creak}
 GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55, 'click': 0.6,
         'chime': 1.0, 'ding': 0.55, 'gps': 0.8, 'blip': 0.5, 'level': 0.6, 'error': 0.55,
-        'buzzer': 0.35, 'boing': 0.45, 'wah': 0.6, 'flash': 0.6, 'ring': 0.6, 'punch': 0.7, 'drumroll': 0.6, 'applause': 0.7}
+        'buzzer': 0.35, 'boing': 0.45, 'wah': 0.6, 'flash': 0.6, 'ring': 0.6, 'punch': 0.7, 'drumroll': 0.6, 'applause': 0.7,
+        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5}
 cues = json.load(open(args.cues)) if args.cues else []
 for c in cues:
     if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
@@ -817,7 +883,7 @@ for c in cues:
 bed = (music + wet) * fade + sfx
 
 mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55, 'noir': 0.5, 'bounce': 0.5,
-             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5}.get(style, 0.35)
+             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6}.get(style, 0.35)
 if args.voice:
     vsr, v = wavfile.read(args.voice)
     v = v.astype(np.float64) / (32768.0 if v.dtype == np.int16 else 1.0)
@@ -834,7 +900,7 @@ if args.voice:
     duck = 1 - 0.55 * np.clip(e, 0, 1)
     mix = mix * duck + np.vstack([v, v])
 
-if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow'):
+if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror'):
     # the newer styles are sparser, so one bright effect can set the peak and the loudness pass then
     # pushes it over: a peak limiter holds anything above 3.5 times the mix's RMS (1 ms look-ahead,
     # 120 ms release)
@@ -859,6 +925,9 @@ if args.bed:
     peak = np.abs(b2).max() or 1
     wavfile.write(args.bed, SR, ((b2 / peak * 0.95).T * 32767).astype(np.int16))
     if args.sfx:
-        # the effects as loud as they are in the bed, so they sit the same under another sound
-        wavfile.write(args.sfx, SR, ((np.tanh(sfx * 0.9) / peak * 0.95).T * 32767).astype(np.int16))
+        # the effects as loud as they are in the bed, so they sit the same under another sound; never
+        # above -3 dBFS (in a quiet bed, a jump scare's stab sets the bed's peak and would hit full scale)
+        fx = np.tanh(sfx * 0.9) / peak * 0.95
+        fx *= min(1, 0.7 / (np.abs(fx).max() or 1))
+        wavfile.write(args.sfx, SR, (fx.T * 32767).astype(np.int16))
 print(f'{args.out}: {args.dur:.2f}s, {style}, {args.bpm:.0f} bpm')

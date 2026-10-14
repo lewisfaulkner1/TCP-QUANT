@@ -12,7 +12,7 @@
 //   Cast.WHO                     their names, colours and builds
 //
 // A pose: { arms, legs, face (1 or -1: the way it turns), lean, squash, hop, shake, look: [x, y], lid,
-// brow: { raise, angry, worry }, mouth: { smile, open, teeth, wavy }, card, screen }. Arms: down,
+// brow: { raise, angry, worry }, mouth: { smile, open, teeth, wavy, o }, card, screen, popcorn, drop, spill }. Arms: down,
 // point, pull, phone, guard, punch, grab, rub, hug, tea, shrug, up, sign, hips, wave. Legs: stand,
 // walk, run, sit, tuck. Blinks and breathing are added.
 //
@@ -32,7 +32,7 @@
     patience: { name: 'PATIENCE', body: '#D8AD4E', dark: '#9C7226', lite: '#F6E3A3', limb: '#6B4A17', W: 128, H: 118, r: 24, wick: 'flame', eyes: 'calm', shoe: '#2A1C16', sole: '#D8AD4E', badge: true, tag: '#D8AD4E' },
   };
 
-  const BASE = { arms: 'down', legs: 'stand', face: 1, lean: 0, squash: 0, hop: 0, shake: 0, look: [0, 0], lid: 0, brow: { raise: 0, angry: 0, worry: 0 }, mouth: { smile: 0.25, open: 0, teeth: 0, wavy: 0 }, card: '', screen: '' };
+  const BASE = { arms: 'down', legs: 'stand', face: 1, lean: 0, squash: 0, hop: 0, shake: 0, look: [0, 0], lid: 0, brow: { raise: 0, angry: 0, worry: 0 }, mouth: { smile: 0.25, open: 0, teeth: 0, wavy: 0, o: 0 }, card: '', screen: '' };
   const DEFAULTS = {
     fomo: { brow: { raise: 0.6 }, mouth: { smile: 0.6, open: 0.25, teeth: 1 }, shake: 0.35 },
     revenge: { brow: { angry: 1 }, mouth: { smile: -0.5, open: 0.12, teeth: 1 }, arms: 'guard' },
@@ -102,6 +102,7 @@
     grab: { L: [-58, -18, 'open', 200], R: [58, -22, 'open', -20] },
     rub: { L: [52, 24, 'open', 20], R: [-50, 26, 'open', 160] },
     hug: { L: [64, 6, 'open', 10], R: [-62, 10, 'open', 170] },
+    tub: { L: [16, 42, 'open', 40], R: [-16, 42, 'open', 140] },
     tea: { L: [36, 24, 'hold', 20], R: [-36, 24, 'hold', 160] },
     shrug: { L: [-52, -12, 'open', 220], R: [52, -12, 'open', -40] },
     up: { L: [-40, -76, 'open', -110], R: [40, -76, 'open', -70] },
@@ -162,7 +163,7 @@
       return `M ${n(h.s0[0])} ${n(h.s0[1])} Q ${n(mx - (dy / len) * bend)} ${n(my + (dx / len) * bend * 0.4 + 8)} ${n(h.hx)} ${n(h.hy)}`;
     };
     // a hand crosses the body when it ends on the far side of the middle from its shoulder
-    const crosses = (h) => (h.s0[0] < 0 ? h.hx > -W * 0.15 : h.hx < W * 0.15) && h.hy > y0 && h.hy < y1 + 10;
+    const crosses = (h) => p.arms === 'tub' || ((h.s0[0] < 0 ? h.hx > -W * 0.15 : h.hx < W * 0.15) && h.hy > y0 && h.hy < y1 + 10);
     const drawHand = (h) => (h.kind === 'box' ? boxing(h.hx, h.hy, h.ang, c.gloves || '#8E1F14') : glove(h.hx, h.hy, h.ang, h.kind, h.s0[0] < 0 ? -1 : 1));
     const behind = hands.filter((h) => !crosses(h));
     behind.forEach((h) => body.push(limb(armPath(h), c)));
@@ -254,6 +255,12 @@
       body.push(line(d, 4));
     } else if (op < 0.06) {
       body.push(line(`M ${n(-mw)} ${n(my - sm * 4)} Q 0 ${n(my + sm * mw * 0.9)} ${n(mw)} ${n(my - sm * 4)}`, 5));
+    } else if (p.mouth.o > 0.5) {
+      // a scream: a tall O, not a grin
+      const rx = mw * 0.62, ry = Math.max(6, op * mw * 1.15), cy = my + ry * 0.45;
+      body.push(`<clipPath id="${id}m"><ellipse cx="0" cy="${n(cy)}" rx="${n(rx)}" ry="${n(ry)}"/></clipPath><ellipse cx="0" cy="${n(cy)}" rx="${n(rx)}" ry="${n(ry)}" fill="#3A1410"/>
+        <g clip-path="url(#${id}m)"><ellipse cx="0" cy="${n(cy + ry * 0.8)}" rx="${n(rx * 0.7)}" ry="${n(ry * 0.42)}" fill="#E46A63"/></g>
+        <ellipse cx="0" cy="${n(cy)}" rx="${n(rx)}" ry="${n(ry)}" fill="none" stroke="${INK}" stroke-width="4"/>`);
     } else {
       const topY = my - sm * 4, ctl = my + sm * mw * 0.45, bot = my + op * mw * 1.7 + Math.max(0, sm) * mw * 0.5;
       const md = `M ${n(-mw)} ${n(topY)} Q 0 ${n(ctl)} ${n(mw)} ${n(topY)} Q ${n(mw * 0.6)} ${n(bot)} 0 ${n(bot)} Q ${n(-mw * 0.6)} ${n(bot)} ${n(-mw)} ${n(topY)} Z`;
@@ -290,6 +297,24 @@
       prop.push(`<g transform="translate(${n(sx2)} ${n(sy3)})"><path d="M -20 -18 L 20 -18 L 16 10 C 12 16, -12 16, -16 10 Z" fill="${WHITE}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
         <path d="M 19 -12 C 30 -12, 30 4, 17 4" fill="none" stroke="${INK}" stroke-width="3.4"/><rect x="-18" y="-18" width="36" height="5" fill="${c.body}"/>
         ${[0, 1].map((i) => { const u = (t * 0.35 + i * 0.5) % 1; return `<path d="M ${n(-5 + i * 9)} ${n(-24 - u * 34)} q 6 -8 0 -16" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="${n(0.5 * Math.sin(u * Math.PI))}"/>`; }).join('')}</g>`);
+    }
+    // a bucket of popcorn held low (pose.popcorn, best with arms 'tub': the eyes peek over it), knocked
+    // over at its feet (pose.drop), and kernels flying (pose.spill)
+    const bucket = (x, y, rot) => `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)})">
+        ${[[-16, -40], [-2, -46], [12, -42], [-9, -52], [5, -54], [18, -36], [-20, -32]].map(([kx, ky]) => `<circle cx="${kx}" cy="${ky}" r="8" fill="#FFF4D6" stroke="${INK}" stroke-width="2.2"/>`).join('')}
+        <path d="M -26 -34 L 26 -34 L 20 18 L -20 18 Z" fill="${WHITE}" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/>
+        ${[-14, 0, 14].map((kx) => `<path d="M ${kx - 4} -34 L ${kx + 4} -34 L ${kx + 3} 18 L ${kx - 3} 18 Z" fill="#D8322A"/>`).join('')}
+        <path d="M -26 -34 L 26 -34 L 20 18 L -20 18 Z" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"/></g>`;
+    const held = [mid[0], Math.max(mid[1] + 4, y0 + H - 2)];
+    if (p.popcorn) prop.push(bucket(held[0], held[1], 0));
+    else if (p.drop > 0.5) prop.push(bucket(W * 0.7 * f, -12, 34 * f));
+    if (p.spill > 0) {
+      const [bx, by] = p.popcorn ? held : p.drop > 0.5 ? [W * 0.55 * f, -20] : [0, y1 - 6];
+      for (let i = 0; i < 9; i++) {
+        const u = ((t * 1.6 + i * 0.13) % 1), ang = -Math.PI / 2 + (i - 4) * 0.32;
+        const px = bx + Math.cos(ang) * u * 150, py = by - 40 + Math.sin(ang) * u * 150 + u * u * 180;
+        prop.push(`<circle cx="${n(px)}" cy="${n(py)}" r="7" fill="#FFF4D6" stroke="${INK}" stroke-width="2" opacity="${n(p.spill * (1 - u))}"/>`);
+      }
     }
     if (p.arms === 'sign' && p.card) {
       prop.push(`<g transform="translate(${n(mid[0])} ${n(mid[1] + 10)})"><rect x="-44" y="-30" width="88" height="56" rx="6" fill="${WHITE}" stroke="${INK}" stroke-width="3.6"/>

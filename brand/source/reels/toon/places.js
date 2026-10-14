@@ -9,6 +9,8 @@
 //   press     a press conference: the TCP backdrop and its screen, the microphones, the press, flashes
 //   ring      a boxing ring at night: him in his corner, gold ropes, the big screen, the towel
 //   gameshow  TAKE IT OR LEAVE IT: him at a podium, the trade on the big screen, the two buttons
+//   cinema    a horror film's late showing: him in a red velvet seat, the screen's cold flicker
+//   film      that film up close, THE TRADE, from the row behind: his cap and FEAR in silhouette
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -392,6 +394,115 @@
       ${crown(540, 1700, 0.28)}<text x="540" y="1790" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="52" fill="#F6E3A3">TAKE IT</text>
       <text x="540" y="1846" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="34" fill="#C9B5FF">OR LEAVE IT</text>`;
     return [{ f: 0.35, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the cinema
+  // A late showing of a horror film called THE TRADE: him in a red velvet seat, the screen off to the
+  // right lighting the rows in a cold flicker, the row in front's seat backs below (their tops at y
+  // 1448). The film itself is the set 'film'. s.film: [{ t, k, closed, hit, scare }]: how far the price
+  // has run (k, 0 to 1), whether it's been closed (and where), the target hit, and a jump-scare flash.
+  const FILM = [[80, 520], [150, 548], [210, 530], [270, 590], [320, 612], [370, 572], [420, 515], [470, 500], [520, 540], [580, 470],
+    [640, 420], [700, 360], [760, 380], [820, 300], [880, 250], [940, 214], [1000, 206]];
+  const CLOSE_K = 7 / 16;
+  function filmAt(keys, t) {
+    const ks = (keys || [{ t: 0, k: 0 }]).map((k) => ({ ...k, at: at(k.t) }));
+    let a = ks[0], b = ks[0];
+    for (const k of ks) { if (k.at <= t) a = k; if (k.at > t) { b = k; break; } b = k; }
+    const u = b.at > a.at ? cl((t - a.at) / (b.at - a.at)) : 1;
+    return { k: mix(a.k ?? 0, b.k ?? a.k ?? 0, u), closed: !!a.closed, hit: !!a.hit, title: !!a.title, scare: ks.filter((k) => k.scare).map((k) => t - k.at).filter((d) => d >= 0 && d < 0.5)[0] };
+  }
+  function filmSVG(q, t, id) {
+    const L = FILM.length - 1, end = q.k * L, pts = [];
+    for (let i = 0; i <= Math.floor(end); i++) pts.push(FILM[i]);
+    if (end < L && end > 0) { const i = Math.floor(end), f = end - i; pts.push([mix(FILM[i][0], FILM[i + 1][0], f), mix(FILM[i][1], FILM[i + 1][1], f)]); }
+    const last = pts[pts.length - 1] || FILM[0];
+    const lineAt = (y, col, label, dash = '') => `<path d="M 40 ${y} L 1040 ${y}" stroke="${col}" stroke-width="4" ${dash ? `stroke-dasharray="${dash}"` : ''} opacity="0.9"/>
+      <text x="960" y="${y - 14}" text-anchor="end" font-family="JB Mono" font-weight="600" font-size="30" fill="${col}">${label}</text>`;
+    const stamp = (x, y, w, bg, fg, text, k = 1) => `<g transform="translate(${n(x)} ${n(y)}) scale(${n(k)})"><rect x="${-w / 2}" y="-32" width="${w}" height="64" rx="10" fill="${bg}"/>
+      <text x="0" y="11" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="30" fill="${fg}">${text}</text></g>`;
+    const pop = q.scare != null ? 1.35 - 0.35 * (1 - Math.pow(1 - cl(q.scare / 0.22), 3)) : 1;
+    const ck = CLOSE_K * L, cp = FILM[Math.round(ck)];
+    const flick = 0.92 + Math.sin(t * 31) * 0.03 + Math.sin(t * 7.3) * 0.03;
+    return `<defs><radialGradient id="${id}fv" cx="0.5" cy="0.5" r="0.7"><stop offset="0.6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.75"/></radialGradient></defs>
+      <rect x="0" y="0" width="1080" height="900" fill="#07090D"/>
+      <g opacity="${n(flick)}">
+        ${[1, 2, 3, 4, 5, 6].map((i) => `<path d="M 0 ${i * 128} L 1080 ${i * 128}" stroke="#141822" stroke-width="2"/>`).join('')}
+        ${lineAt(206, '#D8AD4E', 'TARGET', '14 10')}${lineAt(520, '#C9C3B6', 'ENTRY', '6 8')}${lineAt(760, '#E0613F', 'STOP')}
+        ${pts.length > 1 ? `<path d="M ${pts.map((p) => `${n(p[0])} ${n(p[1])}`).join(' L ')}" fill="none" stroke="#7FE0B3" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+          <circle cx="${n(last[0])}" cy="${n(last[1])}" r="14" fill="#7FE0B3"/><circle cx="${n(last[0])}" cy="${n(last[1])}" r="30" fill="#7FE0B3" opacity="0.2"/>` : ''}
+        ${q.closed && end >= ck ? `<path d="M ${cp[0]} ${cp[1] + 16} L ${cp[0] + 50} ${cp[1] + 86}" stroke="#9CCBF2" stroke-width="4"/>
+          <circle cx="${cp[0]}" cy="${cp[1]}" r="16" fill="none" stroke="#9CCBF2" stroke-width="5"/>${stamp(cp[0] + 140, cp[1] + 118, 370, '#9CCBF2', '#0E2236', 'CLOSED +2 PIPS')}` : ''}
+        ${q.hit ? stamp(800, 120, 300, '#D8AD4E', '#1A120C', 'TARGET HIT', pop) : ''}
+        ${q.title ? `<text x="540" y="420" text-anchor="middle" font-family="Serif" font-style="italic" font-size="150" fill="#E9E4D8">The Trade</text><text x="540" y="500" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="28" letter-spacing="10" fill="#9C968A">A HORROR IN ONE POSITION</text>` : ''}
+      </g>
+      ${q.scare != null ? `<rect width="1080" height="900" fill="#FFFFFF" opacity="${n(0.5 * (1 - q.scare / 0.5))}"/>` : ''}
+      <rect width="1080" height="900" fill="url(#${id}fv)"/>`;
+  }
+  // the film, up close, from the row behind: the screen over the heads, him (his cap) and FEAR next to
+  // him black against it with a cold rim that flickers with the film. FEAR's outline follows its track.
+  SETS.film = (s, t, st, p, id) => {
+    const q = filmAt(s.film, t);
+    const flick = 0.8 + Math.sin(t * 23) * 0.08 + Math.sin(t * 5.1) * 0.1 + (q.scare != null ? (1 - q.scare / 0.5) * 0.9 : 0);
+    const track = s.cast && s.cast.fear;
+    let fear = '';
+    if (track) {
+      const f = C.at('fear', track, t);
+      f.pose.__full = true;
+      fear = `<g transform="translate(700 1690) scale(1.5)">${C.svg('fear', f.pose, t, id + 'fs')}</g>`;
+    }
+    const head = (x, y, k) => `<ellipse cx="${x}" cy="${y}" rx="${n(46 * k)}" ry="${n(56 * k)}"/><path d="M ${n(x - 120 * k)} ${n(y + 280 * k)} C ${n(x - 112 * k)} ${n(y + 70 * k)}, ${n(x + 112 * k)} ${n(y + 70 * k)}, ${n(x + 120 * k)} ${n(y + 280 * k)} Z"/>`;
+    // him from behind: the cap's dome and button, his head, neck and shoulders
+    const him = `<ellipse cx="300" cy="1330" rx="116" ry="138"/>
+      <path d="M 178 1290 C 172 1172, 246 1124, 304 1124 C 366 1124, 434 1170, 426 1290 Z"/><circle cx="304" cy="1122" r="11"/>
+      <path d="M 236 1430 L 370 1430 L 392 1510 C 500 1530, 590 1590, 620 1920 L -20 1920 C 10 1590, 96 1530, 212 1510 Z"/>`;
+    const people = `${head(90, 1236, 0.7)}${head(540, 1252, 0.66)}${head(990, 1226, 0.72)}${head(1080, 1400, 1.4)}${him}${fear}`;
+    const seats = `<rect x="40" y="1640" width="530" height="400" rx="46"/><rect x="600" y="1640" width="530" height="400" rx="46"/>`;
+    const svg = `<defs><filter id="${id}rim" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="dilate" radius="3"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 0.62  0 0 0 0 0.76  0 0 0 0 0.98  0 0 0 ${n(cl(0.55 * flick, 0, 1))} 0"/></filter>
+        <filter id="${id}sil" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0.008  0 0 0 0 0.011  0 0 0 0 0.02  0 0 0 1 0"/></filter>
+        <linearGradient id="${id}wl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A2130"/><stop offset="1" stop-color="#07080C"/></linearGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="#05060A"/>
+      ${[24, 14, 6].map((d) => `<rect x="${-d}" y="${300 - d}" width="${1080 + 2 * d}" height="${900 + 2 * d}" rx="${d}" fill="#7FA6D9" opacity="${n(0.05 * flick)}"/>`).join('')}
+      <g transform="translate(0 300)">${filmSVG(q, t, id)}</g>
+      <rect x="-600" y="1200" width="2280" height="1320" fill="url(#${id}wl)"/>
+      <ellipse cx="540" cy="1210" rx="700" ry="90" fill="#7FA6D9" opacity="${n(0.1 * flick)}"/>
+      <g filter="url(#${id}rim)">${people}</g><g filter="url(#${id}sil)">${people}</g>
+      <g filter="url(#${id}rim)">${seats}</g><g fill="#160406">${seats}</g>`;
+    return [{ f: 1, svg }];
+  };
+  SETS.cinema = (s, t, st, p, id) => {
+    const q = filmAt(s.film, t);
+    const flick = 0.75 + Math.sin(t * 23) * 0.08 + Math.sin(t * 5.1) * 0.1 + (q.scare != null ? (1 - q.scare / 0.5) * 0.9 : 0);
+    p.light = { ...p.light, tint: '#CFE0FF', rim: 1 };
+    const seat = (x, y, w, h) => `<path d="M ${x - w / 2} ${y + h} L ${x - w / 2} ${y + 40} C ${x - w / 2} ${y}, ${x + w / 2} ${y}, ${x + w / 2} ${y + 40} L ${x + w / 2} ${y + h} Z" fill="#6E1218"/>
+      <path d="M ${x - w / 2 + 16} ${y + h} L ${x - w / 2 + 16} ${y + 50} C ${x - w / 2 + 16} ${y + 22}, ${x + w / 2 - 16} ${y + 22}, ${x + w / 2 - 16} ${y + 50} L ${x + w / 2 - 16} ${y + h} Z" fill="#8E1A22"/>
+      ${[1, 2, 3].map((i) => `<path d="M ${x - w / 2 + 16 + i * (w - 32) / 4} ${y + 40} L ${x - w / 2 + 16 + i * (w - 32) / 4} ${y + h}" stroke="#6E1218" stroke-width="5"/>`).join('')}`;
+    const rowsBehind = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) {
+      const x = -140 + c * 250 + (r % 2 ? 125 : 0), y = 460 + r * 150, k = 0.5 + r * 0.12;
+      rowsBehind.push(`<g opacity="${0.5 + r * 0.15}">${seat(x, y, 200 * k, 260 * k)}</g>`);
+      if ((c + r) % 3 === 0) rowsBehind.push(`<ellipse cx="${x}" cy="${y - 20 * k}" rx="${44 * k}" ry="${52 * k}" fill="#06070B"/><path d="M ${x + 30 * k} ${y - 60 * k} Q ${x + 48 * k} ${y - 20 * k} ${x + 34 * k} ${y + 10 * k}" stroke="#7FA6D9" stroke-width="4" fill="none" opacity="0.6"/>`);
+    }
+    const bg = `<defs><linearGradient id="${id}cw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#06070B"/><stop offset="1" stop-color="#121722"/></linearGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="url(#${id}cw)"/>
+      ${[[-60, 300], [1140, 300]].map(([x, y]) => `<rect x="${x - 18}" y="${y}" width="36" height="70" rx="8" fill="#3A2416"/><ellipse cx="${x}" cy="${y + 20}" rx="60" ry="80" fill="#F2B866" opacity="0.12"/>`).join('')}
+      ${rowsBehind.join('')}`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const subject = `
+      ${seat(330, 640, 470, 860)}
+      ${seat(800, 860, 340, 640)}
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${nearArm}
+      <path d="M 560 1180 L 640 1180 L 640 1470 L 560 1470 Z" fill="#2A0C10"/><rect x="548" y="1166" width="104" height="26" rx="10" fill="#3A1218"/>
+      <clipPath id="${id}cin"><rect x="-600" y="-600" width="2280" height="2060"/></clipPath>
+      <g clip-path="url(#${id}cin)">${castOf(s, t, id)}</g>
+      ${[[110, 1448, 420], [560, 1448, 420], [1010, 1448, 420]].map(([x, y, w]) => seat(x, y, w, 700)).join('')}`;
+    const glow = `<defs><linearGradient id="${id}sl" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#BFD8FF" stop-opacity="0.55"/><stop offset="0.6" stop-color="#BFD8FF" stop-opacity="0.08"/><stop offset="1" stop-color="#BFD8FF" stop-opacity="0"/></linearGradient>
+        <radialGradient id="${id}cv" cx="0.45" cy="0.48" r="0.75"><stop offset="0.5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.7"/></radialGradient></defs>
+      <rect width="1080" height="1920" fill="url(#${id}sl)" opacity="${n(cl(flick, 0, 1.6) * 0.5)}" style="mix-blend-mode:screen"/>
+      <rect width="1080" height="1920" fill="url(#${id}cv)"/>`;
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 0, svg: glow }, T.topShade(id)];
   };
 
   T.castOf = castOf;

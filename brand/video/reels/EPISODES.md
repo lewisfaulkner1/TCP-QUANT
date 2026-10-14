@@ -779,7 +779,7 @@ Education, not financial advice. Trading carries risk.
 
 ## The trading emotions: a new cast, new places, new sound
 
-Five episodes for Saturday 17 to Wednesday 21 October, after EP08 on Friday 16. Each is somewhere
+Six episodes for Saturday 17 to Thursday 22 October, after EP08 on Friday 16. Each is somewhere
 new, with its own music, and three come straight from the master brief (EP06, EP09 and the line-up
 that brings in the brief's FOMO character). The founder is in every one, as approved on sheet V6.
 
@@ -806,6 +806,7 @@ saying "join".
 | Mon 19 Oct | EP06 · Why We Don't Post Every Trade | a press conference | news theme | the same | the same |
 | Tue 20 Oct | EP18 · Revenge Trading | a boxing ring at night | fight night | the same | the same |
 | Wed 21 Oct | EP19 · Greed at the Take Profit | a TV game show | big-band swing | the same | the same |
+| Thu 22 Oct | EP21 · Fear Closes Winners Early | a cinema at night, a horror film | horror score | the same | the same |
 
 Same files as the others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the
 covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -1026,10 +1027,53 @@ Do you move yours? Be honest 👇
 Education, not financial advice. Trading carries risk. A drawn chart, not a real trade. The characters are made up.
 ```
 
+### EP21 · Fear Closes Winners Early (22.2 s, horror score)
+
+`specs/ep21-fear.js`. A late showing of a horror film called THE TRADE (*a horror in one position*).
+*Watching your trade next to FEAR:* the founder calm in a red velvet seat, FEAR in the next one,
+peeking over its popcorn. On the screen the price dips towards the stop: *IT'S GOING DOWN!!*, and
+the popcorn goes everywhere. It creeps back to just above the entry, and FEAR grabs its phone:
+*CLOSE IT!! CLOSE IT!!* CLOSED +2 PIPS. Then the price runs all the way to the target without it: a
+jump scare, TARGET HIT. *…oh.* *Fear closes winners early. The stop was in. Let the plan work.* FEAR
+sinks into its seat. *Ever closed a winner too early?* The film shots look over the audience's
+shoulders, with his cap and FEAR's drooping wick in silhouette against the screen. The score is a
+drone, a heartbeat and a music box; the jump scare is one flash, nowhere near three a second. The
+chart is a drawing, not a market.
+
+Why it should travel: *POV: watching your trade* is a format traders already share, and the horror
+film gives it a picture nobody has used; *…oh.* is the payoff people rewatch for; the film's title
+card is a screenshot; and *closed it at +2* is a confession half the comments will make.
+
+**TCP account (K):**
+```
+Watching your trade next to FEAR. 🍿
+
+It dips: "IT'S GOING DOWN!!"
+It comes back: "CLOSE IT!! CLOSE IT!!"
+Closed at +2 pips. Then it ran all the way to the target.
+
+Fear closes winners early. The stop was already in: let the plan work.
+
+Ever closed a winner too early? 👇
+
+#trading #daytrading #tradingpsychology #forextrader #xauusd
+Education, not financial advice. Trading carries risk. A drawn chart, not a real trade. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+FEAR always sits next to me for the scary part. 🍿
+
+It wants out at +2 pips, every time. The stop's already in, so I let the plan finish.
+
+When did you last close a winner too early? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. A drawn chart, not a real trade. The characters are made up.
+```
+
 ### Next ideas
 
-- **FEAR's episode:** a horror film. A winning trade, a dark corridor, FEAR closing it at the first
-  creak; the price walks on to the target without him.
 - **PATIENCE's episode:** a nature documentary on the rarest trader of all, the one that waits
   (captions as the narrator; no impression of any real presenter's voice).
 - **The emotions' group chat:** FOMO, REVENGE, GREED and FEAR in one chat at 3am; PATIENCE has it
