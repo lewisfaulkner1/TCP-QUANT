@@ -7,6 +7,7 @@
 //   observe   the dark room behind the one-way glass: him at the desk, the line-up bright beyond it
 //   cafe      a café by day: him at the counter in the window, a flat white, the laptop, the street
 //   press     a press conference: the TCP backdrop and its screen, the microphones, the press, flashes
+//   ring      a boxing ring at night: him in his corner, gold ropes, the big screen, the towel
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -218,7 +219,7 @@
         <rect x="-15" y="-232" width="30" height="58" rx="15" fill="#1A1B1E"/><rect x="-15" y="-232" width="30" height="30" rx="15" fill="#2C2E33"/></g>`;
     };
     const subject = `
-      <g transform="translate(610 360)"><rect x="-16" y="-16" width="472" height="332" rx="8" fill="#050608"/>${screen}
+      <g transform="translate(616 640)"><rect x="-16" y="-16" width="472" height="332" rx="8" fill="#050608"/>${screen}
         <rect width="440" height="300" fill="url(#${id}beam)" opacity="0.35"/></g>
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
       ${onTable ? '' : nearArm}
@@ -227,17 +228,27 @@
       <g transform="translate(980 1452)"><path d="M -18 0 L -22 -74 L 22 -74 L 18 0 Z" fill="#CFE6F2" opacity="0.55" stroke="#9FB7C4" stroke-width="2"/><rect x="-20" y="-40" width="40" height="38" fill="#9DD3EE" opacity="0.35"/></g>
       ${castOf(s, t, id)}
       ${onTable ? nearArm : ''}
-      <path d="M -300 1500 L 1400 1500 L 1400 2400 L -300 2400 Z" fill="#0F1013"/><path d="M -300 1500 L 1400 1500" stroke="#2A2D33" stroke-width="5"/>
+      <path d="M -300 1500 L 1400 1500 L 1400 2400 L -300 2400 Z" fill="#1A1C22"/><path d="M -300 1500 L 1400 1500" stroke="#3C414C" stroke-width="5"/>
       ${crown(540, 1610, 0.32)}<text x="540" y="1700" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="22" letter-spacing="6" fill="#8C7A50">THE CRYPTO PLAYBOOK</text>`;
     // the press: heads and shoulders in silhouette, phones and recorders up, lit from the stage
     const bob = (k) => Math.sin(t * 3.1 + k * 1.7) * 6;
     const heads = [[-40, 1760, 1.1, 0], [170, 1700, 0.95, 1], [380, 1790, 1.15, 2], [600, 1720, 1.0, 3], [820, 1780, 1.1, 4], [1040, 1710, 0.95, 5]];
+    const RIM = '#6E7FA6', SIL = '#0A0C11';
     const press = heads.map(([x, y, k, i]) => {
-      const up = i % 2 === 0, hy = y + bob(i);
-      const arm = up ? `<path d="M ${x + 50 * k} ${hy + 110 * k} C ${x + 70 * k} ${hy + 20 * k}, ${x + 80 * k} ${hy - 90 * k}, ${x + 90 * k} ${hy - 150 * k}" stroke="#07080A" stroke-width="${30 * k}" stroke-linecap="round" fill="none"/>
-          <g transform="translate(${x + 90 * k} ${hy - 190 * k}) rotate(${-8 + i * 3})"><rect x="${-24 * k}" y="${-42 * k}" width="${48 * k}" height="${84 * k}" rx="${8 * k}" fill="#07080A"/><rect x="${-19 * k}" y="${-36 * k}" width="${38 * k}" height="${68 * k}" rx="${4 * k}" fill="#9EC5FF" opacity="0.85"/></g>` : '';
-      return `${arm}<ellipse cx="${x}" cy="${hy}" rx="${58 * k}" ry="${70 * k}" fill="#07080A"/><path d="M ${x - 150 * k} ${hy + 320 * k} C ${x - 140 * k} ${hy + 90 * k}, ${x + 140 * k} ${hy + 90 * k}, ${x + 150 * k} ${hy + 320 * k} Z" fill="#07080A"/>
-        <path d="M ${x - 52 * k} ${hy - 30 * k} C ${x - 40 * k} ${hy - 70 * k}, ${x + 30 * k} ${hy - 76 * k}, ${x + 50 * k} ${hy - 34 * k}" stroke="#2A3142" stroke-width="${5 * k}" fill="none" opacity="0.8"/>`;
+      const up = i % 2 === 0 && i !== 2, hy = y + bob(i);
+      const arm = up ? `<path d="M ${x + 50 * k} ${hy + 110 * k} C ${x + 70 * k} ${hy + 20 * k}, ${x + 80 * k} ${hy - 90 * k}, ${x + 90 * k} ${hy - 150 * k}" stroke="${SIL}" stroke-width="${30 * k}" stroke-linecap="round" fill="none"/>
+          <path d="M ${x + 64 * k} ${hy + 10 * k} C ${x + 76 * k} ${hy - 60 * k}, ${x + 82 * k} ${hy - 100 * k}, ${x + 88 * k} ${hy - 140 * k}" stroke="${RIM}" stroke-width="${4 * k}" fill="none" opacity="0.7"/>
+          <g transform="translate(${x + 90 * k} ${hy - 190 * k}) rotate(${-8 + i * 3})"><rect x="${-60 * k}" y="${-70 * k}" width="${120 * k}" height="${140 * k}" rx="${30 * k}" fill="#9EC5FF" opacity="0.18"/>
+            <rect x="${-24 * k}" y="${-42 * k}" width="${48 * k}" height="${84 * k}" rx="${8 * k}" fill="${SIL}"/><rect x="${-19 * k}" y="${-36 * k}" width="${38 * k}" height="${68 * k}" rx="${4 * k}" fill="#BCD7FF"/>
+            <rect x="${-14 * k}" y="${-24 * k}" width="${28 * k}" height="${20 * k}" fill="#6E8FC7"/></g>` : '';
+      // the TV camera on the shoulder of the one in the middle
+      const cam = i === 2 ? `<g transform="translate(${x + 30 * k} ${hy - 40 * k})"><rect x="${-120 * k}" y="${-60 * k}" width="${190 * k}" height="${100 * k}" rx="${12 * k}" fill="${SIL}"/>
+          <rect x="${70 * k}" y="${-46 * k}" width="${50 * k}" height="${72 * k}" rx="${8 * k}" fill="#11141B"/><circle cx="${120 * k}" cy="${-10 * k}" r="${30 * k}" fill="#11141B" stroke="${RIM}" stroke-width="${3 * k}"/>
+          <rect x="${-70 * k}" y="${-92 * k}" width="${90 * k}" height="${14 * k}" rx="${6 * k}" fill="${SIL}"/><circle cx="${-96 * k}" cy="${-40 * k}" r="${7 * k}" fill="#FF3B30"/>
+          <path d="M ${-120 * k} ${-58 * k} L ${60 * k} ${-58 * k}" stroke="${RIM}" stroke-width="${4 * k}" opacity="0.8"/></g>` : '';
+      return `${arm}<ellipse cx="${x}" cy="${hy}" rx="${58 * k}" ry="${70 * k}" fill="${SIL}"/><path d="M ${x - 150 * k} ${hy + 320 * k} C ${x - 140 * k} ${hy + 90 * k}, ${x + 140 * k} ${hy + 90 * k}, ${x + 150 * k} ${hy + 320 * k} Z" fill="${SIL}"/>
+        <path d="M ${x - 54 * k} ${hy - 16 * k} C ${x - 46 * k} ${hy - 66 * k}, ${x + 40 * k} ${hy - 76 * k}, ${x + 56 * k} ${hy - 22 * k}" stroke="${RIM}" stroke-width="${6 * k}" fill="none" opacity="0.9"/>
+        <path d="M ${x - 120 * k} ${hy + 140 * k} C ${x - 80 * k} ${hy + 96 * k}, ${x + 80 * k} ${hy + 96 * k}, ${x + 120 * k} ${hy + 140 * k}" stroke="${RIM}" stroke-width="${5 * k}" fill="none" opacity="0.6"/>${cam}`;
     }).join('');
     const flashes = (s.flashes || []).map((f) => t - at(f)).filter((d) => d >= 0 && d < 0.16);
     const fl = flashes.map((d, j) => {
@@ -247,6 +258,66 @@
     const pressLayer = `<defs><radialGradient id="${id}flash" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>${press}${fl}`;
     const wash = flashes.length ? `<rect width="1080" height="1920" fill="#FFFFFF" opacity="${n(Math.min(0.32, 0.12 * flashes.length) * (1 - Math.min(...flashes) / 0.16))}"/>` : '';
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, { f: 1.25, svg: pressLayer, blur: s.dof && s.dof.fg }, T.topShade(id), { f: 0, svg: wash }];
+  };
+
+  // ------------------------------------------------------------ the boxing ring
+  // Fight night: him on the stool in his corner, the gold ropes across in front of him, the black
+  // apron (TCP in gold) hiding the stool, the arena dark behind with the big screen over the ring.
+  // The ring's edge is at y 1448. s.screen: [[t, 'stopped' | 'done' | 'logo'], …]; s.towel: [from, to]
+  // (the towel thrown in, from his corner to the middle of the ring).
+  SETS.ring = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#FFF4E6', rim: 1 };
+    const mode = (s.screen || []).filter(([a]) => t >= at(a)).map(([, m]) => m).pop() || 'logo';
+    const crowd = [];
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 14; c++) {
+      const x = -260 + c * 120 + (r % 2 ? 60 : 0) + Math.sin(c * 7 + r) * 14, y = 620 + r * 90, k = 0.7 + r * 0.08;
+      crowd.push(`<circle cx="${n(x)}" cy="${n(y + Math.sin(t * 2.4 + c + r) * 3)}" r="${n(26 * k)}" fill="#0E0F14"/><path d="M ${n(x - 44 * k)} ${n(y + 80 * k)} C ${n(x - 40 * k)} ${n(y + 20 * k)}, ${n(x + 40 * k)} ${n(y + 20 * k)}, ${n(x + 44 * k)} ${n(y + 80 * k)} Z" fill="#0E0F14"/>
+        <path d="M ${n(x - 22 * k)} ${n(y - 12 * k)} Q ${n(x)} ${n(y - 30 * k)} ${n(x + 22 * k)} ${n(y - 12 * k)}" stroke="#3A3F52" stroke-width="3" fill="none"/>`);
+    }
+    const scr = mode === 'stopped'
+      ? `<rect width="480" height="280" fill="#0B0D11"/><text x="240" y="62" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="34" fill="#F4F1EA">ROUND 1</text>
+        <path d="M 40 110 L 110 130 L 160 120 L 220 150 L 270 140 L 330 200 L 380 190 L 440 236" fill="none" stroke="#E0613F" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+        <rect x="120" y="214" width="240" height="44" rx="6" fill="#E0613F"/><text x="240" y="245" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="24" fill="#1A0703">STOPPED OUT</text>`
+      : mode === 'done'
+        ? `<rect width="480" height="280" fill="#0B0D11"/>${crown(240, 100, 0.34)}<text x="240" y="210" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="#F6E3A3">DONE FOR TODAY</text>`
+        : `<rect width="480" height="280" fill="#0B0D11"/>${crown(240, 110, 0.4)}<text x="240" y="222" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="40" fill="#F6E3A3">FIGHT NIGHT</text>`;
+    const bg = `<defs><linearGradient id="${id}rb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E0" stop-opacity="0.22"/><stop offset="1" stop-color="#FFF6E0" stop-opacity="0"/></linearGradient>
+        <radialGradient id="${id}rg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFE9C2" stop-opacity="0.28"/><stop offset="1" stop-color="#FFE9C2" stop-opacity="0"/></radialGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="#07080C"/>
+      ${crowd.join('')}
+      <g transform="translate(300 160)"><rect x="-20" y="-20" width="520" height="320" rx="10" fill="#020203"/>${scr}<rect x="-20" y="-20" width="520" height="320" rx="10" fill="none" stroke="#1E2028" stroke-width="6"/></g>
+      <path d="M 400 -400 L 680 -400 L 1100 1500 L -20 1500 Z" fill="url(#${id}rb)"/>
+      <ellipse cx="560" cy="1300" rx="700" ry="380" fill="url(#${id}rg)"/>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    // the corner behind him: the post and its pads; the ring's floor going back
+    const corner = `<path d="M -300 1300 L 1400 1300 L 1400 1448 L -300 1448 Z" fill="#2B2D33"/>
+      <rect x="40" y="620" width="34" height="860" fill="#1B1C20"/>
+      ${[760, 920, 1080].map((y) => `<rect x="22" y="${y}" width="70" height="96" rx="14" fill="#16171B" stroke="#D8AD4E" stroke-width="3"/>${crown(57, y + 48, 0.12)}`).join('')}
+      ${[800, 960, 1120].map((y, i) => `<path d="M 92 ${y} L 1400 ${y - 80 + i * 10}" stroke="#8C7238" stroke-width="10" stroke-linecap="round"/>`).join('')}`;
+    // the near ropes, gold, sagging a little, in front of him
+    const ropes = [1150, 1285, 1420].map((y) => `<path d="M -300 ${y} Q 540 ${y + 22} 1400 ${y}" stroke="#7A5B1E" stroke-width="22" fill="none"/>
+      <path d="M -300 ${y - 4} Q 540 ${y + 18} 1400 ${y - 4}" stroke="#D8AD4E" stroke-width="15" fill="none"/><path d="M -300 ${y - 8} Q 540 ${y + 14} 1400 ${y - 8}" stroke="#F6E3A3" stroke-width="4" fill="none" opacity="0.8"/>`).join('');
+    // the towel, thrown in
+    let towel = '';
+    if (s.towel) {
+      const [a, b] = s.towel.map(at), u = cl((t - a) / (b - a));
+      if (t >= a) {
+        const x = mix(380, 760, u), y = mix(1080, 1380, u) - Math.sin(u * Math.PI) * 260, r = u * 540;
+        towel = `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(r)}) scale(${n(u >= 1 ? 1.2 : 1)} ${n(u >= 1 ? 0.45 : 1)})"><path d="M -60 -34 C -20 -48, 30 -40, 62 -30 C 56 0, 60 20, 66 38 C 20 30, -24 44, -62 34 C -54 10, -58 -12, -60 -34 Z" fill="#F7F5F0" stroke="#1A120C" stroke-width="4"/>
+          <path d="M -50 -20 C -10 -30, 30 -24, 54 -18 M -48 22 C -8 14, 30 22, 56 26" stroke="#C8BFAE" stroke-width="4" fill="none"/></g>`;
+      }
+    }
+    const apron = `<path d="M -300 1448 L 1400 1448 L 1400 2400 L -300 2400 Z" fill="#0D0E11"/><path d="M -300 1448 L 1400 1448" stroke="#2E3138" stroke-width="8"/>
+      ${[-120, 240, 600, 960].map((x) => `${crown(x, 1640, 0.26)}<text x="${x}" y="1740" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="56" fill="#D8AD4E">TCP</text>`).join('')}`;
+    const subject = `${corner}
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${nearArm}
+      ${towel}
+      ${ropes}
+      ${apron}
+      ${castOf(s, t, id)}`;
+    return [{ f: 0.3, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 
   T.castOf = castOf;

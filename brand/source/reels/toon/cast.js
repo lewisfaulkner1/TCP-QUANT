@@ -381,6 +381,12 @@
         s.cues = s.sfx === false ? [] : [{ t: s.a, sfx: s.sfx || 'pop' }];
       },
       draw(s, t) {
+        // keep the whole bubble inside the frame, whatever its text's width
+        if (s.w == null && s.node.offsetWidth) {
+          s.w = s.node.offsetWidth;
+          const x = Math.min(1080 - 26 - s.w / 2, Math.max(26 + s.w / 2, s.x || 540));
+          s.node.style.left = `${x}px`;
+        }
         const k = E.outBack(seg(t, s.a, s.a + 0.24));
         css(s.node, { opacity: clamp(seg(t, s.a, s.a + 0.06)) * s.pOut, transform: `translate(-50%, -50%) scale(${n(0.55 + 0.45 * k)})` });
       },
