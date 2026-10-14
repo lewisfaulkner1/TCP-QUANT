@@ -1,0 +1,6 @@
+# The reel studio's Python side, in a Python 3.12 virtual environment (see README.md).
+sherpa-onnx==1.13.8   # voice.py: runs the Kokoro voice model offline
+soundfile             # voice.py, hear.py
+numpy                 # all three
+scipy                 # all three (music.py needs only numpy and scipy)
+pocketsphinx          # hear.py: the speech check

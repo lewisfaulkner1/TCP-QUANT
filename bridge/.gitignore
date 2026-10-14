@@ -1,0 +1,5 @@
+# The bridge's keys and token, its settings and its log never go in the repository.
+secrets/
+config.json
+bridge.log*
+__pycache__/

@@ -1,0 +1,443 @@
+<title>TCP Card Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="gfonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+@font-face{font-family:"TCP Display";src:url(data:font/woff2;base64,__FONT_B64__) format("woff2");font-weight:800;font-style:normal;font-display:block}
+:root{
+  color-scheme:dark;
+  --ink:#0E0D0B;--panel:#16140F;--panel-2:#1C1A15;--line:#2E2A22;--line-2:#3A3429;
+  --gold:#D8AD4E;--gold-soft:#E3C06D;--ivory:#F2ECDF;--stone:#A69D8C;--muted:#8A8274;
+  --royal:#241640;--up:#35A68C;--down:#E0613F;
+  --display:"TCP Display","Archivo",system-ui,sans-serif;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --radius:14px;
+}
+html,body{background:var(--ink)}
+body{color:var(--ivory);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:20px 56px;display:grid;gap:20px}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 24px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand svg{width:44px;height:auto;flex:none}
+.brand h1{margin:0;font:800 22px/1.1 var(--display);letter-spacing:.01em}
+.brand p{margin:2px 0 0;color:var(--stone);font-size:13.5px}
+
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid var(--line-2);border-radius:999px;background:var(--ink)}
+.seg button{border:0;background:transparent;color:var(--stone);padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;line-height:1.2;white-space:nowrap}
+.seg button:hover{color:var(--ivory)}
+.seg button[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+fieldset > .seg{justify-self:start}
+.seg.dir button[data-value="buy"][aria-pressed="true"]{background:var(--up);color:var(--ink)}
+.seg.dir button[data-value="sell"][aria-pressed="true"]{background:var(--down);color:var(--ink)}
+.tabs button{padding:9px 18px;font-size:15px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.workspace{display:grid;gap:20px;grid-template-areas:"preview" "form";grid-template-columns:minmax(0,1fr);align-items:start}
+.preview-pane{grid-area:preview;display:grid;gap:14px;min-width:0}
+.form-pane{grid-area:form;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;display:grid;gap:18px}
+@media (min-width:940px){
+  .workspace{grid-template-areas:"form preview";grid-template-columns:minmax(360px,420px) minmax(0,1fr)}
+  .preview-pane{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+}
+
+.size-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.dims{font:500 12.5px/1 var(--mono);color:var(--stone);letter-spacing:.06em}
+.stage{display:grid;place-items:center;padding:14px;border:1px solid var(--line);border-radius:18px;background:
+  radial-gradient(120% 80% at 50% 0%,#1A1813 0%,#0B0A09 70%)}
+.stage img{display:block;max-width:100%;height:auto;max-height:min(74vh,900px);width:auto;border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(242,236,223,.06)}
+@media (max-width:939px){.stage img{max-height:58vh}}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line-2);background:transparent;color:var(--ivory);font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--stone)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.btn.primary:hover{background:var(--gold-soft);border-color:var(--gold-soft)}
+.btn.small{min-height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn.link{border:0;padding:0;min-height:0;color:var(--stone);text-decoration:underline;text-underline-offset:3px;font-weight:500}
+.hint{margin:0;color:var(--stone);font-size:13.5px}
+details.caption{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+details.caption summary{cursor:pointer;padding:10px 14px;color:var(--stone);font-weight:600;font-size:14px}
+details.caption pre{margin:0;padding:0 14px 14px;white-space:pre-wrap;font:13px/1.55 var(--mono);color:var(--ivory)}
+
+.notice{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 14px;border-radius:12px;background:rgba(216,173,78,.09);border:1px solid rgba(216,173,78,.35);color:var(--ivory);font-size:14px}
+.notice strong{color:var(--gold)}
+form{display:grid;gap:16px;margin:0}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+legend,.lbl{padding:0;color:var(--stone);font-size:13px;font-weight:600;letter-spacing:.01em}
+.field{display:grid;gap:6px;min-width:0}
+.field > span{color:var(--stone);font-size:13px;font-weight:600}
+.field small{color:var(--muted);font-weight:500}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+input,select,textarea{width:100%;min-width:0;background:var(--ink);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;color:var(--ivory);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,173,78,.18)}
+input::placeholder,textarea::placeholder{color:#6F685C}
+input.num,#instrument,#qMarket{font-family:var(--mono);font-variant-numeric:tabular-nums}
+#instrument,#qMarket{text-transform:uppercase}
+textarea{resize:vertical;line-height:1.5}
+#rLines{font:14px/1.6 var(--mono)}
+.count{justify-self:end;color:var(--muted);font:500 12px/1 var(--mono)}
+.warn{margin:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(224,97,63,.45);background:rgba(224,97,63,.08);color:#F1B3A2;font-size:13.5px}
+.help{margin:0;color:var(--stone);font-size:13.5px}
+.help code{font-family:var(--mono);color:var(--ivory);font-size:12.5px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.quick{display:grid;gap:8px;padding:14px;border:1px dashed var(--line-2);border-radius:12px}
+.quick-row{display:grid;grid-template-columns:86px minmax(0,1fr) auto 76px auto;gap:8px;align-items:center}
+.quick-row .seg button{padding:7px 10px}
+@media (max-width:480px){.quick-row{grid-template-columns:1fr 1fr}.quick-row .seg{justify-self:start}}
+.errors{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.errors li{padding:8px 10px;border-radius:8px;background:rgba(224,97,63,.08);border:1px solid rgba(224,97,63,.35);color:#F1B3A2;font-size:13px}
+.errors code{font-family:var(--mono);color:var(--ivory)}
+.summary{padding:10px 12px;border-radius:10px;background:var(--ink);border:1px solid var(--line);font:500 13px/1.5 var(--mono);color:var(--ivory);font-variant-numeric:tabular-nums}
+.form-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ivory);color:var(--ink);font-weight:600;font-size:14px;padding:10px 16px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.45);transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+canvas#work{display:none}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      __CROWN_SVG__
+      <div>
+        <h1>Card Studio</h1>
+        <p>Signal and weekly-results images for Telegram and socials</p>
+      </div>
+    </div>
+    <div class="seg tabs" role="group" aria-label="Card type">
+      <button type="button" id="tabSignal" data-mode="signal" aria-pressed="true">Signal</button>
+      <button type="button" id="tabResults" data-mode="results" aria-pressed="false">Weekly results</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="preview-pane" aria-label="Preview">
+      <div class="size-row">
+        <div class="seg" role="group" aria-label="Image size" id="sizeSeg">
+          <button type="button" data-size="square" aria-pressed="false">Square</button>
+          <button type="button" data-size="portrait" aria-pressed="true">Portrait</button>
+          <button type="button" data-size="story" aria-pressed="false">Story</button>
+        </div>
+        <span class="dims" id="dims">1080 × 1350 PNG</span>
+      </div>
+      <div class="stage"><img id="cardImg" alt="Card preview" width="1080" height="1350"></div>
+      <div class="actions">
+        <button type="button" class="btn primary" id="saveBtn">Save image</button>
+        <button type="button" class="btn" id="copyBtn">Copy caption</button>
+      </div>
+      <p class="hint" id="saveHint" hidden>Saving isn't available in this view. Long-press the card (or right-click it) to save the image.</p>
+      <details class="caption" id="captionBox">
+        <summary>Caption</summary>
+        <pre id="captionText"></pre>
+      </details>
+    </section>
+
+    <section class="form-pane" aria-label="Details">
+      <div class="notice" id="exampleNotice">
+        <span><strong>Example.</strong> Replace these details with your own. The card says EXAMPLE until you edit it.</span>
+        <button type="button" class="btn small" id="clearBtn">Start blank</button>
+      </div>
+
+      <form id="signalForm" autocomplete="off" novalidate>
+        <fieldset>
+          <legend>Signal type</legend>
+          <div class="seg" role="group" aria-label="Signal type" data-field="kind">
+            <button type="button" data-value="algo" aria-pressed="true">Algorithmic signal</button>
+            <button type="button" data-value="aplus" aria-pressed="false">A+ setup</button>
+          </div>
+        </fieldset>
+        <div class="grid2">
+          <label class="field"><span>Market</span><input id="instrument" list="markets" maxlength="12" spellcheck="false" autocapitalize="characters"></label>
+          <label class="field"><span>Order</span>
+            <select id="order">
+              <option value="market">Market</option>
+              <option value="limit">Limit</option>
+              <option value="stop">Stop</option>
+            </select>
+          </label>
+        </div>
+        <fieldset>
+          <legend>Direction</legend>
+          <div class="seg dir" role="group" aria-label="Direction" data-field="side">
+            <button type="button" data-value="buy" aria-pressed="true">Buy</button>
+            <button type="button" data-value="sell" aria-pressed="false">Sell</button>
+          </div>
+        </fieldset>
+        <div class="grid2">
+          <label class="field"><span>Entry</span><input id="entry" class="num" inputmode="decimal"></label>
+          <label class="field"><span>Stop loss</span><input id="sl" class="num" inputmode="decimal"></label>
+          <label class="field"><span>Take profit</span><input id="tp" class="num" inputmode="decimal"></label>
+          <label class="field"><span>Take profit 2 <small>(optional)</small></span><input id="tp2" class="num" inputmode="decimal"></label>
+        </div>
+        <p class="warn" id="levelWarn" hidden></p>
+        <div class="grid2">
+          <label class="field"><span>Status</span>
+            <select id="status">
+              <option value="live">Live</option>
+              <option value="tp">Take profit hit</option>
+              <option value="tp2">Take profit 2 hit</option>
+              <option value="sl">Stop loss hit</option>
+              <option value="be">Breakeven</option>
+              <option value="closed">Closed early</option>
+            </select>
+          </label>
+          <label class="field" id="closedWrap" hidden><span>Result in R</span><input id="closedR" class="num" inputmode="decimal" placeholder="+0.8"></label>
+        </div>
+        <div class="grid2">
+          <label class="field"><span>Date and time</span><input id="when" type="datetime-local"></label>
+          <label class="field"><span>Time zone</span><input id="tz" maxlength="10" spellcheck="false"></label>
+        </div>
+        <label class="field"><span>Reference</span><input id="ref" maxlength="14" spellcheck="false"></label>
+        <label class="field" id="whyWrap"><span>Why I took it</span>
+          <textarea id="why" rows="5" maxlength="420"></textarea>
+          <span class="count" id="whyCount">0 / 420</span>
+        </label>
+      </form>
+
+      <form id="resultsForm" autocomplete="off" novalidate hidden>
+        <div class="grid2">
+          <label class="field"><span>Title</span><input id="rTitle" maxlength="22"></label>
+          <label class="field"><span>Dates</span><input id="rDates" maxlength="30"></label>
+        </div>
+        <div class="quick">
+          <span class="lbl">Add a trade</span>
+          <div class="quick-row">
+            <select id="qDay" aria-label="Day">
+              <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Sat</option><option>Sun</option>
+            </select>
+            <input id="qMarket" list="markets" aria-label="Market" placeholder="XAUUSD" maxlength="12" spellcheck="false">
+            <div class="seg dir" role="group" aria-label="Direction" id="qSide">
+              <button type="button" data-value="buy" aria-pressed="true">Buy</button>
+              <button type="button" data-value="sell" aria-pressed="false">Sell</button>
+            </div>
+            <input id="qR" class="num" inputmode="decimal" aria-label="Result in R" placeholder="+2">
+            <button type="button" class="btn small" id="qAdd">Add</button>
+          </div>
+        </div>
+        <label class="field"><span>Trades</span><textarea id="rLines" rows="9" spellcheck="false"></textarea></label>
+        <p class="help">One trade per line: day, market, buy or sell, then the result in R. For example <code>Tue XAUUSD SELL -1</code>. Use 0 for breakeven.</p>
+        <ul class="errors" id="rErrors"></ul>
+        <div class="summary" id="rSummary"></div>
+      </form>
+
+      <div class="form-foot">
+        <span>Drafts stay in this browser.</span>
+        <button type="button" class="btn link" id="exampleBtn">Reset to example</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<datalist id="markets"><option value="XAUUSD"><option value="BTCUSD"><option value="GC"><option value="MGC"></datalist>
+<canvas id="work"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>__CARDS_JS__</script>
+<script>
+(() => {
+'use strict';
+
+/* ---------- cards (shared drawing code, inlined from cards.cjs) ---------- */
+const T = createTCPCards({Path2D});
+const {SIZES, num, fmtR, plainR, signalModel, resultsModel, drawSignal, drawResults, captionSignal, captionResults} = T;
+
+/* ---------- state ---------- */
+const STORE = 'tcp-card-studio-v1';
+const pad2 = n => String(n).padStart(2,'0');
+function localStamp(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function tzLabel(d){
+  try { const p = new Intl.DateTimeFormat('en-GB',{timeZoneName:'short'}).formatToParts(d).find(x => x.type === 'timeZoneName'); return p ? p.value : ''; }
+  catch(e){ return ''; }
+}
+function refFor(when){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(when || ''); return m ? `${m[2]}${m[3]}-01` : ''; }
+function weekDefaults(now){
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = (d.getDay() + 6) % 7;
+  const mon = new Date(d); mon.setDate(d.getDate() - dow);
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const thu = new Date(Date.UTC(mon.getFullYear(), mon.getMonth(), mon.getDate() + 3));
+  const jan4 = new Date(Date.UTC(thu.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((thu - jan4) / 86400000 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7);
+  const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let dates;
+  if (mon.getFullYear() !== fri.getFullYear()) dates = `${mon.getDate()} ${M[mon.getMonth()]} ${mon.getFullYear()} – ${fri.getDate()} ${M[fri.getMonth()]} ${fri.getFullYear()}`;
+  else if (mon.getMonth() !== fri.getMonth()) dates = `${mon.getDate()} ${M[mon.getMonth()]} – ${fri.getDate()} ${M[fri.getMonth()]} ${fri.getFullYear()}`;
+  else dates = `${mon.getDate()} – ${fri.getDate()} ${M[fri.getMonth()]} ${fri.getFullYear()}`;
+  return {title: `Week ${week}`, dates};
+}
+function exampleSignal(){
+  const now = new Date(); const when = localStamp(now);
+  return {kind:'algo', instrument:'XAUUSD', order:'market', side:'buy', entry:'3742.50', sl:'3727.50', tp:'3772.50', tp2:'',
+    status:'live', closedR:'', when, tz: tzLabel(now), ref: refFor(when),
+    why:'Price swept the Asian-session low into the H4 demand zone and closed back inside it. Entry on the M15 reclaim, stop below the sweep, target at 2R into the prior day\'s high.',
+    example:true};
+}
+function blankSignal(prev){
+  const now = new Date(); const when = localStamp(now);
+  return {kind: prev ? prev.kind : 'algo', instrument:'', order:'market', side:'buy', entry:'', sl:'', tp:'', tp2:'', status:'live', closedR:'',
+    when, tz: tzLabel(now), ref: refFor(when), why:'', example:false};
+}
+function exampleResults(){
+  const w = weekDefaults(new Date());
+  return {title:w.title, dates:w.dates, example:true, lines:[
+    'Mon XAUUSD BUY +2','Tue XAUUSD SELL -1','Tue XAUUSD BUY +2','Wed XAUUSD SELL 0',
+    'Thu XAUUSD BUY -1','Thu XAUUSD BUY +2','Fri XAUUSD SELL +2','Fri XAUUSD BUY -1'].join('\n')};
+}
+function blankResults(){ const w = weekDefaults(new Date()); return {title:w.title, dates:w.dates, lines:'', example:false}; }
+
+let state = {mode:'signal', size:'portrait', signal: exampleSignal(), results: exampleResults()};
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+  if (saved && saved.signal && saved.results) {
+    state = {mode: saved.mode === 'results' ? 'results' : 'signal', size: SIZES[saved.size] ? saved.size : 'portrait',
+      signal: Object.assign(exampleSignal(), saved.signal), results: Object.assign(exampleResults(), saved.results)};
+  }
+} catch(e) {}
+let saveTimer;
+function persist(){ clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e) {} }, 350); }
+
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
+const canvas = $('work'); const img = $('cardImg');
+const sigForm = $('signalForm'), resForm = $('resultsForm');
+const fields = ['instrument','order','entry','sl','tp','tp2','status','closedR','when','tz','ref','why'];
+
+function syncSignalForm(){
+  const s = state.signal;
+  fields.forEach(k => { const el = $(k); if (el && el.value !== String(s[k] ?? '')) el.value = s[k] ?? ''; });
+  sigForm.querySelectorAll('.seg[data-field]').forEach(seg => seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(s[seg.dataset.field] === b.dataset.value))));
+  $('closedWrap').hidden = s.status !== 'closed';
+  $('whyWrap').hidden = s.kind !== 'aplus';
+  $('whyCount').textContent = `${String(s.why || '').length} / 420`;
+  const M = signalModel(s); $('levelWarn').hidden = !M.warnings.length; $('levelWarn').textContent = M.warnings.join(' ');
+}
+function syncResultsForm(){
+  const r = state.results;
+  [['rTitle','title'],['rDates','dates'],['rLines','lines']].forEach(([id, k]) => { if ($(id).value !== String(r[k] ?? '')) $(id).value = r[k] ?? ''; });
+  const R = resultsModel(r);
+  const errs = $('rErrors'); errs.textContent = '';
+  R.errors.forEach(e => { const li = document.createElement('li'); li.append(`Line ${e.n} is missing ${e.missing.join(', ')}: `); const code = document.createElement('code'); code.textContent = e.line; li.append(code); errs.append(li); });
+  $('rSummary').textContent = R.trades.length
+    ? `${R.trades.length} trades · net ${fmtR(R.net)} · ${R.wins} wins · ${R.losses} losses · ${R.be} breakeven · win rate ${R.rate}%`
+    : 'No trades yet.';
+}
+function syncChrome(){
+  const cur = state.mode === 'signal' ? state.signal : state.results;
+  $('tabSignal').setAttribute('aria-pressed', String(state.mode === 'signal'));
+  $('tabResults').setAttribute('aria-pressed', String(state.mode === 'results'));
+  sigForm.hidden = state.mode !== 'signal'; resForm.hidden = state.mode !== 'results';
+  $('exampleNotice').hidden = !cur.example;
+  $('sizeSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.size === state.size)));
+  const [w, h] = SIZES[state.size]; $('dims').textContent = `${w} × ${h} PNG`;
+  $('captionText').textContent = state.mode === 'signal' ? captionSignal(state.signal) : captionResults(state.results);
+}
+
+let renderTimer = null, lastUrl = null, lastBlob = null, renderSeq = 0;
+function draw(){
+  const [W, H] = SIZES[state.size];
+  if (canvas.width !== W) canvas.width = W; if (canvas.height !== H) canvas.height = H;
+  const ctx = canvas.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.globalAlpha = 1;
+  if (state.mode === 'signal') drawSignal(ctx, W, H, state.signal, state.size); else drawResults(ctx, W, H, state.results, state.size);
+}
+function toBlob(){ return new Promise(res => canvas.toBlob(b => res(b), 'image/png')); }
+async function render(){
+  const seq = ++renderSeq; draw(); const blob = await toBlob(); if (!blob || seq !== renderSeq) return;
+  lastBlob = blob; const url = URL.createObjectURL(blob); const prev = lastUrl; lastUrl = url;
+  img.onload = () => { if (prev) URL.revokeObjectURL(prev); };
+  const [w, h] = SIZES[state.size]; img.width = w; img.height = h; img.src = url;
+  img.alt = state.mode === 'signal'
+    ? `Preview of the ${(state.signal.instrument || 'market').toUpperCase()} ${state.signal.side} signal card`
+    : `Preview of the ${state.results.title || 'weekly'} results card`;
+}
+function schedule(){ clearTimeout(renderTimer); renderTimer = setTimeout(render, 80); }
+function changed(){ syncChrome(); persist(); schedule(); }
+
+function edit(which, patch){ Object.assign(state[which], patch, {example:false}); if (which === 'signal') syncSignalForm(); else syncResultsForm(); changed(); }
+
+fields.forEach(k => { const el = $(k); if (!el) return; el.addEventListener('input', () => {
+  const patch = {[k]: k === 'instrument' ? el.value.toUpperCase() : el.value};
+  if (k === 'when') { const auto = refFor(state.signal.when); if (!state.signal.ref || state.signal.ref === auto) patch.ref = refFor(el.value); }
+  edit('signal', patch);
+}); });
+sigForm.querySelectorAll('.seg[data-field]').forEach(seg => seg.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; edit('signal', {[seg.dataset.field]: b.dataset.value});
+}));
+[['rTitle','title'],['rDates','dates'],['rLines','lines']].forEach(([id, k]) => $(id).addEventListener('input', () => edit('results', {[k]: $(id).value})));
+
+let qSide = 'buy';
+$('qSide').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; qSide = b.dataset.value; $('qSide').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
+$('qAdd').addEventListener('click', () => {
+  const market = $('qMarket').value.trim().toUpperCase(); const r = num($('qR').value);
+  if (!market) { toast('Add the market first'); $('qMarket').focus(); return; }
+  if (r === null) { toast('Add the result in R, for example +2 or -1'); $('qR').focus(); return; }
+  const line = `${$('qDay').value} ${market} ${qSide.toUpperCase()} ${plainR(r).replace(/R$/, '')}`;
+  const cur = state.results.example ? '' : String(state.results.lines || '').replace(/\s+$/, '');
+  edit('results', {lines: cur ? cur + '\n' + line : line}); $('qR').value = ''; toast('Trade added');
+});
+$('qR').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('qAdd').click(); } });
+
+document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.mode = b.dataset.mode; changed(); });
+$('sizeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.size = b.dataset.size; changed(); });
+$('clearBtn').addEventListener('click', () => {
+  if (state.mode === 'signal') { state.signal = blankSignal(state.signal); syncSignalForm(); } else { state.results = blankResults(); syncResultsForm(); }
+  changed(); toast('Blank card ready');
+});
+$('exampleBtn').addEventListener('click', () => {
+  if (state.mode === 'signal') { state.signal = exampleSignal(); syncSignalForm(); } else { state.results = exampleResults(); syncResultsForm(); }
+  changed();
+});
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+
+/* ---------- copy caption ---------- */
+$('copyBtn').addEventListener('click', () => {
+  const text = $('captionText').textContent;
+  const fallback = () => { $('captionBox').open = true; const r = document.createRange(); r.selectNodeContents($('captionText')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Caption selected. Copy it from here.'); };
+  try { navigator.clipboard.writeText(text).then(() => toast('Caption copied'), fallback); } catch(e) { fallback(); }
+});
+
+/* ---------- save image ---------- */
+let downloads;
+const dlReady = (window.claude && typeof window.claude.use === 'function')
+  ? window.claude.use('downloads').catch(() => null)
+  : Promise.resolve(null);
+dlReady.then(d => { downloads = d; $('saveBtn').hidden = !d; $('saveHint').hidden = !!d; });
+function fileName(){
+  const d = new Date(); const stamp = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const slug = v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return state.mode === 'signal'
+    ? `tcp-${slug(state.signal.instrument) || 'signal'}-${state.signal.side}-${(state.signal.when || stamp).slice(0, 10)}-${state.size}.png`
+    : `tcp-results-${slug(state.results.title) || stamp}-${state.size}.png`;
+}
+$('saveBtn').addEventListener('click', async () => {
+  const d = downloads === undefined ? await dlReady : downloads;
+  if (!d) { $('saveBtn').hidden = true; $('saveHint').hidden = false; return; }
+  clearTimeout(renderTimer); draw(); const blob = await toBlob();
+  if (!blob) { toast("The image couldn't be made. Try again."); return; }
+  try {
+    const r = await d.save({filename: fileName(), data: blob});
+    if (r && r.status === 'saved') toast('Image saved');
+  } catch(e) {
+    const code = e && e.code;
+    if (code === 'declined') toast('Not saved');
+    else if (code === 'rate_limited') toast('A save is already waiting for you to confirm');
+    else { toast("Saving isn't available here"); $('saveHint').hidden = false; }
+  }
+});
+
+/* ---------- fonts, then first paint ---------- */
+const FONT_LOADS = ['800 100px "TCP Display"','400 30px Archivo','500 30px Archivo','italic 400 40px "Instrument Serif"','500 26px "JetBrains Mono"','600 26px "JetBrains Mono"'];
+function loadFonts(){ if (!document.fonts || !document.fonts.load) return; Promise.allSettled(FONT_LOADS.map(f => document.fonts.load(f))).then(schedule); }
+const gf = $('gfonts');
+if (gf.sheet) loadFonts(); else gf.addEventListener('load', loadFonts);
+if (document.fonts) { document.fonts.ready.then(schedule); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', schedule); }
+
+syncSignalForm(); syncResultsForm(); syncChrome(); render();
+})();
+</script>

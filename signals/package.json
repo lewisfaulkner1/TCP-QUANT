@@ -1,0 +1,14 @@
+{
+  "name": "tcp-signal-publisher",
+  "private": true,
+  "type": "module",
+  "description": "Posts TCP algorithm signals from the VPS into Telegram as branded cards",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/cli.js run",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.9"
+  }
+}
