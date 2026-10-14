@@ -338,7 +338,8 @@
     for (const k of ks) { if (k.at <= t) a = k; if (k.at > t) { b = k; break; } b = k; }
     const u = b.at > a.at ? cl((t - a.at) / (b.at - a.at)) : 1;
     const num = (key, d = 0) => mix(a[key] ?? d, b[key] ?? a[key] ?? d, u);
-    return { k: num('k'), g: a.g == null && b.g == null ? null : num('g', 110), press: num('press'), badge: a.badge || null };
+    // GREED's line shows only from the key that first gives it, then follows the keys after
+    return { k: num('k'), g: a.g == null ? null : num('g', a.g), press: num('press'), badge: a.badge || null };
   }
   function gameScreen(q, t, id) {
     const pts = [], L = PATH.length - 1, end = q.k * L;
