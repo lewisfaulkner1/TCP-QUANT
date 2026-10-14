@@ -15,6 +15,8 @@
 //   hide      inside the film-maker's hide on that bank: canvas, the long lens, the slit's bright view
 //   track     a floodlit stadium on race night, side on: the stands, the boards, the lanes, the finish
 //   booth     the commentary box above it: him at the desk with a microphone, the stadium behind
+//   museum    the museum of red flags, side on: gallery 1's exhibits in glass cases, gallery 2's green flags
+//   gallery   him in gallery 2 as the guide, at a lectern, the green wall and its frames behind him
 (function () {
   const T = window.Toon, C = window.Cast, F = window.Founder;
   const { SETS, HIM, n, cl, mix, crown } = T;
@@ -790,6 +792,103 @@
       <g transform="translate(980 1448) skewX(-18)"><rect x="-70" y="-14" width="140" height="14" fill="#E8E0CC"/><path d="M -56 -10 L 50 -10" stroke="#8C8576" stroke-width="2"/></g>
       ${onTable ? nearArm : ''}
       <path d="M -300 1520 L 1400 1520 L 1400 2400 L -300 2400 Z" fill="#1C1A18"/>`;
+    return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // ------------------------------------------------------------ the museum of red flags
+  // Side on, x along the hall: the entrance and its banner, gallery 1 on burgundy walls (exhibits in
+  // glass cases on plinths: the rented Lambo at x 700, the 100% screenshot at 1500, the GUARANTEED
+  // stamp at 2300), then the arch into gallery 2 on green walls (the plan logged before the result,
+  // framed at x 3200; an example record with its losses at 3900). The floor is at y 1640.
+  // s.alarm: when the alarm goes off (a small beacon on the wall, slower than three a second).
+  const plinth = (x, inner, plaque, sub, id2) => `<g transform="translate(${x} 0)">
+      <path d="M -260 300 L 260 300 L 170 1240 L -170 1240 Z" fill="url(#${id2}cone)"/>
+      <rect x="-150" y="1240" width="300" height="330" fill="#ECE7DC"/><rect x="-150" y="1240" width="300" height="330" fill="url(#${id2}pl)"/>
+      <rect x="-166" y="1226" width="332" height="22" fill="#F6F2EA"/><rect x="-166" y="1562" width="332" height="18" fill="#D6D0C4"/>
+      <rect x="-118" y="1330" width="236" height="74" rx="4" fill="#B8913E"/><rect x="-112" y="1336" width="224" height="62" rx="3" fill="#CFA750"/>
+      <text x="0" y="1362" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="19" fill="#2A1C0C">${plaque}</text>
+      <text x="0" y="1388" text-anchor="middle" font-family="Serif" font-style="italic" font-size="17" fill="#3A2810">${sub}</text>
+      <g transform="translate(0 1230)">${inner}</g>
+      <rect x="-140" y="926" width="280" height="300" fill="#DDEEFF" opacity="0.1"/><rect x="-140" y="926" width="280" height="300" fill="none" stroke="#F4F8FF" stroke-width="4" opacity="0.7"/>
+      <path d="M -110 950 L -60 950 L -130 1180 Z" fill="#FFFFFF" opacity="0.18"/></g>`;
+  const LAMBO = `<g transform="translate(0 -40)"><ellipse cx="0" cy="34" rx="120" ry="12" fill="#000" opacity="0.25"/><ellipse cx="0" cy="30" rx="104" ry="10" fill="#2A2A2E"/>
+      <path d="M -100 20 L -92 -6 L -40 -30 L 30 -34 L 92 -10 L 104 14 L 100 22 Z" fill="#F2C230" stroke="#1A120C" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M -36 -26 L 20 -30 L 52 -14 L -30 -12 Z" fill="#1E2A38" stroke="#1A120C" stroke-width="2.5"/>
+      <circle cx="-58" cy="20" r="17" fill="#1A1B1E" stroke="#1A120C" stroke-width="3"/><circle cx="62" cy="20" r="17" fill="#1A1B1E" stroke="#1A120C" stroke-width="3"/>
+      <circle cx="-58" cy="20" r="7" fill="#9CA3AE"/><circle cx="62" cy="20" r="7" fill="#9CA3AE"/>
+      <g transform="translate(80 -86) rotate(12)"><rect x="-38" y="-16" width="76" height="32" rx="4" fill="#FFFDF6" stroke="#1A120C" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="13" fill="#C8281E">RENTED</text></g></g>`;
+  const WINRATE = `<g transform="translate(0 -150)"><rect x="-62" y="-100" width="124" height="214" rx="16" fill="#0E1116" stroke="#C9A24A" stroke-width="8"/>
+      <rect x="-50" y="-86" width="100" height="186" rx="6" fill="#0B1F1A"/>
+      <text x="0" y="-56" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="12" fill="#7BF0C0">WIN RATE</text>
+      <text x="0" y="-20" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="34" fill="#35D08F">100%</text>
+      ${[0, 1, 2, 3, 4, 5].map((i) => `<rect x="${-40 + i * 14}" y="${70 - 14 - i * 8}" width="10" height="${14 + i * 8}" fill="#35D08F"/>`).join('')}
+      <text x="0" y="92" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="10" fill="#7BF0C0">NO LOSSES EVER</text></g>`;
+  const STAMP = `<g transform="translate(0 -80)"><rect x="-124" y="10" width="248" height="46" rx="4" fill="#FFFDF6" stroke="#1A120C" stroke-width="2.5" transform="rotate(-4)"/>
+      <text x="0" y="43" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="24" fill="#C8281E" transform="rotate(-4)" opacity="0.9">GUARANTEED</text>
+      <g transform="translate(40 -40) rotate(18)"><rect x="-30" y="0" width="60" height="22" rx="3" fill="#7A3A1E" stroke="#1A120C" stroke-width="2.5"/><rect x="-9" y="-62" width="18" height="64" rx="6" fill="#8C5A36" stroke="#1A120C" stroke-width="2.5"/><circle cx="0" cy="-70" r="18" fill="#7A3A1E" stroke="#1A120C" stroke-width="2.5"/></g></g>`;
+  const frame = (x, y, w, h, inner, plaque) => `<g transform="translate(${x} ${y})"><rect x="${-w / 2 - 26}" y="-26" width="${w + 52}" height="${h + 52}" fill="#B8913E" stroke="#7A5A20" stroke-width="4"/>
+      <rect x="${-w / 2 - 12}" y="-12" width="${w + 24}" height="${h + 24}" fill="#D9B45C"/><g transform="translate(${-w / 2} 0)">${inner}</g>
+      <g transform="translate(0 ${h + 70})"><rect x="-150" y="0" width="300" height="56" rx="4" fill="#2E8A57"/><text x="0" y="36" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="20" fill="#FFFFFF">${plaque}</text></g></g>`;
+  const RECORD = (() => {
+    const res = [1, -1, 1, 1, -1, -1, 1, -1, 1, -1];
+    return `<rect width="440" height="300" fill="#0B0D11"/><text x="24" y="44" font-family="TCP Display" font-weight="800" font-size="24" fill="#F6E3A3">WINS AND LOSSES</text>
+      <g transform="translate(330 22) rotate(8)"><rect x="-10" y="-4" width="96" height="30" rx="4" fill="none" stroke="#E0613F" stroke-width="3"/><text x="38" y="19" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="17" fill="#E0613F">EXAMPLE</text></g>
+      <path d="M 24 170 L 416 170" stroke="#3A3F4A" stroke-width="2"/>
+      ${res.map((r, i) => `<rect x="${36 + i * 38}" y="${r > 0 ? 170 - 70 : 170}" width="26" height="70" fill="${r > 0 ? '#35D08F' : '#E0613F'}"/>`).join('')}
+      <text x="24" y="276" font-family="JB Mono" font-weight="500" font-size="17" fill="#8C8577">every result, the losses too</text>`;
+  })();
+  SETS.museum = (s, t, st, p, id) => {
+    const alarm = s.alarm != null ? t - at(s.alarm) : -1, ringing = alarm >= 0 && alarm < 2.2;
+    const wall = (x0, x1, col, dark) => `<rect x="${x0}" y="200" width="${x1 - x0}" height="1240" fill="${col}"/><rect x="${x0}" y="1180" width="${x1 - x0}" height="260" fill="${dark}"/>
+      <rect x="${x0}" y="1172" width="${x1 - x0}" height="14" fill="#C9A24A"/><rect x="${x0}" y="200" width="${x1 - x0}" height="70" fill="${dark}"/><rect x="${x0}" y="266" width="${x1 - x0}" height="10" fill="#C9A24A"/>`;
+    const bg = `<defs><linearGradient id="${id}cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4D6" stop-opacity="0.32"/><stop offset="1" stop-color="#FFF4D6" stop-opacity="0.02"/></linearGradient>
+        <linearGradient id="${id}pl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0.12"/><stop offset="0.5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.18"/></linearGradient>
+        <linearGradient id="${id}fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFC6B8"/><stop offset="1" stop-color="#9C9284"/></linearGradient></defs>
+      <rect x="-800" y="-600" width="6000" height="3120" fill="#1A1412"/>
+      ${wall(-800, 2700, '#5A1E24', '#3E1418')}${wall(2700, 5000, '#1E4A34', '#143426')}
+      <path d="M 2620 1440 L 2620 560 Q 2700 440 2780 560 L 2780 1440 Z" fill="#120E0C"/><path d="M 2600 1440 L 2600 560 Q 2700 410 2800 560 L 2800 1440" fill="none" stroke="#C9A24A" stroke-width="12"/>
+      <g transform="translate(3640 280)"><rect x="-190" y="-42" width="380" height="84" rx="6" fill="#0E2A1E" stroke="#C9A24A" stroke-width="4"/><text x="0" y="-6" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="18" letter-spacing="6" fill="#9FD8B4">GALLERY 2</text>
+        <text x="0" y="28" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="30" fill="#E9F6EC">GREEN FLAGS</text></g>
+      ${[[1150, 'ONLY UP', 'up'], [1900, 'TO THE MOON', 'moon']].map(([x, title, kind]) => `<g transform="translate(${x} 770)"><rect x="-130" y="-160" width="260" height="300" fill="#B8913E" stroke="#7A5A20" stroke-width="4"/><rect x="-112" y="-142" width="224" height="264" fill="#EDE4D0"/>
+        ${kind === 'up' ? `<path d="M 0 100 L 0 -110 M -40 -70 L 0 -120 L 40 -70" stroke="#2E9A5C" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+          : `<circle cx="60" cy="-90" r="30" fill="#D8D2C4" stroke="#9C9484" stroke-width="3"/><g transform="translate(-20 30) rotate(35)"><path d="M 0 -70 C 22 -40, 22 20, 14 40 L -14 40 C -22 20, -22 -40, 0 -70 Z" fill="#E9E4D8" stroke="#1A120C" stroke-width="4"/><circle cx="0" cy="-14" r="10" fill="#3F7FD8" stroke="#1A120C" stroke-width="3"/><path d="M -10 40 L 0 70 L 10 40 Z" fill="#E8A317"/></g>`}
+        <rect x="-70" y="150" width="140" height="30" rx="3" fill="#CFA750"/><text x="0" y="171" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="15" fill="#2A1C0C">${title}</text></g>`).join('')}
+      <g transform="translate(560 650) scale(1.22)"><path d="M -400 -140 L -380 -420 M 400 -140 L 380 -420" stroke="#2A2420" stroke-width="5"/><rect x="-420" y="-150" width="840" height="166" rx="6" fill="#120E0C" stroke="#C9A24A" stroke-width="5"/>
+        <text x="0" y="-98" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="22" letter-spacing="8" fill="#C9A24A">THE MUSEUM OF</text>
+        <text x="0" y="-30" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="50" fill="#F2EEE4">TRADING <tspan fill="#E0613F">RED FLAGS</tspan></text>${crown(-372, -102, 0.12)}${crown(372, -102, 0.12)}</g>
+      ${frame(3250, 640, 440, 300, planCard(id), 'LOGGED BEFORE THE RESULT')}
+      ${frame(3850, 640, 440, 300, RECORD, 'LOSSES SHOWN TOO')}
+      <g transform="translate(1720 760)"><rect x="-26" y="-10" width="52" height="20" rx="4" fill="#2A2420"/><path d="M -22 -10 A 22 24 0 0 1 22 -10 Z" fill="${ringing && Math.floor(alarm * 2.4) % 2 === 0 ? '#FF3B30' : '#7A1E1A'}"/>
+        ${ringing && Math.floor(alarm * 2.4) % 2 === 0 ? `<circle cx="0" cy="-16" r="70" fill="#FF3B30" opacity="0.25"/>` : ''}</g>`;
+    const floor = `<rect x="-800" y="1440" width="6000" height="1200" fill="url(#${id}fl)"/>
+      ${Array.from({ length: 30 }, (_, i) => `<path d="M ${-800 + i * 200} 1440 L ${-900 + i * 200 - 300} 2640" stroke="#B8AE9E" stroke-width="3" opacity="0.6"/>`).join('')}
+      <path d="M -800 1560 L 5200 1560 M -800 1760 L 5200 1760 M -800 2040 L 5200 2040" stroke="#B8AE9E" stroke-width="3" opacity="0.5"/>`;
+    const exhibits = `${plinth(700, LAMBO, 'THE RENTED LAMBO', 'c. every weekend', id)}${plinth(1500, WINRATE, 'NEVER POSTS A LOSS', 'screenshot, cropped', id)}${plinth(2300, STAMP, 'GUARANTEED PROFITS', 'they never are', id)}`;
+    // the bench and the rope in gallery 2
+    const rope = `${[3060, 4040].map((x) => `<rect x="${x - 8}" y="1460" width="16" height="140" fill="#C9A24A"/><circle cx="${x}" cy="1458" r="14" fill="#E2BE62"/>`).join('')}
+      <path d="M 3060 1470 Q 3550 1560 4040 1470" stroke="#8E1A22" stroke-width="12" fill="none"/>`;
+    const subject = `${floor}${exhibits}${rope}${castOf(s, t, id)}`;
+    // the walls stand right behind the plinths, so they move with the room
+    return [{ f: 1, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
+  };
+
+  // gallery 2, for him: the guide at a lectern, the green wall with its two frames behind him
+  SETS.gallery = (s, t, st, p, id) => {
+    p.light = { ...p.light, tint: '#FFF3DE', rim: 1 };
+    const bg = `<defs><radialGradient id="${id}gs" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#FFF4D6" stop-opacity="0.22"/><stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/></radialGradient></defs>
+      <rect x="-600" y="-600" width="2280" height="3120" fill="#1E4A34"/><rect x="-600" y="1180" width="2280" height="400" fill="#143426"/><rect x="-600" y="1172" width="2280" height="14" fill="#C9A24A"/>
+      <rect x="-600" y="-600" width="2280" height="870" fill="#143426"/><rect x="-600" y="266" width="2280" height="10" fill="#C9A24A"/>
+      <g transform="translate(-60 0)">${frame(140, 560, 440, 300, planCard(id), 'LOGGED BEFORE THE RESULT')}</g>
+      <g transform="translate(160 0)">${frame(840, 560, 440, 300, RECORD, 'LOSSES SHOWN TOO')}</g>
+      <ellipse cx="540" cy="700" rx="700" ry="600" fill="url(#${id}gs)"/>`;
+    const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    const onTable = (p.arms || 'rest') === 'desk', nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    const subject = `
+      <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : nearArm}
+      <path d="M 200 1448 L 760 1448 L 720 2400 L 240 2400 Z" fill="#5C3A22"/><path d="M 180 1436 L 780 1436 L 780 1460 L 180 1460 Z" fill="#7A5232"/>
+      <g transform="translate(480 1560)"><rect x="-110" y="0" width="220" height="46" rx="4" fill="#B8913E"/><text x="0" y="31" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="20" fill="#2A1C0C">GUIDED TOURS</text></g>
+      ${onTable ? nearArm : ''}`;
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 

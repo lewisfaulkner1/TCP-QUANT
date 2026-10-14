@@ -779,7 +779,7 @@ Education, not financial advice. Trading carries risk.
 
 ## The trading emotions: a new cast, new places, new sound
 
-Eight episodes for Saturday 17 to Saturday 24 October, after EP08 on Friday 16. Each is somewhere
+Nine episodes for Saturday 17 to Sunday 25 October, after EP08 on Friday 16. Each is somewhere
 new, with its own music, and three come straight from the master brief (EP06, EP09 and the line-up
 that brings in the brief's FOMO character). The founder is in every one, as approved on sheet V6.
 
@@ -809,6 +809,7 @@ saying "join".
 | Thu 22 Oct | EP21 · Fear Closes Winners Early | a cinema at night, a horror film | horror score | the same | the same |
 | Fri 23 Oct | EP22 · The Rarest Trader in the Wild | a savanna's watering hole, a wildlife film | wildlife score, birds | the same | the same |
 | Sat 24 Oct | EP23 · The Race | a floodlit stadium, race night | sports theme, the crowd | the same | the same |
+| Sun 25 Oct | EP10 · The Museum of Red Flags | a museum, two galleries | a harpsichord minuet | the same | the same |
 
 Same files as the others (`tcp-<episode>-music.mp4`, `-sfx.mp4`, the `-personal-` pair and the
 covers). Covers are the frame at 0.9 s; if TikTok asks for cover text, use the hook.
@@ -1163,11 +1164,52 @@ Hare or tortoise right now? 👇
 Education, not financial advice. Trading carries risk. The characters are made up.
 ```
 
+### EP10 · The Museum of Red Flags (23.4 s, harpsichord minuet)
+
+`specs/ep10-red-flags.js`, the master brief's EP10 (*what a good trading group actually looks like*),
+reworked without the word "free": habits, not a sign-up. FOMO tours THE MUSEUM OF TRADING RED FLAGS.
+Gallery 1, on burgundy walls, red flags in glass cases: the rented Lambo (*IS THAT HIS?!* *A car is
+not a track record*); the screenshot that never posts a loss, where FOMO presses on the glass (*100%?!
+I WANT IN!!*), the alarm goes off and PATIENCE, the guard, says *don't touch* (*no losses shown? Red
+flag*); the GUARANTEED stamp (*guaranteed? Nothing is*). Gallery 2, on green walls, the green flags:
+the plan posted before the result and an example record with its losses (stamped EXAMPLE, half wins
+and half losses). FOMO yawns: *…BORING.* The founder, the guide: *boring is a green flag. Seen any red
+flags in your DMs?* Paintings on the way round: ONLY UP and TO THE MOON.
+
+Why it should travel: red flags are some of the most shared finance videos there are, and a museum
+turns the list into a tour with a laugh at every case; *boring is a green flag* is the line people
+quote; the question asks for stories, so the comments fill up; and TCP's own habits are the green
+flags without anyone being asked to join.
+
+**TCP account (K):**
+```
+Welcome to the museum of trading red flags. 🚩
+
+The rented Lambo. The screenshot that never shows a loss. "Guaranteed."
+
+The green flags look boring: the plan posted before the result, and the losses shown too.
+
+Seen any of these in your DMs? 👇
+
+#trading #daytrading #tradingtips #forextrader #xauusd
+Education, not financial advice. Trading carries risk. Example plan and record, not real trades. The characters are made up.
+```
+
+**Founder's account (J):**
+```
+Every red flag from my DMs, in one museum. 🚩
+
+The real ones look boring. That's how you know.
+
+Which red flag have you seen most? 👇
+
+#trading #daytrader #tradinglife #forex
+Education, not financial advice. Trading carries risk. Example plan and record, not real trades. The characters are made up.
+```
+
 ### Next ideas
 
 - **The emotions' group chat:** FOMO, REVENGE, GREED and FEAR in one chat at 3am; PATIENCE has it
   muted.
 - **EP03 · The Trading Guru Olympics** (the brief): needs human contestants (RSI Guy, News Guy,
   Signal Guy…), drawn as a second cast.
-- **EP10** (the brief): reworked without the word "free" (joining needs a broker account): *what a
-  good trading group actually looks like*, showing habits, not a sign-up.
