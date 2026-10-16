@@ -498,15 +498,18 @@
       ${rowsBehind.join('')}`;
     const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
     const nearArm = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
+    // The armrest between the two seats sits behind him, so neither of his arms can cross it whatever
+    // the pose; the row in front puts a whole seat back in front of him (his far hand, tucked under his
+    // arm, would show through a gap) and another in front of FEAR.
     const subject = `
       ${seat(330, 640, 470, 860)}
       ${seat(800, 860, 340, 640)}
+      <path d="M 560 1180 L 640 1180 L 640 1470 L 560 1470 Z" fill="#2A0C10"/><rect x="548" y="1166" width="104" height="26" rx="10" fill="#3A1218"/>
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
       ${nearArm}
-      <path d="M 560 1180 L 640 1180 L 640 1470 L 560 1470 Z" fill="#2A0C10"/><rect x="548" y="1166" width="104" height="26" rx="10" fill="#3A1218"/>
       <clipPath id="${id}cin"><rect x="-600" y="-600" width="2280" height="2060"/></clipPath>
       <g clip-path="url(#${id}cin)">${castOf(s, t, id)}</g>
-      ${[[110, 1448, 420], [560, 1448, 420], [1010, 1448, 420]].map(([x, y, w]) => seat(x, y, w, 700)).join('')}`;
+      ${[[-130, 1448, 440], [330, 1448, 450], [790, 1448, 440], [1250, 1448, 440]].map(([x, y, w]) => seat(x, y, w, 700)).join('')}`;
     const glow = `<defs><linearGradient id="${id}sl" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#BFD8FF" stop-opacity="0.55"/><stop offset="0.6" stop-color="#BFD8FF" stop-opacity="0.08"/><stop offset="1" stop-color="#BFD8FF" stop-opacity="0"/></linearGradient>
         <radialGradient id="${id}cv" cx="0.45" cy="0.48" r="0.75"><stop offset="0.5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.7"/></radialGradient></defs>
       <rect width="1080" height="1920" fill="url(#${id}sl)" opacity="${n(cl(flick, 0, 1.6) * 0.5)}" style="mix-blend-mode:screen"/>
