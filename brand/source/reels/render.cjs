@@ -143,6 +143,22 @@ function ffmpeg(list) {
   log(`frames in ${((Date.now() - started) / 1000).toFixed(0)}s, ${cues.length} sound cues`);
 
   // ---------------------------------------------------------------- sound
+  // a soft swish where the story moves to another place, and TCP's sting under the end card, unless
+  // the spec has a sound of its own there (or a beat of silence)
+  cues = cues.filter((c) => !c.auto);
+  if (SPEC.autoSfx !== false) {
+    const near = (t, d) => cues.some((c) => c.sfx !== 'mute' && Math.abs(c.t - t) < d);
+    const hushed = (t) => cues.some((c) => c.sfx === 'mute' && t >= c.t - 0.1 && t <= c.until + 0.1);
+    let last = null;
+    for (const sc of SPEC.scenes || []) {
+      if (sc.kind === 'toon') {
+        if (last && sc.set !== last && sc.from > 0.4 && !near(sc.from, 0.3) && !hushed(sc.from)) cues.push({ t: sc.from - 0.06, sfx: 'swish', auto: true });
+        last = sc.set;
+      }
+      if (sc.kind === 'end' && !cues.some((c) => c.sfx === 'sting')) cues.push({ t: sc.from, sfx: 'sting', auto: true });
+    }
+    cues.sort((a, b) => a.t - b.t);
+  }
   fs.writeFileSync(path.join(DIR, 'cues.json'), JSON.stringify(cues));
   const music = [process.env.PY_MUSIC || 'python3', path.join(HERE, 'music.py'), '--dur', DURATION.toFixed(3), '--cues', path.join(DIR, 'cues.json'),
     '--style', SPEC.style || (VOICE ? 'pulse' : 'drive'), '--bpm', String(SPEC.bpm || 120), '--seed', String(SPEC.seed || 1),
@@ -156,8 +172,9 @@ function ffmpeg(list) {
   const video = ['-framerate', String(FPS), '-i', path.join(frameDir, '%05d.jpg')];
   // capped at 8 Mbps so a bright, grainy reel still comes in under 30 MB (TikTok and Instagram recompress anyway)
   const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-maxrate', '8M', '-bufsize', '16M', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-movflags', '+faststart', '-r', String(FPS)];
-  // -14 LUFS, then a limiter at -1.5 dBFS: a single loudness pass can let a sharp effect through
-  const loud = ['-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,alimiter=limit=0.84:level=false', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'];
+  // -14 LUFS, then a limiter at -2 dBFS: a single loudness pass can let a sharp effect through, and
+  // the AAC encoder adds up to a decibel of its own on a bright transient
+  const loud = ['-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,alimiter=limit=0.8:level=false', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'];
   const made = [];
   if (VOICE) {
     ffmpeg([...video, '-i', path.join(DIR, 'mix.wav'), ...enc, ...loud, '-shortest', path.join(OUT, `tcp-${TAG}-voice.mp4`)]);

@@ -54,6 +54,7 @@ const HEADER = { s: 0.62, x: 893 };
 
 const SPEC = {
   title: 'EP08 · The Day I Deleted 27 Indicators',
+  outfit: 'boss-crew',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 23.3,
   cover: 0.9,

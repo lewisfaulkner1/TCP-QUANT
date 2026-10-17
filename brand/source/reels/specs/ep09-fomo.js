@@ -57,6 +57,7 @@ const SAY = (text, a, b, x, y, more = {}) => ({ kind: 'bubble', who: 'fomo', tex
 
 const SPEC = {
   title: 'EP09 · If FOMO Was a Person',
+  outfit: 'offwhite-hoodie',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 17.8,
   cover: 0.9,

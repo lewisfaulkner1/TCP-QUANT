@@ -23,6 +23,7 @@ const RED = '#FF4B3E', PURPLE = '#B26BFF', GOLDEN = '#E6C15A';
 
 const SPEC = {
   title: 'EP04 · If Trading Was GTA',
+  outfit: 'corteiz-zip',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 23.0,
   cover: 0.9,

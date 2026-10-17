@@ -32,6 +32,7 @@ const PA = (text, a, b) => ({ kind: 'caption', style: 'note', num: 'C', text: 'Y
 
 const SPEC = {
   title: 'EP07 · The Pilot Calls a Trade',
+  outfit: 'burberry-zip',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 9 * B + 2.8,
   cover: 0.9,

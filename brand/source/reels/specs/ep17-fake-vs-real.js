@@ -40,6 +40,7 @@ const SAY = (text, a, b) => ({ kind: 'caption', from: a + 0.05, to: b, y: 280, t
 
 const SPEC = {
   title: 'EP17 · Fake Trader vs Real Trader',
+  outfit: 'mcqueen-knit',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 21.3,
   cover: 0.9,

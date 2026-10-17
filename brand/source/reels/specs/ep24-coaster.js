@@ -104,6 +104,7 @@ const SAY = (who, text, a, b, x, y, tail = 'b', more = {}) => ({ kind: 'bubble',
 
 const SPEC = {
   title: 'EP24 · The Rollercoaster',
+  outfit: 'rhude-varsity',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: DUR,
   cover: 0.9,

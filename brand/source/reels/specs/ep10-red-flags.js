@@ -59,6 +59,7 @@ const SAY = (who, text, a, b, x, y, tail = 'b', more = {}) => ({ kind: 'bubble',
 
 const SPEC = {
   title: 'EP10 · The Museum of Red Flags',
+  outfit: 'dior-crew',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 23.4,
   cover: 0.9,

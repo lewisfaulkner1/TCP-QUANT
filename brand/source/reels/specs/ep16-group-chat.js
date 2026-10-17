@@ -35,6 +35,7 @@ const MSG = (num, who, text, a, b, y) => ({ kind: 'caption', style: 'note', num,
 
 const SPEC = {
   title: 'EP16 · Trading Group Chat at 3 AM',
+  outfit: 'essentials-hoodie',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 20.8,
   cover: 0.9,

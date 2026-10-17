@@ -56,6 +56,7 @@ const SAY = (who, text, a, b, more = {}) => ({ kind: 'bubble', who, text, from: 
 
 const SPEC = {
   title: 'EP20 · The Line-Up',
+  outfit: 'balmain-varsity',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 22.8,
   cover: 0.9,

@@ -38,6 +38,7 @@ const FACE = { dof: { bg: 7 } };
 
 const SPEC = {
   title: 'EP14 · POV: You Finally Stop Chasing Candles',
+  outfit: 'valentino-knit',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 18.8,
   cover: 0.9,

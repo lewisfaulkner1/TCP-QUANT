@@ -773,9 +773,13 @@
       <rect x="-200" y="1430" width="1500" height="5" fill="${GOLDHI}" opacity="0.6"/>
       <ellipse cx="560" cy="1432" rx="760" ry="140" fill="url(#${id}warm)"/>`;
     const place = `translate(${HIM.x} ${HIM.y}) scale(${HIM.s})`;
+    // his arms go over the desk when they rest on it (hands on the keys, or folded with his elbows on
+    // it); held up or hanging, the desk hides whatever of them is below its top, as it would from here
+    const onTable = ['desk', 'fold'].includes(p.arms || 'rest'), arms = `<g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>`;
     const subject = `
       ${chair(id)}
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
+      ${onTable ? '' : arms}
       <!-- the monitor on its stand, turned towards him and us -->
       <path d="M 874 1080 L 910 1080 L 914 1452 L 870 1452 Z" fill="#161618"/><path d="M 874 1080 L 880 1080 L 882 1452 L 870 1452 Z" fill="#26262A"/>
       <g transform="translate(690 740) skewY(-9) scale(0.72 1)">${monitor(st, id + 'c', 560)}</g>
@@ -794,7 +798,7 @@
       ${Array.from({ length: 3 }, (_, rr) => Array.from({ length: 12 }, (__, c) => `<rect x="${n(760 + c * 20.5 + rr * 3)}" y="${n(1482 + rr * 8 - c * 0.4)}" width="16" height="5" rx="1" fill="#2E2E34"/>`).join('')).join('')}
       <g transform="translate(1100 1540)"><ellipse cx="0" cy="8" rx="44" ry="8" fill="#000" opacity="0.4"/><rect x="-38" y="-86" width="76" height="94" rx="11" fill="#141312"/><rect x="-38" y="-86" width="14" height="94" rx="7" fill="#fff" opacity="0.05"/><path d="M 38 -66 C 66 -66, 66 -18, 38 -18" fill="none" stroke="#141312" stroke-width="12"/><ellipse cx="0" cy="-86" rx="38" ry="7" fill="#0A0908"/><ellipse cx="0" cy="-85" rx="32" ry="5" fill="#2A1A10"/>${crown(0, -40, 0.17)}</g>
       ${steam(1100, 1446, t, id)}
-      <g transform="${place}">${F.founderSVG(p, id + 'f', 'arm')}</g>
+      ${onTable ? arms : ''}
       <!-- the screen's light on him and the desk, and the room falling off -->
       <ellipse cx="860" cy="980" rx="560" ry="620" fill="url(#${id}glow)" style="mix-blend-mode:screen"/>
       <ellipse cx="820" cy="1500" rx="420" ry="90" fill="url(#${id}glow)" style="mix-blend-mode:screen" opacity="0.7"/>
@@ -1038,11 +1042,12 @@
       <path d="M -300 1448 L 1400 1448 L 1400 1600 L -300 1600 Z" fill="url(#${id}jwood)"/>
       ${grain(-300, 1452, 1400, 1596, 13)}
       <path d="M -300 1450 L 1400 1450" stroke="#D9A574" stroke-width="3" opacity="0.8"/>
-      <!-- an espresso on its saucer, and its steam -->
-      <g transform="translate(1120 1500)"><ellipse cx="0" cy="10" rx="70" ry="13" fill="#000" opacity="0.18"/><ellipse cx="0" cy="4" rx="64" ry="12" fill="#F6F3EE" stroke="#D8D2C8" stroke-width="2"/>
+      <!-- an espresso on its saucer in front of the laptop (whole in the frame: at the edge it read as a
+           white blob), and its steam -->
+      <g transform="translate(1000 1530)"><ellipse cx="0" cy="10" rx="70" ry="13" fill="#000" opacity="0.18"/><ellipse cx="0" cy="4" rx="64" ry="12" fill="#F6F3EE" stroke="#D8D2C8" stroke-width="2"/>
         <path d="M -34 -46 L 34 -46 L 28 0 C 20 8, -20 8, -28 0 Z" fill="#FBF9F5" stroke="#D8D2C8" stroke-width="2"/><ellipse cx="0" cy="-46" rx="34" ry="7" fill="#3B2416"/>
         <path d="M 32 -36 C 54 -36, 54 -12, 30 -12" fill="none" stroke="#FBF9F5" stroke-width="8"/>${crown(0, -22, 0.08)}</g>
-      ${steam(1120, 1440, t, id)}
+      ${steam(1000, 1470, t, id)}
       ${onTable ? nearArm : ''}
       <!-- the table's front, in cream leather -->
       <path d="M -300 1600 L 1400 1600 L 1400 2400 L -300 2400 Z" fill="#E3D6C3"/><path d="M -300 1600 L 1400 1600" stroke="#B49A78" stroke-width="5"/>

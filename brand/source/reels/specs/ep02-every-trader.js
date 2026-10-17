@@ -60,6 +60,7 @@ const shot = (set, from, to, cam, more = {}) => ({ kind: 'toon', set, from, to, 
 
 const SPEC = {
   title: 'EP02 · Every Trader Has Done This',
+  outfit: 'balenciaga-hoodie',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 26.6,
   cover: 0.9,

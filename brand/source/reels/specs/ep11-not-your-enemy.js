@@ -44,6 +44,7 @@ const FACE = { dof: { bg: 7 } };
 
 const SPEC = {
   title: 'EP11 · The Market Is Not Your Enemy',
+  outfit: 'gucci-knit',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 21.3,
   cover: 0.9,

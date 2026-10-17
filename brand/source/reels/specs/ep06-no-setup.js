@@ -37,6 +37,7 @@ const ASK = (text, a, b, x, y, tail = 'b') => ({ kind: 'bubble', tag: 'PRESS', t
 
 const SPEC = {
   title: 'EP06 · Why We Don’t Post Every Trade',
+  outfit: 'prada-zip',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 19.3,
   cover: 0.9,

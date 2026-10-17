@@ -54,6 +54,7 @@ const SAY = (text, a, b, x, y, tail = 'br') => ({ kind: 'bubble', who: 'revenge'
 
 const SPEC = {
   title: 'EP18 · Revenge Trading',
+  outfit: 'givenchy-crew',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 20.3,
   cover: 0.9,

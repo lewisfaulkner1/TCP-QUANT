@@ -237,8 +237,8 @@
       <g transform="${place}">${F.founderSVG(p, id + 'f', 'body')}</g>
       ${onTable ? '' : nearArm}
       <path d="M -300 1448 L 1400 1448 L 1400 1500 L -300 1500 Z" fill="#15171B"/><path d="M -300 1450 L 1400 1450" stroke="#3A3E46" stroke-width="3"/>
-      ${[600, 690, 780, 870].map(mic).join('')}
-      <g transform="translate(980 1452)"><path d="M -18 0 L -22 -74 L 22 -74 L 18 0 Z" fill="#CFE6F2" opacity="0.55" stroke="#9FB7C4" stroke-width="2"/><rect x="-20" y="-40" width="40" height="38" fill="#9DD3EE" opacity="0.35"/></g>
+      ${[640, 725, 810, 895].map(mic).join('')}
+      <g transform="translate(992 1452)"><path d="M -18 0 L -22 -74 L 22 -74 L 18 0 Z" fill="#CFE6F2" opacity="0.55" stroke="#9FB7C4" stroke-width="2"/><rect x="-20" y="-40" width="40" height="38" fill="#9DD3EE" opacity="0.35"/></g>
       ${castOf(s, t, id)}
       ${onTable ? nearArm : ''}
       <path d="M -300 1500 L 1400 1500 L 1400 2400 L -300 2400 Z" fill="#1A1C22"/><path d="M -300 1500 L 1400 1500" stroke="#3C414C" stroke-width="5"/>
@@ -715,19 +715,22 @@
     const tower = (x) => `<g transform="translate(${x} 0)"><path d="M -8 900 L -4 220 L 4 220 L 8 900 Z" fill="#2A3048"/><rect x="-80" y="150" width="160" height="80" rx="6" fill="#2A3048"/>
       ${[0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => `<circle cx="${-56 + c * 37}" cy="${170 + r * 22}" r="9" fill="#FFF6DA"/>`).join('')).join('')}
       <circle cx="0" cy="190" r="260" fill="url(#${id}fl)"/></g>`;
+    // the scoreboard: narrow enough to sit whole in every shot of the race, from the start line to
+    // the finish, so no name is ever cut by the edge of the picture
+    const row = (y, col, text) => `<text x="22" y="${y}" font-family="TCP Display" font-weight="800" font-size="34" fill="${col}">${text}</text>`;
     const board = mode === 'result'
-      ? `<text x="230" y="96" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="26" letter-spacing="6" fill="#9FB3D8">RESULT</text>
-        <text x="40" y="168" font-family="TCP Display" font-weight="800" font-size="50" fill="#F6E3A3">1  PATIENCE</text><text x="40" y="232" font-family="TCP Display" font-weight="800" font-size="50" fill="#6E7894">2  —</text>`
-      : `<text x="230" y="96" text-anchor="middle" font-family="JB Mono" font-weight="600" font-size="26" letter-spacing="6" fill="#9FB3D8">FINAL · 100 PIPS</text>
-        <text x="40" y="168" font-family="TCP Display" font-weight="800" font-size="50" fill="#E9E4D8">1  FOMO</text><text x="40" y="232" font-family="TCP Display" font-weight="800" font-size="50" fill="#E9E4D8">2  PATIENCE</text>`;
+      ? `<text x="22" y="46" font-family="JB Mono" font-weight="600" font-size="18" letter-spacing="2" fill="#9FB3D8">RESULT</text>
+        ${row(122, '#F6E3A3', '1  PATIENCE')}${row(184, '#6E7894', '2  —')}`
+      : `<text x="22" y="46" font-family="JB Mono" font-weight="600" font-size="18" letter-spacing="2" fill="#9FB3D8">FINAL · 100 PIPS</text>
+        ${row(122, '#E9E4D8', '1  FOMO')}${row(184, '#E9E4D8', '2  PATIENCE')}`;
     const bg = `<defs><linearGradient id="${id}sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060A1A"/><stop offset="1" stop-color="#1A2547"/></linearGradient>
         <radialGradient id="${id}fl"><stop offset="0" stop-color="#FFF4D0" stop-opacity="0.5"/><stop offset="1" stop-color="#FFF4D0" stop-opacity="0"/></radialGradient></defs>
       <rect x="-700" y="-600" width="3600" height="3120" fill="url(#${id}sky)"/>
       ${tower(-120)}${tower(1240)}${tower(2500)}
       <rect x="-700" y="600" width="3600" height="580" fill="#0E1426"/>${crowd.join('')}
       <rect x="-700" y="1150" width="3600" height="40" fill="#0B0F1C"/>
-      <g transform="translate(760 470)"><rect x="-16" y="-16" width="492" height="292" rx="10" fill="#05070C"/><rect width="460" height="260" fill="#0B1020"/>${board}
-        ${crown(400, 50, 0.16)}</g>`;
+      <g transform="translate(718 470)"><rect x="-16" y="-16" width="330" height="252" rx="10" fill="#05070C"/><rect width="298" height="220" fill="#0B1020"/>${board}
+        ${crown(268, 36, 0.11)}</g>`;
     // the boards along the track
     const boards = `<defs><linearGradient id="${id}bgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient></defs>
       <rect x="-700" y="1226" width="4800" height="112" fill="#0A0D16"/>${Array.from({ length: 13 }, (_, i) => boardAd(-600 + i * 360, i, id)).join('')}`;
@@ -979,9 +982,10 @@
       ${[[640, '#22C55E'], [700, '#E8A317'], [760, '#C8281E']].map(([x, c]) => `<circle cx="${x}" cy="1440" r="16" fill="${c}" stroke="#1A120C" stroke-width="3"/>`).join('')}
       ${onTable ? nearArm : ''}
       <path d="M -300 1530 L 1400 1530 L 1400 2400 L -300 2400 Z" fill="#221E28"/>
-      <g transform="translate(600 548)"><path d="M -34 -60 L -34 -260 M 34 -60 L 34 -260" stroke="#5A5266" stroke-width="4"/><rect x="-46" y="-62" width="92" height="104" rx="6" fill="#F2C230" stroke="#1A120C" stroke-width="4"/>
-        <text x="0" y="-32" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="15" fill="#1A120C">RIDE AT</text><text x="0" y="-12" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="15" fill="#1A120C">YOUR OWN</text>
-        <text x="0" y="12" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="19" fill="#C8281E">RISK</text><path d="M -30 26 L 30 26" stroke="#1A120C" stroke-width="3"/></g>`;
+      <g transform="translate(560 548)"><path d="M -44 -62 L -44 -262 M 44 -62 L 44 -262" stroke="#5A5266" stroke-width="4"/><rect x="-64" y="-64" width="128" height="110" rx="7" fill="#F2C230" stroke="#1A120C" stroke-width="4"/>
+        <rect x="-56" y="-56" width="112" height="94" rx="4" fill="none" stroke="#1A120C" stroke-width="1.5" opacity="0.5"/>
+        <text x="0" y="-32" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="14" fill="#1A120C">RIDE AT</text><text x="0" y="-13" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="14" fill="#1A120C">YOUR OWN</text>
+        <text x="0" y="14" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="21" fill="#C8281E">RISK</text><path d="M -32 26 L 32 26" stroke="#1A120C" stroke-width="3"/></g>`;
     return [{ f: 0.4, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 

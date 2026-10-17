@@ -58,6 +58,7 @@ const SAY = (text, a, b, more = {}) => ({ kind: 'bubble', who: 'fear', text, fro
 
 const SPEC = {
   title: 'EP21 · Fear Closes Winners Early',
+  outfit: 'amiri-hoodie',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 22.2,
   cover: 0.9,

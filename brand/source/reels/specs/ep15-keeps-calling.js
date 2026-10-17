@@ -35,6 +35,7 @@ const CALL = (num, who, sub, a, b) => ({ kind: 'caption', style: 'note', num, te
 
 const SPEC = {
   title: 'EP15 · The Market Keeps Calling Me',
+  outfit: 'stone-island-puffer',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 20.3,
   cover: 0.9,

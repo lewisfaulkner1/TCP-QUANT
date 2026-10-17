@@ -41,6 +41,7 @@ const FACE = { dof: { bg: 7 } };
 
 const SPEC = {
   title: 'EP12 · One Trade Is Not a Personality Test',
+  outfit: 'fendi-hoodie',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 21.3,
   cover: 0.9,

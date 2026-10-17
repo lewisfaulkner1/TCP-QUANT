@@ -30,6 +30,7 @@ const FACE = (a, b) => shot('cabin', a, b, [{ t: a, s: 2.05, x: 400, y: 900 }, {
 
 const SPEC = {
   title: 'EP01 · Trading From 40,000 Feet',
+  outfit: 'lv-knit',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 22.9,
   cover: 0.9,

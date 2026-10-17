@@ -54,6 +54,7 @@ const SAY = (who, text, a, b, x, y, tail = 'b', more = {}) => ({ kind: 'bubble',
 
 const SPEC = {
   title: 'EP23 · The Race',
+  outfit: 'palm-zip',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 21.8,
   cover: 0.9,

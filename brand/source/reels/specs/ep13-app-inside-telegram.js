@@ -19,6 +19,7 @@ const shot = (set, from, to, cam, more = {}) => ({ kind: 'toon', set, from, to, 
 
 const SPEC = {
   title: 'EP13 · The App Inside Telegram',
+  outfit: 'casablanca-crew',
   modules: ['toon/founder.js', 'toon/toon.js'],
   duration: 24.3,
   cover: 0.9,

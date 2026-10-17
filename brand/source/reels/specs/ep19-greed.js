@@ -49,11 +49,13 @@ const WIDE = (a, b) => shot(a, b, [{ t: a, s: 1.0, x: 540, y: 1000 }, { t: b, s:
 const STAGE = (a, b) => shot(a, b, [{ t: a, s: 1.35, x: 700, y: 860 }, { t: b, s: 1.42, x: 704, y: 860, ease: 'linear' }], { dof: { bg: 3 } });
 const PODIUM = (a, b) => shot(a, b, [{ t: a, s: 1.3, x: 700, y: 1250 }, { t: b, s: 1.36, x: 704, y: 1252, ease: 'linear' }], { dof: { bg: 4 } });
 const FACE = (a, b) => shot(a, b, [{ t: a, s: 2.05, x: 400, y: 900 }, { t: b, s: 2.2, x: 400, y: 894, ease: 'linear' }], { dof: { bg: 7 } });
-const SCREEN = (a, b) => shot(a, b, [{ t: a, s: 2.0, x: 836, y: 800 }, { t: b, s: 2.08, x: 836, y: 802, ease: 'linear' }]);
+// (the screen fills the frame: nothing of him or GREED shows at its edges)
+const SCREEN = (a, b) => shot(a, b, [{ t: a, s: 2.15, x: 836, y: 796 }, { t: b, s: 2.22, x: 836, y: 798, ease: 'linear' }], { cast: {} });
 const SAY = (text, a, b, x, y, tail = 'br') => ({ kind: 'bubble', who: 'greed', text, from: a, to: b, x, y, tail, fo: 0.01 });
 
 const SPEC = {
   title: 'EP19 · Greed at the Take Profit',
+  outfit: 'versace-crew',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 18.8,
   cover: 0.9,

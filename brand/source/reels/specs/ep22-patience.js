@@ -68,6 +68,7 @@ const SAY = (who, text, a, b, x, y, tail = 'b', more = {}) => ({ kind: 'bubble',
 
 const SPEC = {
   title: 'EP22 · The Rarest Trader in the Wild',
+  outfit: 'moncler-puffer',
   modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js'],
   duration: 23.4,
   cover: 0.9,

@@ -70,9 +70,16 @@ def pan2(x, pan=0.0):
     return np.vstack([x * np.cos(a), x * np.sin(a)])
 
 
+hum = np.random.default_rng(args.seed + 991)
+
+
 def put(buf, start, x, gain=1.0, pan=0.0, rv=0.0):
     if x.ndim == 1:
         x = pan2(x, pan)
+    if buf is music:
+        # played, not programmed: each note a few milliseconds off the grid and a touch louder or softer
+        start += hum.normal(0, 0.0025)
+        gain *= 1 + hum.normal(0, 0.05)
     i = int(round(start * SR))
     if i >= N or i + x.shape[1] <= 0:
         return
@@ -122,7 +129,10 @@ def kick(gain=1.0):
     ph = 2 * np.pi * np.cumsum(f) / SR
     x = np.sin(ph) * np.exp(-t * 7.5)
     x += 0.35 * np.exp(-t * 90) * rng.standard_normal(n) * 0.3
-    return x * gain
+    # a sub under it and a click on top, so it lands on a phone's speaker and in earphones alike
+    x += 0.32 * np.sin(2 * np.pi * 47 * t) * np.minimum(1, t / 0.004) * np.exp(-t * 5)
+    x += 0.22 * bandpass(rng.standard_normal(n), 2500, 6000) * np.exp(-t * 260)
+    return np.tanh(x * 1.3) / np.tanh(1.3) * gain
 
 
 def hat(gain=1.0, open_=False):
@@ -1069,19 +1079,155 @@ def sfx_slide():
     f = 1700 * 2 ** (-t / t[-1] * 2.2) * (1 + 0.02 * np.sin(2 * np.pi * 7 * t))
     return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.minimum(1, t / 0.03) * np.clip((t[-1] - t) / 0.15, 0, 1) * 0.35
 
+def sfx_swish():
+    # a soft swish for a cut: air sweeping up through a band, quick in, gone
+    n = int(0.3 * SR)
+    t = tt(n)
+    x = rng.standard_normal(n)
+    lo = bandpass(x, 900, 2600)
+    hi = bandpass(x, 2600, 7000)
+    k = t / t[-1]
+    return (lo * (1 - k) + hi * k) * np.sin(np.pi * k) ** 3 * 0.5
+
+
+# each style's key, for the end card's sting: its root (as a note near D3) and whether it is minor
+KEYS = {'pulse': (50, True), 'drive': (50, True), 'calm': (50, True), 'lofi': (53, False), 'lounge': (46, False),
+        'trap': (49, True), 'noir': (50, True), 'bounce': (53, False), 'news': (48, True), 'fight': (52, True),
+        'gameshow': (46, False), 'horror': (52, True), 'nature': (50, False), 'sport': (50, False),
+        'classical': (55, False), 'fair': (48, False)}
+
+
+def sfx_sting():
+    # TCP's sting for the end card: a shimmer rising into a warm add-nine chord in the track's own key,
+    # bells on top and a low boom under it
+    root, minor = KEYS.get(args.style, (50, False))
+    third = 3 if minor else 4
+    n = int(2.4 * SR)
+    t = tt(n)
+    out = np.zeros(n)
+    rise = int(0.32 * SR)
+    sh = highpass(rng.standard_normal(rise), 4000) * (tt(rise) / tt(rise)[-1]) ** 2 * 0.12
+    out[:rise] += sh
+    i = rise
+    m = n - i
+    tm = tt(m)
+    chord = np.zeros(m)
+    for k, step in enumerate((0, 7, 12, 12 + third, 19, 26)):
+        f = midi(root + step) * (1 + rng.uniform(-0.001, 0.001))
+        chord += (np.sin(2 * np.pi * f * tm) + 0.3 * np.sin(4 * np.pi * f * tm) * np.exp(-tm * 3)) * (0.9 if k < 2 else 0.6)
+    chord = lowpass(chord, 3600) * np.minimum(1, tm / 0.012) * np.exp(-tm * 1.5) * 0.12
+    bells = sum((np.sin(2 * np.pi * midi(root + st) * tm) + 0.4 * np.sin(2 * np.pi * midi(root + st) * 2.76 * tm) * np.exp(-tm * 6)) * np.exp(-tm * 2.6) for st in (31, 36, 36 + third)) * 0.045
+    boom = np.sin(2 * np.pi * np.cumsum(midi(root - 24) + 40 * np.exp(-tm * 14)) / SR) * np.exp(-tm * 3.2) * 0.55
+    out[i:] += chord + bells + boom
+    return out
+
+
+def sfx_rev():
+    # a supercar's engine: a blip of the throttle from idle, the note climbing and falling, a crackle
+    # from the exhaust as it drops back
+    n = int(2.0 * SR)
+    t = tt(n)
+    rpm = 0.25 + 0.75 * np.exp(-((t - 0.55) / 0.32) ** 2) + 0.5 * np.exp(-((t - 1.05) / 0.18) ** 2)
+    f = 38 + 150 * rpm
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    tone = sum(np.sin(k * ph + rng.random() * 6.28) / k ** 0.8 for k in range(1, 12))
+    tone *= 1 + 0.35 * np.sin(ph * 0.5)
+    x = np.zeros(n)
+    for j in range(0, n, 2048):
+        seg = slice(j, min(n, j + 2048))
+        x[seg] = lowpass(tone[max(0, j - 2048):seg.stop], 300 + 2600 * float(rpm[j]), 2)[-(seg.stop - j):]
+    x = np.tanh(x * 1.6) * np.minimum(1, t / 0.05) * np.clip((t[-1] - t) / 0.3, 0, 1) * 0.5
+    pops = np.zeros(n)
+    for k in range(7):
+        c = int((1.3 + rng.uniform(0, 0.55)) * SR)
+        m = int(0.03 * SR)
+        if c + m < n:
+            pops[c:c + m] += bandpass(rng.standard_normal(m), 200, 2400) * np.exp(-tt(m) * 120) * rng.uniform(0.3, 0.7)
+    return x + pops
+
+
+def sfx_jet():
+    # a jet's engines spooling up: a turbine's whine climbing over a deepening roar
+    n = int(3.2 * SR)
+    t = tt(n)
+    k = (t / t[-1]) ** 1.4
+    f = 380 + 2000 * k
+    whine = (np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.3 * np.sin(2 * np.pi * np.cumsum(f * 1.5) / SR)) * 0.05 * k
+    roar = lowpass(rng.standard_normal(n), 900) * (0.15 + 0.6 * k) * 0.6
+    return (whine + roar) * np.minimum(1, t / 0.4) * np.clip((t[-1] - t) / 0.5, 0, 1)
+
+
+def sfx_door():
+    # a heavy car door shutting: a deep thud and the latch
+    n = int(0.45 * SR)
+    t = tt(n)
+    thud = np.sin(2 * np.pi * np.cumsum(55 + 50 * np.exp(-t * 30)) / SR) * np.exp(-t * 14)
+    body = lowpass(rng.standard_normal(n), 600) * np.exp(-t * 30) * 0.5
+    latch = np.zeros(n)
+    i = int(0.02 * SR)
+    latch[i:] = highpass(rng.standard_normal(n - i), 3000) * np.exp(-tt(n - i) * 300) * 0.4
+    return (thud + body + latch) * 0.8
+
+
+def sfx_lock():
+    # a car's lock: two chirps and the indicators' click
+    n = int(0.42 * SR)
+    out = np.zeros(n)
+    for start in (0.0, 0.16):
+        i = int(start * SR)
+        m = int(0.07 * SR)
+        tm = tt(m)
+        out[i:i + m] += signal.square(2 * np.pi * 2650 * tm) * np.minimum(1, tm / 0.004) * np.clip((tm[-1] - tm) / 0.01, 0, 1) * 0.18
+    return lowpass(out, 6000)
+
+
+def sfx_tyres():
+    # tyres biting: a short squeal
+    n = int(0.9 * SR)
+    t = tt(n)
+    f = 2100 + 300 * np.sin(2 * np.pi * 7 * t)
+    tone = np.sin(2 * np.pi * np.cumsum(f) / SR) * 0.25 + bandpass(rng.standard_normal(n), 1600, 3600) * 0.35
+    return tone * np.sin(np.pi * t / t[-1]) ** 0.7 * 0.5
+
+
+def sfx_belt():
+    # a seatbelt clicking home
+    n = int(0.2 * SR)
+    out = np.zeros(n)
+    for start, g in ((0.0, 0.6), (0.045, 1.0)):
+        i = int(start * SR)
+        m = n - i
+        out[i:] += (highpass(rng.standard_normal(m), 2000) * np.exp(-tt(m) * 500) + np.sin(2 * np.pi * 3100 * tt(m)) * np.exp(-tt(m) * 400) * 0.5) * g
+    return out * 0.6
+
+
+def sfx_indicator():
+    # a car's indicator: tick, tock, tick, tock
+    n = int(1.6 * SR)
+    out = np.zeros(n)
+    for k in range(4):
+        i = int(k * 0.4 * SR)
+        m = int(0.03 * SR)
+        f = 1800 if k % 2 == 0 else 1300
+        out[i:i + m] += (np.sin(2 * np.pi * f * tt(m)) * 0.5 + highpass(rng.standard_normal(m), 2500) * 0.4) * np.exp(-tt(m) * 260)
+    return out * 0.6
+
 SFX = {'tick': sfx_tick, 'pop': sfx_pop, 'slam': sfx_slam, 'whoosh': sfx_whoosh, 'rise': sfx_rise, 'click': sfx_click,
        'chime': sfx_chime, 'ding': sfx_ding, 'gps': sfx_gps, 'blip': sfx_blip, 'level': sfx_level, 'error': sfx_error,
        'buzzer': sfx_buzzer, 'boing': sfx_boing, 'wah': sfx_wah, 'flash': sfx_flash, 'ring': sfx_ring, 'punch': sfx_punch,
        'drumroll': sfx_drumroll, 'applause': sfx_applause, 'stinger': sfx_stinger, 'heartbeat': sfx_heartbeat, 'creak': sfx_creak,
-       'splash': sfx_splash, 'plop': sfx_plop, 'reel': sfx_reel, 'bird': sfx_bird, 'gun': sfx_gun, 'cheer': sfx_cheer, 'alarm': sfx_alarm, 'slide': sfx_slide}
+       'splash': sfx_splash, 'plop': sfx_plop, 'reel': sfx_reel, 'bird': sfx_bird, 'gun': sfx_gun, 'cheer': sfx_cheer, 'alarm': sfx_alarm, 'slide': sfx_slide,
+       'swish': sfx_swish, 'sting': sfx_sting, 'rev': sfx_rev, 'jet': sfx_jet, 'door': sfx_door, 'lock': sfx_lock, 'tyres': sfx_tyres, 'belt': sfx_belt, 'indicator': sfx_indicator}
 GAIN = {'tick': 0.35, 'pop': 0.45, 'slam': 0.8, 'whoosh': 0.5, 'rise': 0.55, 'click': 0.6,
         'chime': 1.0, 'ding': 0.55, 'gps': 0.8, 'blip': 0.5, 'level': 0.6, 'error': 0.55,
         'buzzer': 0.35, 'boing': 0.45, 'wah': 0.6, 'flash': 0.6, 'ring': 0.6, 'punch': 0.7, 'drumroll': 0.6, 'applause': 0.7,
-        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5, 'splash': 0.7, 'plop': 0.6, 'reel': 0.45, 'bird': 0.35, 'gun': 0.8, 'cheer': 0.7, 'alarm': 0.4, 'slide': 0.6}
+        'stinger': 0.8, 'heartbeat': 0.7, 'creak': 0.5, 'splash': 0.7, 'plop': 0.6, 'reel': 0.45, 'bird': 0.35, 'gun': 0.8, 'cheer': 0.7, 'alarm': 0.4, 'slide': 0.6,
+        'swish': 0.22, 'sting': 0.75, 'rev': 0.7, 'jet': 0.6, 'door': 0.7, 'lock': 0.5, 'tyres': 0.5, 'belt': 0.6, 'indicator': 0.45}
 cues = json.load(open(args.cues)) if args.cues else []
 for c in cues:
     if c['sfx'] in SFX and 0 <= c['t'] < args.dur:
-        put(sfx, c['t'], SFX[c['sfx']]() * GAIN[c['sfx']], pan=rng.uniform(-0.2, 0.2), rv=0.25 if c['sfx'] in ('slam', 'whoosh') else 0.1)
+        put(sfx, c['t'], SFX[c['sfx']]() * GAIN[c['sfx']], pan=rng.uniform(-0.2, 0.2), rv=0.25 if c['sfx'] in ('slam', 'whoosh', 'sting') else 0.1)
+hits = sfx.copy()
 
 if args.amb == 'savanna':
     # a savanna: a warm breeze, insects in the grass, and birds calling now and then
@@ -1116,10 +1262,77 @@ if args.amb == 'cabin':
     sfx[1] += np.roll(amb, 911)
 
 # ----------------------------------------------------------------------- reverb
-ir_n = int(1.8 * SR)
-ir = rng.standard_normal((2, ir_n)) * np.exp(-tt(ir_n) * 3.2)
-ir = np.vstack([lowpass(ir[0], 5000), lowpass(ir[1], 5000)])
-wet = np.vstack([signal.fftconvolve(send[0], ir[0])[:N], signal.fftconvolve(send[1], ir[1])[:N]]) * 0.06
+# a room: a short gap, early reflections off its walls (different on each side), then a tail whose
+# highs die away faster than its lows
+ir_n = int(2.4 * SR)
+tr = tt(ir_n)
+ir = np.zeros((2, ir_n))
+pre = int(0.016 * SR)
+for ch in range(2):
+    for d, g in zip(np.sort(rng.uniform(0.004, 0.07, 7)), (0.5, 0.42, 0.36, 0.3, 0.25, 0.2, 0.16)):
+        ir[ch, pre + int(d * SR)] += g * rng.choice((-1, 1))
+    tail = rng.standard_normal(ir_n)
+    body = lowpass(tail, 1800) * np.exp(-tr * 6.9 / 2.3) + highpass(tail, 1800) * np.exp(-tr * 6.9 / 1.0) * 0.7
+    ir[ch, pre:] += (body * np.minimum(1, np.clip(tr - 0.02, 0, None) / 0.05) * 0.35)[:ir_n - pre]
+ir = np.vstack([lowpass(ir[0], 9000), lowpass(ir[1], 9000)])
+ir /= np.maximum(1e-9, np.sqrt((ir ** 2).sum(axis=1, keepdims=True)))
+# (as wet as the old room was: its tail's energy came to about 2.4 times the send)
+wet = np.vstack([signal.fftconvolve(send[0], ir[0])[:N], signal.fftconvolve(send[1], ir[1])[:N]]) * 2.5
+
+
+# ---------------------------------------------------------------------- the master
+# the music bus finished like a record: glued by a slow compressor, its lows tight and in the middle,
+# its sides opened out, a little warmth, presence and air; at the end it closes down through a filter
+# as it fades, rather than just getting quieter
+def biquad(x, kind, f0, db=0.0, q=0.707):
+    A, w0 = 10 ** (db / 40), 2 * np.pi * f0 / SR
+    cw, sw = np.cos(w0), np.sin(w0)
+    al = sw / (2 * q)
+    if kind == 'peak':
+        b, a = [1 + al * A, -2 * cw, 1 - al * A], [1 + al / A, -2 * cw, 1 - al / A]
+    else:
+        sq = 2 * np.sqrt(A) * al
+        if kind == 'low':
+            b = [A * ((A + 1) - (A - 1) * cw + sq), 2 * A * ((A - 1) - (A + 1) * cw), A * ((A + 1) - (A - 1) * cw - sq)]
+            a = [(A + 1) + (A - 1) * cw + sq, -2 * ((A - 1) + (A + 1) * cw), (A + 1) + (A - 1) * cw - sq]
+        else:
+            b = [A * ((A + 1) + (A - 1) * cw + sq), -2 * A * ((A - 1) + (A + 1) * cw), A * ((A + 1) + (A - 1) * cw - sq)]
+            a = [(A + 1) - (A - 1) * cw + sq, 2 * ((A - 1) - (A + 1) * cw), (A + 1) - (A - 1) * cw - sq]
+    return signal.lfilter(np.array(b) / a[0], np.array(a) / a[0], x)
+
+
+def glue(x, ratio=2.0, over=1.5):
+    lvl = np.sqrt(np.mean(x ** 2))
+    if lvl < 1e-7:
+        return x
+    w = int(0.02 * SR)
+    e = np.sqrt(np.convolve((x ** 2).mean(axis=0), np.ones(w) / w, mode='same'))
+    g = np.where(e > lvl * over, (np.maximum(e, 1e-9) / (lvl * over)) ** (1 / ratio - 1), 1.0)
+    b, a = signal.butter(1, 6 / (SR / 2))
+    y = x * signal.filtfilt(b, a, g)
+    return y * lvl / max(1e-9, np.sqrt(np.mean(y ** 2)))
+
+
+bus = glue(music + wet)
+mid, side = (bus[0] + bus[1]) / 2, highpass((bus[0] - bus[1]) / 2, 160) * 1.3
+bus = np.vstack([mid + side, mid - side])
+for kind, f0, db, q in (('low', 90, 2.0, 0.707), ('peak', 320, -1.5, 1.0), ('peak', 3000, 1.2, 0.9), ('high', 11000, 1.0, 0.707)):
+    bus = np.vstack([biquad(bus[0], kind, f0, db, q), biquad(bus[1], kind, f0, db, q)])
+L = int(min(args.dur, args.fadeout + 0.9) * SR)
+if L > 512:
+    seg, blk = bus[:, -L:].copy(), 256
+    for ch in range(2):
+        z1 = z2 = None
+        for j in range(0, L, blk):
+            fc = 16000 * (500 / 16000) ** ((j / L) ** 1.4)
+            a = np.exp(-2 * np.pi * fc / SR)
+            x = seg[ch, j:j + blk]
+            if z1 is None:
+                z1 = z2 = np.array([a * x[0]])
+            y, z1 = signal.lfilter([1 - a], [1, -a], x, zi=z1)
+            y, z2 = signal.lfilter([1 - a], [1, -a], y, zi=z2)
+            seg[ch, j:j + blk] = y
+    bus[:, -L:] = seg
 
 # fade the music out at the end, and drop it out where the cues say (effects keep their tails)
 fade = np.ones(N)
@@ -1134,7 +1347,19 @@ for c in cues:
         gate[a:b] = 0
         gate[b:min(N, b + edge)] = np.linspace(0, 1, min(N, b + edge) - b)
         fade *= gate
-bed = (music + wet) * fade + sfx
+# the music steps back (up to 3 dB) under a loud effect so it lands, and at the end card's sting it
+# drops away, leaving the sting on its own
+w = int(0.03 * SR)
+fxe = np.sqrt(np.convolve((hits ** 2).mean(axis=0), np.ones(w) / w, mode='same'))
+ref = np.sqrt(np.mean(bus ** 2)) or 1e-9
+b, a = signal.butter(1, 7 / (SR / 2))
+bus *= 1 - 0.3 * np.clip(signal.filtfilt(b, a, np.clip(fxe / (2 * ref), 0, 1)), 0, 1)
+for c in cues:
+    if c['sfx'] == 'sting' and 0 <= c['t'] < args.dur:
+        i = int(c['t'] * SR)
+        k = np.clip(tt(N - i) / 0.35, 0, 1)
+        fade[i:] *= 1 - 0.7 * k * k * (3 - 2 * k)
+bed = bus * fade + sfx
 
 mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55, 'noir': 0.5, 'bounce': 0.5,
              'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5, 'sport': 0.5, 'classical': 0.5, 'fair': 0.5}.get(style, 0.35)

@@ -41,12 +41,95 @@
     cap: '#1E1E21', capHi: '#36363C', capDark: '#0E0E10', stitch: '#4C4C55', eyelet: '#2C2C31',
     gold: '#D8AD4E', goldHi: '#F8E3A6', goldLo: '#9E7428',
     top: '#211F1E', topHi: '#3A3734', topDark: '#100F0E', stitchTop: '#3C3936',
+    slTop: '#211F1E', slHi: '#3A3734', slDark: '#100F0E', cuff: '#1A1918', ribHi: '#3A3734',
     pearl: '#EFEBE3', pearlShade: '#ADA597', lens: '#0B0B0E', print: '#E6DECD',
   };
   const n = (v) => Math.round(v * 100) / 100;
   const lerp = (a, b, k) => a + (b - a) * k;
   const xy = (p) => `${n(p[0])} ${n(p[1])}`;
   const RAD = Math.PI / 180;
+
+  // ------------------------------------------------------------ the wardrobe
+  // His clothes and chains change from episode to episode (Lewis asked for it on 16 October 2026);
+  // his face, hair and cap never do. An outfit names the garment, its colours, the brand printed on
+  // it in plain letters (never a logo's artwork), and the chains round his neck. A spec picks one
+  // with SPEC.outfit; a pose can carry its own (outfit: 'name'), so a sheet can show them all.
+  //   kind     crew (the crewneck), hoodie (the hood down behind his neck and its cords), zip (a
+  //            track top: a zip down the front, two stripes down each sleeve), varsity (contrast
+  //            sleeves, striped rib collar and cuffs, press studs), puffer (quilted and glossy), knit
+  //            (a fine rib)
+  //   top      its colour (hi and dark, its light and its shade, follow from it unless given)
+  //   sleeve   the sleeves' colour, when they differ (varsity)
+  //   stripe   the stripes: down the sleeves (zip), round the collar and cuffs (varsity)
+  //   print    the lettering's colour; mark { text, font: serif | sans | serifb, size: big | small }
+  //   chains   [{ kind: tennis | cuban | rope | pearl, metal: white | yellow | rose, len: short | mid
+  //            | long, iced (a Cuban set with stones), pendant: 'crown', iced or not }]
+  const OUTFITS = {
+    amiri: { kind: 'crew', top: '#211F1E', hi: '#3A3734', dark: '#100F0E', print: '#E6DECD', mark: { text: 'AMIRI', font: 'serif', size: 'big' }, chains: [{ kind: 'pearl', len: 'long' }] },
+    'lv-knit': { kind: 'knit', top: '#E6DCC8', print: '#5C4330', mark: { text: 'LOUIS VUITTON', font: 'sans', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid', pendant: 'crown', iced: true }] },
+    'balenciaga-hoodie': { kind: 'hoodie', top: '#1C1C1F', print: '#F2F2EF', mark: { text: 'BALENCIAGA', font: 'sans', size: 'big' }, chains: [{ kind: 'cuban', metal: 'white', len: 'short', iced: true }] },
+    'palm-zip': { kind: 'zip', top: '#161618', stripe: ['#F1EEE6'], print: '#F1EEE6', mark: { text: 'PALM ANGELS', font: 'serif', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid' }] },
+    'moncler-puffer': { kind: 'puffer', top: '#4D5A3B', print: '#EFEADB', mark: { text: 'MONCLER', font: 'sans', size: 'small' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }] },
+    'rhude-varsity': { kind: 'varsity', top: '#18181B', sleeve: '#EAE2D0', stripe: ['#B3262E', '#EAE2D0'], print: '#EAE2D0', mark: { text: 'RHUDE', font: 'sans', size: 'big' }, chains: [{ kind: 'tennis', metal: 'white', len: 'long', pendant: 'crown', iced: true }] },
+    'dior-crew': { kind: 'crew', top: '#1E2943', print: '#ECE5D4', mark: { text: 'DIOR', font: 'serif', size: 'big' }, chains: [{ kind: 'cuban', metal: 'white', len: 'short', iced: true }, { kind: 'tennis', metal: 'white', len: 'long' }] },
+    'versace-crew': { kind: 'crew', top: '#EFEBE3', print: '#A9802F', mark: { text: 'VERSACE', font: 'serif', size: 'big' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }, { kind: 'rope', metal: 'yellow', len: 'long', pendant: 'crown' }] },
+    'gucci-knit': { kind: 'knit', top: '#2C4735', print: '#E3CC8E', mark: { text: 'GUCCI', font: 'serif', size: 'small' }, chains: [{ kind: 'tennis', metal: 'yellow', len: 'short' }, { kind: 'rope', metal: 'yellow', len: 'long' }] },
+    'prada-zip': { kind: 'zip', top: '#62656B', stripe: ['#141416'], print: '#141416', mark: { text: 'PRADA', font: 'serif', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid', pendant: 'crown', iced: true }] },
+    'fendi-hoodie': { kind: 'hoodie', top: '#7C5C3E', print: '#F3E9D3', mark: { text: 'FENDI', font: 'sans', size: 'big' }, chains: [{ kind: 'tennis', metal: 'rose', len: 'mid' }] },
+    'givenchy-crew': { kind: 'crew', top: '#571925', print: '#F0E7D8', mark: { text: 'GIVENCHY', font: 'sans', size: 'big' }, chains: [{ kind: 'cuban', metal: 'white', len: 'short', iced: true }, { kind: 'tennis', metal: 'white', len: 'long' }] },
+    'offwhite-hoodie': { kind: 'hoodie', top: '#E5E4E0', print: '#151515', mark: { text: 'OFF-WHITE', font: 'sans', size: 'big' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }] },
+    'saint-laurent-crew': { kind: 'crew', top: '#2B2B2F', print: '#F4F1EA', mark: { text: 'SAINT LAURENT', font: 'sans', size: 'big' }, chains: [{ kind: 'tennis', metal: 'white', len: 'long', pendant: 'crown', iced: true }] },
+    'burberry-zip': { kind: 'zip', top: '#C4AB84', stripe: ['#1B1815'], print: '#1B1815', mark: { text: 'BURBERRY', font: 'serif', size: 'small' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }] },
+    'valentino-knit': { kind: 'knit', top: '#9AB2CF', print: '#1D2942', mark: { text: 'VALENTINO', font: 'serif', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'short' }, { kind: 'tennis', metal: 'white', len: 'long', pendant: 'crown', iced: true }] },
+    'essentials-hoodie': { kind: 'hoodie', top: '#8B8D92', print: '#F0F0EC', mark: { text: 'ESSENTIALS', font: 'sans', size: 'big' }, chains: [{ kind: 'cuban', metal: 'white', len: 'mid', iced: true }] },
+    'casablanca-crew': { kind: 'crew', top: '#ECE2CE', print: '#2E5843', mark: { text: 'CASABLANCA', font: 'serif', size: 'big' }, chains: [{ kind: 'rope', metal: 'yellow', len: 'mid', pendant: 'crown' }] },
+    'balmain-varsity': { kind: 'varsity', top: '#1B2339', sleeve: '#EEE6D4', stripe: ['#C9A24A', '#EEE6D4'], print: '#D2AE5A', mark: { text: 'BALMAIN', font: 'serif', size: 'big' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }] },
+    'stone-island-puffer': { kind: 'puffer', top: '#1F2942', print: '#E9E5D9', mark: { text: 'STONE ISLAND', font: 'sans', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid' }] },
+    'corteiz-zip': { kind: 'zip', top: '#131315', stripe: ['#C7302B'], print: '#F2EFE8', mark: { text: 'CORTEIZ', font: 'sans', size: 'small' }, chains: [{ kind: 'cuban', metal: 'white', len: 'short', iced: true }] },
+    'boss-crew': { kind: 'crew', top: '#F1EFEA', print: '#141414', mark: { text: 'BOSS', font: 'sans', size: 'big' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }, { kind: 'tennis', metal: 'yellow', len: 'long' }] },
+    'mcqueen-knit': { kind: 'knit', top: '#1B1B1D', print: '#DAD4C7', mark: { text: 'ALEXANDER MCQUEEN', font: 'serif', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid', pendant: 'crown', iced: true }] },
+    'trapstar-puffer': { kind: 'puffer', top: '#121214', print: '#ECECEC', mark: { text: 'TRAPSTAR', font: 'sans', size: 'small' }, chains: [{ kind: 'cuban', metal: 'white', len: 'short', iced: true }] },
+    'celine-crew': { kind: 'crew', top: '#C9C1B2', print: '#191919', mark: { text: 'CELINE', font: 'sans', size: 'big' }, chains: [{ kind: 'tennis', metal: 'yellow', len: 'mid' }] },
+    'lv-varsity': { kind: 'varsity', top: '#3A291D', sleeve: '#E8DDC5', stripe: ['#C9A24A', '#E8DDC5'], print: '#E8DDC5', mark: { text: 'LOUIS VUITTON', font: 'sans', size: 'big' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }, { kind: 'rope', metal: 'yellow', len: 'long', pendant: 'crown', iced: true }] },
+    'dior-puffer': { kind: 'puffer', top: '#EDEBE6', print: '#1E2943', mark: { text: 'DIOR', font: 'serif', size: 'small' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid', pendant: 'crown', iced: true }] },
+    'versace-zip': { kind: 'zip', top: '#121214', stripe: ['#C9A24A'], print: '#D2AE5A', mark: { text: 'VERSACE', font: 'serif', size: 'small' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }, { kind: 'rope', metal: 'yellow', len: 'long' }] },
+    'amiri-hoodie': { kind: 'hoodie', top: '#ECE4D6', print: '#3A2E26', mark: { text: 'AMIRI', font: 'serif', size: 'big' }, chains: [{ kind: 'tennis', metal: 'white', len: 'mid', pendant: 'crown', iced: true }] },
+    'gucci-varsity': { kind: 'varsity', top: '#1F3A2B', sleeve: '#EFE7D5', stripe: ['#B3262E', '#EFE7D5'], print: '#EFE7D5', mark: { text: 'GUCCI', font: 'serif', size: 'big' }, chains: [{ kind: 'rope', metal: 'yellow', len: 'mid' }, { kind: 'tennis', metal: 'white', len: 'short' }] },
+    'givenchy-hoodie': { kind: 'hoodie', top: '#141416', print: '#ECECEC', mark: { text: 'GIVENCHY', font: 'sans', size: 'big' }, chains: [{ kind: 'tennis', metal: 'white', len: 'long', pendant: 'crown', iced: true }, { kind: 'cuban', metal: 'white', len: 'short', iced: true }] },
+    'fendi-zip': { kind: 'zip', top: '#5B4330', stripe: ['#E2C27A'], print: '#E2C27A', mark: { text: 'FENDI', font: 'sans', size: 'small' }, chains: [{ kind: 'cuban', metal: 'yellow', len: 'short', iced: true }] },
+    'moncler-white-puffer': { kind: 'puffer', top: '#E9E7E2', print: '#1D2738', mark: { text: 'MONCLER', font: 'sans', size: 'small' }, chains: [{ kind: 'cuban', metal: 'white', len: 'short', iced: true }, { kind: 'tennis', metal: 'white', len: 'long' }] },
+    'prada-crew': { kind: 'crew', top: '#101012', print: '#E8E8E6', mark: { text: 'PRADA', font: 'serif', size: 'big' }, chains: [{ kind: 'rope', metal: 'yellow', len: 'mid', pendant: 'crown', iced: true }] },
+  };
+  const METALS = {
+    white: { hi: '#FFFFFF', mid: '#D6DDE5', lo: '#8A94A1', edge: '#5B6470' },
+    yellow: { hi: '#FFF0BE', mid: '#E0B657', lo: '#9C7124', edge: '#6A4A14' },
+    rose: { hi: '#FFE4D8', mid: '#E0A084', lo: '#A3624A', edge: '#784231' },
+  };
+  // how far down his chest each length hangs (the low point and how far out it lies there), and
+  // each kind's links: their radius and their spacing (in radii)
+  const LENS = { short: { LOW: -66, ZLOW: 100 }, mid: { LOW: -98, ZLOW: 110 }, long: { LOW: -124, ZLOW: 116 } };
+  const LINKS = { pearl: { BEAD: 3.1, GAP: 2.15 }, tennis: { BEAD: 2.55, GAP: 2.05 }, cuban: { BEAD: 4.4, GAP: 1.5 }, rope: { BEAD: 3, GAP: 1.25 } };
+  let LOOK = null;
+  function dress(p) {
+    const name = (p && p.outfit) || (typeof window !== 'undefined' && window.SPEC && window.SPEC.outfit) || 'amiri';
+    if (LOOK && LOOK.name === name) return LOOK;
+    const o = OUTFITS[name] || OUTFITS.amiri;
+    const lum = (h) => { const [r, g, b] = hexRGB(h); return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255; };
+    const tone = (c) => {
+      const L = lum(c), light = L > 0.45;
+      return { top: c, hi: mixC(c, '#FFFFFF', light ? 0.42 : L < 0.08 ? 0.12 : 0.2), dark: mixC(c, '#000000', light ? 0.3 : 0.5), light };
+    };
+    const body = { ...tone(o.top), ...(o.hi ? { hi: o.hi } : {}), ...(o.dark ? { dark: o.dark } : {}) };
+    const sl = o.sleeve ? tone(o.sleeve) : body;
+    Object.assign(C, {
+      top: body.top, topHi: body.hi, topDark: body.dark, stitchTop: mixC(body.top, body.light ? '#000000' : '#FFFFFF', 0.14), print: o.print || '#E6DECD',
+      slTop: sl.top, slHi: sl.hi, slDark: sl.dark, cuff: mixC(body.top, body.dark, 0.35), ribHi: body.hi,
+      slStripe: o.kind === 'zip' && o.stripe ? o.stripe[0] : null, ribStripe: o.kind === 'varsity' && o.stripe ? o.stripe : null,
+      quilt: o.kind === 'puffer',
+    });
+    LOOK = { ...o, name, light: body.light };
+    return LOOK;
+  }
 
   const BASE = {
     view: '34', flip: false,
@@ -751,25 +834,30 @@
     : [61 * Math.sin(th), 8 - 22 * Math.cos(th), 62 * Math.cos(th) - 4]);
   // the chain: around the back of his neck on the collar, then off it at his collarbones and down
   // his chest to a low point over his sternum
-  const CHAIN = { R: [70, 69], LIFT: 0, OFF: 0.98, LOW: -118, ZLOW: 115, BEAD: 3.1 };
-  function chainPath() {
+  // the chains: each round the back of his neck on the collar, then off it at his collarbones and
+  // down his chest to a low point over his sternum; a second chain lies a little further out
+  function chainCfg(c, i) {
+    return { R: [70 + i * 2.5, 69 + i * 2.5], LIFT: i * 2, OFF: 0.98, ...(LENS[c.len] || LENS.long), ...(c.pendant ? { LOW: -86, ZLOW: 104 } : {}), ...(LINKS[c.kind] || LINKS.pearl) };
+  }
+  function chainPath(cfg) {
     const pts = [];
     // round the back it lies on the collar band, halfway between its edges
-    const ring = (th) => [CHAIN.R[0] * Math.sin(th), 2 - 22 * Math.cos(th) + CHAIN.LIFT, CHAIN.R[1] * Math.cos(th) - 4];
+    const ring = (th) => [cfg.R[0] * Math.sin(th), 2 - 22 * Math.cos(th) + cfg.LIFT, cfg.R[1] * Math.cos(th) - 4];
     // the back: from where it leaves the collar on his far side, round the back, to his near side
-    for (let i = 0; i <= 60; i++) pts.push(ring(CHAIN.OFF + (i / 60) * (2 * Math.PI - 2 * CHAIN.OFF)));
+    for (let i = 0; i <= 60; i++) pts.push(ring(cfg.OFF + (i / 60) * (2 * Math.PI - 2 * cfg.OFF)));
     // the front: a U hanging from those two points, lying on his chest
-    const A = ring(-CHAIN.OFF);
+    const A = ring(-cfg.OFF);
     for (let i = 1; i < 60; i++) {
       const u = -1 + (2 * i) / 60, k = 1 - Math.pow(Math.abs(u), 1.7);
       const x = A[0] * -u * (1 + 0.22 * (1 - u * u));
-      pts.push([x, A[1] + (CHAIN.LOW - A[1]) * k, A[2] + (CHAIN.ZLOW - A[2]) * Math.pow(k, 0.7)]);
+      pts.push([x, A[1] + (cfg.LOW - A[1]) * k, A[2] + (cfg.ZLOW - A[2]) * Math.pow(k, 0.7)]);
     }
     return pts;
   }
   const bodyCache = {};
   function bodyModel(view) {
-    if (bodyCache[view]) return bodyCache[view];
+    const key = `${view}|${LOOK ? LOOK.name : 'amiri'}`;
+    if (bodyCache[key]) return bodyCache[key];
     const cam = cam3(...BODY_VIEWS[view]);
     const c0 = -cam.yaw * RAD;
     const seen = (th) => cam.rot([Math.sin(th) / 74, 0, Math.cos(th) / 72])[2] > 0;
@@ -782,23 +870,33 @@
     // the back half runs from the front half's end round to its start
     const k = back.findIndex((b, i) => i > 0 && b.th - back[i - 1].th > 0.1);
     const backRun = k > 0 ? [...back.slice(k), ...back.slice(0, k)] : back;
-    // the chain's beads, evenly spaced along it, each with its depth
-    const path = chainPath();
-    const beads = [];
-    let carry = 0;
-    for (let i = 1; i < path.length; i++) {
-      const a = path[i - 1], b = path[i], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
-      let t = carry;
-      while (t < L) {
-        const q = [a[0] + (b[0] - a[0]) * t / L, a[1] + (b[1] - a[1]) * t / L, a[2] + (b[2] - a[2]) * t / L];
-        const s = cam.at(q), zr = cam.rot([q[0], 0, q[2] + 4])[2];
-        beads.push({ p: s, z: s[2], behind: zr < 0, low: q[1] < -22 });
-        t += CHAIN.BEAD * 2.15;
+    // each chain's links, evenly spaced along it, each with its depth and the way the chain runs
+    // there; a pendant hangs from a chain's low point, facing out from his chest
+    const beads = [], pendants = [];
+    ((LOOK && LOOK.chains) || OUTFITS.amiri.chains).forEach((c, ci) => {
+      const cfg = chainCfg(c, ci), path = chainPath(cfg), step = cfg.BEAD * cfg.GAP;
+      let carry = 0, idx = 0, prev = null;
+      for (let i = 1; i < path.length; i++) {
+        const a = path[i - 1], b = path[i], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+        let t = carry;
+        while (t < L) {
+          const q = [a[0] + (b[0] - a[0]) * t / L, a[1] + (b[1] - a[1]) * t / L, a[2] + (b[2] - a[2]) * t / L];
+          const s = cam.at(q), zr = cam.rot([q[0], 0, q[2] + 4])[2];
+          const ang = prev ? Math.atan2(s[1] - prev[1], s[0] - prev[0]) / RAD : Math.atan2(cam.at(b)[1] - s[1], cam.at(b)[0] - s[0]) / RAD;
+          beads.push({ p: s, z: s[2] + ci * 0.5, behind: zr < 0, low: q[1] < -22, kind: c.kind, metal: c.metal || 'white', iced: !!c.iced, r: cfg.BEAD, ang, i: idx++ });
+          prev = s;
+          t += step;
+        }
+        carry = t - L;
       }
-      carry = t - L;
-    }
-    const model = { front, back: backRun, beads };
-    bodyCache[view] = model;
+      if (c.pendant) {
+        const P = [0, cfg.LOW - 1, cfg.ZLOW + 2];
+        const O = cam.at(P), U = cam.at([1, P[1], P[2]]), V = cam.at([0, P[1] - 1, P[2]]);
+        pendants.push({ O, u: [(U[0] - O[0]) * 0.85, (U[1] - O[1]) * 0.85], v: [(V[0] - O[0]) * 0.85, (V[1] - O[1]) * 0.85], metal: c.metal || 'white', iced: !!c.iced, kind: c.pendant, z: O[2] + 1 });
+      }
+    });
+    const model = { front, back: backRun, beads, pendants };
+    bodyCache[key] = model;
     return model;
   }
 
@@ -831,17 +929,141 @@
     run.forEach((f, i) => { if (i % 2 === 0) ribs += `<path d="M ${xy(f.n)} L ${xy(f.o)}" stroke="${part === 'back' ? C.topDark : C.topHi}" stroke-width="0.9" opacity="${part === 'back' ? 0.6 : 0.42}"/>`; });
     return `<path d="${band}" fill="${part === 'back' ? mixC(C.topDark, '#000000', 0.25) : C.top}" stroke="${C.lineCloth}" stroke-width="1.2" stroke-linejoin="round"/>
       ${ribs}
+      ${part !== 'back' && C.ribStripe ? C.ribStripe.map((c, i) => ink(inner.map((q, j) => [lerp(q[0], outer[j][0], 0.34 + i * 0.3), lerp(q[1], outer[j][1], 0.34 + i * 0.3)]), 2.6, c, [0.02, 0.02], 0.95)).join('') : ''}
       ${part === 'back' ? '' : `${ink(inner, 1.4, C.topHi, [0.1, 0.1], 0.45)}${ink(outer, 2, C.lineCloth, [0.03, 0.03], 0.95)}`}`;
   }
-  // The pearl chain: the beads behind his neck go before the neck, the rest after the collar, nearest
-  // last, each a small pearl with its light, a fine dark edge, and its shadow on the shirt.
+  // The chains: the links behind his neck go before the neck, the rest after the collar, nearest
+  // last, each with its light, a fine dark edge and its shadow on the shirt: pearls; a tennis chain's
+  // stones in their settings, a few catching the light; a Cuban's flat links, set with stones when
+  // iced; a rope's twisted links. A pendant hangs in front of them all.
+  const SPARK = (x, y, s) => `<path d="M ${n(x)} ${n(y - s)} Q ${n(x + s * 0.16)} ${n(y - s * 0.16)} ${n(x + s)} ${n(y)} Q ${n(x + s * 0.16)} ${n(y + s * 0.16)} ${n(x)} ${n(y + s)} Q ${n(x - s * 0.16)} ${n(y + s * 0.16)} ${n(x - s)} ${n(y)} Q ${n(x - s * 0.16)} ${n(y - s * 0.16)} ${n(x)} ${n(y - s)} Z" fill="#FFFFFF"/>`;
+  function bead(b, id) {
+    const [x, y] = b.p, r = b.r, M = METALS[b.metal] || METALS.white;
+    if (b.kind === 'tennis') return `<circle cx="${n(x)}" cy="${n(y)}" r="${n(r)}" fill="url(#${id}m${b.metal})" stroke="${M.edge}" stroke-width="0.5"/>
+      <circle cx="${n(x)}" cy="${n(y)}" r="${n(r * 0.7)}" fill="url(#${id}ice)"/><circle cx="${n(x + 0.6)}" cy="${n(y - 0.7)}" r="0.6" fill="#fff"/>${b.i % 7 === 3 ? SPARK(x + 0.4, y - 0.5, r * 1.5) : ''}`;
+    if (b.kind === 'cuban') {
+      return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(b.ang)})">
+        <ellipse rx="${n(r * 1.18)}" ry="${n(r * 0.8)}" fill="url(#${id}m${b.metal})" stroke="${M.edge}" stroke-width="0.7"/>
+        <ellipse rx="${n(r * 0.5)}" ry="${n(r * 0.2)}" transform="rotate(${b.i % 2 ? 24 : -24})" fill="${M.edge}" opacity="0.7"/>
+        ${b.iced ? `<circle cx="${n(-r * 0.62)}" cy="${n(-r * 0.3)}" r="${n(r * 0.18)}" fill="#fff"/><circle cx="${n(r * 0.56)}" cy="${n(r * 0.3)}" r="${n(r * 0.16)}" fill="#fff" opacity="0.9"/><circle cx="${n(r * 0.12)}" cy="${n(-r * 0.52)}" r="${n(r * 0.14)}" fill="#fff" opacity="0.85"/>`
+          : `<path d="M ${n(-r * 0.9)} ${n(-r * 0.42)} Q 0 ${n(-r * 0.8)} ${n(r * 0.9)} ${n(-r * 0.42)}" stroke="${M.hi}" stroke-width="0.8" fill="none" opacity="0.8"/>`}
+      </g>${b.iced && b.i % 7 === 2 ? SPARK(x, y - r * 0.3, r * 1.15) : ''}`;
+    }
+    if (b.kind === 'rope') return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(b.ang + 50)})">
+        <ellipse rx="${n(r * 1.15)}" ry="${n(r * 0.6)}" fill="url(#${id}m${b.metal})" stroke="${M.edge}" stroke-width="0.6"/>
+        <path d="M ${n(-r * 0.8)} ${n(-r * 0.18)} Q 0 ${n(-r * 0.55)} ${n(r * 0.8)} ${n(-r * 0.18)}" stroke="${M.hi}" stroke-width="0.7" fill="none" opacity="0.85"/></g>`;
+    return `<circle cx="${n(x)}" cy="${n(y)}" r="${n(r)}" fill="url(#${id}pearl)" stroke="#7E776B" stroke-width="0.55"/>
+      <circle cx="${n(x + 0.9)}" cy="${n(y - 1.1)}" r="0.9" fill="#fff" opacity="0.95"/>`;
+  }
+  // a crown hanging from the chain's low point (the TCP crown's five points), in gold or set with stones
+  function pendantSVG(q, id) {
+    const M = METALS[q.metal] || METALS.white, fill = q.iced ? `url(#${id}ice)` : `url(#${id}m${q.metal})`;
+    const crown = 'M -13 20 L -15.5 3 L -7 10 L 0 -1 L 7 10 L 15.5 3 L 13 20 Z';
+    const stones = q.iced ? [[-9, 15], [-4.5, 15], [0, 15], [4.5, 15], [9, 15], [-7, 10.5], [0, 8], [7, 10.5], [0, 3.5], [-11, 7.5], [11, 7.5]]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.35" fill="#fff" opacity="0.92"/>`).join('') : '';
+    return `<g transform="matrix(${n(q.u[0])} ${n(q.u[1])} ${n(q.v[0])} ${n(q.v[1])} ${n(q.O[0])} ${n(q.O[1])})">
+      <g transform="translate(1.6 3)" opacity="0.4" filter="url(#${id}softer)"><path d="${crown}" transform="translate(0 6)" fill="#000"/><rect x="-14" y="26" width="28" height="6" fill="#000"/></g>
+      <circle cx="0" cy="0" r="3.2" fill="none" stroke="${M.mid}" stroke-width="1.8"/>
+      <path d="${crown}" transform="translate(0 6)" fill="${fill}" stroke="${M.edge}" stroke-width="1.1" stroke-linejoin="round"/>
+      <g transform="translate(0 6)">${stones}</g>
+      ${[[-15.5, 9], [0, 5], [15.5, 9]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.3" fill="url(#${id}m${q.metal})" stroke="${M.edge}" stroke-width="0.7"/>`).join('')}
+      <rect x="-14" y="26" width="28" height="6" rx="1.6" fill="url(#${id}m${q.metal})" stroke="${M.edge}" stroke-width="0.9"/>
+      ${q.iced ? [-9, -3, 3, 9].map((x) => `<circle cx="${x}" cy="29" r="1.2" fill="#fff"/>`).join('') : ''}
+      ${SPARK(-7, 14, 4.5)}${SPARK(9, 22, 3)}
+    </g>`;
+  }
   function chainSVG(M, id, part) {
     const list = M.beads.filter((b) => (part === 'back' ? b.behind : !b.behind)).sort((a, b) => a.z - b.z);
     if (!list.length) return '';
-    const r = CHAIN.BEAD;
-    const shadow = part === 'back' ? '' : `<g opacity="0.45" filter="url(#${id}softer)">${list.filter((b) => b.low).map((b) => `<circle cx="${n(b.p[0] + 1.4)}" cy="${n(b.p[1] + 2.6)}" r="${n(r * 1.05)}" fill="#000"/>`).join('')}</g>`;
-    return `${shadow}${list.map((b) => `<circle cx="${n(b.p[0])}" cy="${n(b.p[1])}" r="${r}" fill="url(#${id}pearl)" stroke="#7E776B" stroke-width="0.55"/>
-      <circle cx="${n(b.p[0] + 0.9)}" cy="${n(b.p[1] - 1.1)}" r="0.9" fill="#fff" opacity="0.95"/>`).join('')}`;
+    const shadow = part === 'back' ? '' : `<g opacity="0.45" filter="url(#${id}softer)">${list.filter((b) => b.low).map((b) => `<circle cx="${n(b.p[0] + 1.4)}" cy="${n(b.p[1] + 2.6)}" r="${n(b.r * 1.05)}" fill="#000"/>`).join('')}</g>`;
+    return `${shadow}${list.map((b) => bead(b, id)).join('')}${part === 'back' ? '' : M.pendants.map((q) => pendantSVG(q, id)).join('')}`;
+  }
+
+  // ------------------------------------------------------------ the garment's details
+  // How far his chest stands out at each height down its middle (body frame), for anything that runs
+  // down the front or across it: a zip, press studs, quilting, a knit's ribs.
+  const CHEST_Z = [[-26, 72], [-60, 92], [-100, 108], [-153, 120], [-220, 120], [-300, 112], [-380, 104], [-460, 98]];
+  function chestZ(y) {
+    for (let i = 1; i < CHEST_Z.length; i++) if (y >= CHEST_Z[i][0]) { const [y0, z0] = CHEST_Z[i - 1], [y1, z1] = CHEST_Z[i]; return lerp(z0, z1, (y - y0) / (y1 - y0)); }
+    return CHEST_Z[CHEST_Z.length - 1][1];
+  }
+  // a line round his body at height y, across the front from angle a to b
+  function around(cam, y, a, b, k = 24, dz = 0) {
+    const D = chestZ(y) - 2, out = [];
+    for (let i = 0; i <= k; i++) { const th = lerp(a, b, i / k); out.push(cam.at([215 * Math.sin(th), y, 2 + (D + dz) * Math.cos(th)])); }
+    return out;
+  }
+  const down = (cam, x, y0, y1, k = 16, dz = 1) => Array.from({ length: k + 1 }, (_, i) => { const y = lerp(y0, y1, i / k); return cam.at([x, y, chestZ(y) + dz]); });
+  // what is printed or sewn on the front, inside the shirt's outline
+  function garment(p, id) {
+    if (!LOOK) return '';
+    const cam = cam3(...BODY_VIEWS['34']), f = (k) => ` filter="url(#${id}${k})"`;
+    const metal = METALS[(LOOK.chains && LOOK.chains[0] && LOOK.chains[0].metal) || 'white'];
+    if (LOOK.kind === 'zip') {
+      // the zip: its tape either side, the teeth down the middle, the pull hanging near the top
+      const mid = down(cam, 0, -24, -470), l = down(cam, -3.2, -24, -470), r = down(cam, 3.2, -24, -470);
+      const pull = cam.at([0, -64, chestZ(-64) + 3]);
+      return `${ink(l, 2, C.topDark, [0.02, 0.02], 0.9)}${ink(r, 2, C.topDark, [0.02, 0.02], 0.9)}
+        <path d="${smooth(mid)}" fill="none" stroke="${metal.mid}" stroke-width="2.6" stroke-dasharray="1.5 1.3"/>
+        <g transform="translate(${n(pull[0])} ${n(pull[1])})"><rect x="-2.6" y="-4" width="5.2" height="15" rx="2" fill="url(#${id}m${LOOK.chains && LOOK.chains[0] ? LOOK.chains[0].metal || 'white' : 'white'})" stroke="${metal.edge}" stroke-width="0.8"/><rect x="-1" y="5" width="2" height="4" rx="1" fill="${metal.edge}"/></g>`;
+    }
+    if (LOOK.kind === 'varsity') {
+      // the opening down the front and its press studs
+      const line = down(cam, 0, -26, -470);
+      return `${ink(line, 2.4, C.lineCloth, [0.02, 0.02], 0.85)}${ink(off(line, -2, 0), 4, C.topHi, [0.1, 0.1], 0.25, f('softer'))}
+        ${[-56, -198, -290, -382].map((y) => { const q = cam.at([7, y, chestZ(y) + 2]); return `<circle cx="${n(q[0])}" cy="${n(q[1])}" r="4.4" fill="url(#${id}myellow)" stroke="${METALS.yellow.edge}" stroke-width="0.8"/><circle cx="${n(q[0] - 1.2)}" cy="${n(q[1] - 1.3)}" r="1.2" fill="#fff" opacity="0.8"/>`; }).join('')}`;
+    }
+    if (LOOK.kind === 'puffer') {
+      // quilted channels round him, each puffed: light along its middle, a seam between
+      return [-92, -164, -236, -308, -380, -452].map((y) => `${ink(around(cam, y - 36, -1.5, 1.5, 24, 4), 22, C.topHi, [0.15, 0.15], LOOK.light ? 0.5 : 0.22, f('soft2'))}
+        ${ink(around(cam, y, -1.6, 1.6), 2.6, C.topDark, [0.05, 0.05], 0.8)}${ink(around(cam, y + 5, -1.6, 1.6), 7, C.topDark, [0.1, 0.1], 0.35, f('soft'))}`).join('');
+    }
+    if (LOOK.kind === 'knit') {
+      // a fine rib down the knit, and a band of rib at the hem
+      let out = '';
+      for (let th = -1.5; th <= 1.5; th += 0.085) {
+        const pts = Array.from({ length: 9 }, (_, i) => { const y = lerp(-30, -470, i / 8), D = chestZ(y) - 2; return cam.at([215 * Math.sin(th), y, 2 + D * Math.cos(th)]); });
+        out += ink(pts, 1.3, C.topDark, [0.05, 0.05], 0.32) + ink(off(pts, 1.6, 0), 0.9, C.topHi, [0.05, 0.05], 0.22);
+      }
+      return out;
+    }
+    return '';
+  }
+  // A hoodie's hood, down: a soft roll of cloth lying round the back of his neck on his shoulders,
+  // rising out of the neckline either side of his throat, fullest behind his neck.
+  function hoodSVG(id) {
+    const cam = cam3(...BODY_VIEWS['34']), top = [], base = [], crest = [], N = 56;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, th = (0.28 + u * 1.44) * Math.PI, k = Math.sin(u * Math.PI);
+      // its ends rise out of the neckline; its middle is a roll as thick as his neck is wide
+      const e = Math.sin(Math.min(1, Math.min(u, 1 - u) / 0.32) * Math.PI / 2);
+      const r = (10 + 26 * Math.pow(k, 0.7)) * e, R = 79 + r * 1.25, y0 = -4 - 22 * Math.cos(th);
+      top.push(cam.at([R * Math.sin(th), y0 + r * 0.8, R * Math.cos(th) - 4]));
+      crest.push(cam.at([(R - 4) * Math.sin(th), y0 + r * 0.6, (R - 4) * Math.cos(th) - 4]));
+      base.push(cam.at(collarPt(th, true)));
+    }
+    const shape = `${smooth(top)} L ${base.slice().reverse().map(xy).join(' L ')} Z`;
+    return `<clipPath id="${id}hood"><path d="${shape}"/></clipPath>
+      <path d="${shape}" fill="${C.top}"/>
+      <g clip-path="url(#${id}hood)">
+        ${ink(base, 18, C.topDark, [0.1, 0.1], 0.75, ` filter="url(#${id}soft)"`)}
+        ${ink(crest, 12, C.topHi, [0.25, 0.25], LOOK && LOOK.light ? 0.7 : 0.4, ` filter="url(#${id}soft)"`)}
+        ${ink(off(top, 0, 5), 6, C.topDark, [0.2, 0.2], 0.35, ` filter="url(#${id}softer)"`)}
+      </g>
+      ${ink(top, 2.3, C.lineCloth, [0.04, 0.04], 0.9)}`;
+  }
+  // its cords, hanging from the neckline down his chest, metal tips at their ends
+  function cordsSVG(id) {
+    const cam = cam3(...BODY_VIEWS['34']), M = METALS[(LOOK.chains && LOOK.chains[0] && LOOK.chains[0].metal) || 'white'];
+    const colour = LOOK.light ? mixC(C.top, '#000000', 0.12) : mixC(C.top, '#FFFFFF', 0.82);
+    return [-1, 1].map((s) => {
+      const a = collarPt(s * 0.34, true), pts = [];
+      for (let i = 0; i <= 10; i++) { const u = i / 10, y = lerp(a[1], -124 - (s > 0 ? 7 : 0), u), x = lerp(a[0], s * 21, u) + Math.sin(u * Math.PI) * s * 4; pts.push(cam.at([x, y, chestZ(y) + 3])); }
+      const e = pts[pts.length - 1], d = pts[pts.length - 2], ang = Math.atan2(e[1] - d[1], e[0] - d[0]) / RAD;
+      return `${ink(off(pts, 1.4, 2.2), 4.6, '#000', [0.05, 0.05], 0.3, ` filter="url(#${id}softer)"`)}
+        ${ink(pts, 4.4, C.lineCloth, [0.02, 0.02], 0.9)}${ink(pts, 2.8, colour, [0.02, 0.02], 1)}
+        <g transform="translate(${n(e[0])} ${n(e[1])}) rotate(${n(ang - 90)})"><rect x="-2.4" y="-1" width="4.8" height="11" rx="1.6" fill="${M.mid}" stroke="${M.edge}" stroke-width="0.7"/><rect x="-0.9" y="0.5" width="1.2" height="8" fill="${M.hi}" opacity="0.8"/></g>`;
+    }).join('');
   }
 
   // The crewneck's outline round his body; his arms are drawn over it. From the collar down the
@@ -856,39 +1078,55 @@
     return Array.from({ length: 18 }, (_, i) => cam.at(collarPt((55 + (i * 172) / 17) * RAD, true)));
   })();
   const TORSO = `${smooth(TORSO_NEAR)} L 124 600 ${smooth(TORSO_FAR).replace(/^M/, 'L')} L ${COLLAR_BACK.map(xy).join(' L ')} Z`;
-  // The AMIRI wordmark printed across his chest: each letter laid on the curve of his chest at its own
-  // place and turned with it, so the word wraps round him like a real print, foreshortening on the far
-  // side. Letter shapes from Liberation Serif (SIL Open Font License), cap height 1, baseline at 0.
-  const GLYPHS = {"A":{"d":"M0.344 -0.04V0H0.015V-0.04L0.128 -0.06L0.469 -1.008H0.611L0.965 -0.06L1.092 -0.04V0H0.669V-0.04L0.803 -0.06L0.704 -0.348H0.31L0.21 -0.06ZM0.504 -0.901 0.333 -0.415H0.681Z","adv":1.1029},"M":{"d":"M0.643 0H0.617L0.251 -0.86V-0.06L0.385 -0.04V0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.347L0.672 -0.239L1.027 -1H1.313V-0.96L1.185 -0.941V-0.06L1.313 -0.04V0H0.908V-0.04L1.042 -0.06V-0.86Z","adv":1.3579},"I":{"d":"M0.327 -0.06 0.455 -0.04V0H0.055V-0.04L0.183 -0.06V-0.941L0.055 -0.96V-1H0.455V-0.96L0.327 -0.941Z","adv":0.5086},"R":{"d":"M0.316 -0.438V-0.06L0.468 -0.04V0H0.054V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.476Q0.664 -1 0.753 -0.937Q0.843 -0.873 0.843 -0.733Q0.843 -0.633 0.788 -0.56Q0.734 -0.488 0.638 -0.459L0.908 -0.06L1.016 -0.04V0H0.777L0.496 -0.438ZM0.694 -0.723Q0.694 -0.837 0.639 -0.885Q0.583 -0.933 0.444 -0.933H0.316V-0.506H0.448Q0.582 -0.506 0.638 -0.555Q0.694 -0.605 0.694 -0.723Z","adv":1.0186}};
-  const WORDMARK = { text: 'AMIRI', h: 29, track: 0.34, y: -153, W: 215, D: 118, c: 2 };
+  // The brand's name printed on his chest: each letter laid on the curve of his chest at its own place
+  // and turned with it, so the word wraps round him like a real print, foreshortening on the far
+  // side. Big prints run across his chest; small ones sit on his left chest. Plain letters from the
+  // Liberation fonts (SIL Open Font License), cap height 1, baseline at 0: never a logo's artwork.
+  const GLYPHS = {"serif":{"A":{"d":"M0.344 -0.04V0H0.015V-0.04L0.128 -0.06L0.469 -1.008H0.611L0.965 -0.06L1.092 -0.04V0H0.669V-0.04L0.803 -0.06L0.704 -0.348H0.31L0.21 -0.06ZM0.504 -0.901 0.333 -0.415H0.681Z","adv":1.1029},"B":{"d":"M0.714 -0.758Q0.714 -0.849 0.657 -0.891Q0.6 -0.933 0.471 -0.933H0.316V-0.555H0.479Q0.6 -0.555 0.657 -0.603Q0.714 -0.65 0.714 -0.758ZM0.79 -0.285Q0.79 -0.39 0.72 -0.439Q0.65 -0.488 0.495 -0.488H0.316V-0.067Q0.419 -0.063 0.535 -0.063Q0.663 -0.063 0.726 -0.117Q0.79 -0.171 0.79 -0.285ZM0.044 0V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.501Q0.691 -1 0.779 -0.944Q0.867 -0.887 0.867 -0.765Q0.867 -0.677 0.813 -0.615Q0.759 -0.553 0.661 -0.532Q0.796 -0.518 0.87 -0.454Q0.944 -0.389 0.944 -0.288Q0.944 -0.144 0.845 -0.07Q0.745 0.004 0.554 0.004L0.235 0Z","adv":1.0186},"C":{"d":"M0.577 0.015Q0.334 0.015 0.198 -0.117Q0.063 -0.25 0.063 -0.488Q0.063 -0.746 0.193 -0.879Q0.324 -1.011 0.58 -1.011Q0.736 -1.011 0.915 -0.973L0.919 -0.755H0.87L0.848 -0.884Q0.796 -0.916 0.727 -0.934Q0.658 -0.952 0.586 -0.952Q0.394 -0.952 0.306 -0.839Q0.218 -0.726 0.218 -0.49Q0.218 -0.272 0.311 -0.157Q0.403 -0.043 0.579 -0.043Q0.664 -0.043 0.739 -0.063Q0.814 -0.084 0.858 -0.118L0.886 -0.267H0.934L0.93 -0.032Q0.766 0.015 0.577 0.015Z","adv":1.0186},"D":{"d":"M0.886 -0.507Q0.886 -0.717 0.773 -0.825Q0.66 -0.933 0.45 -0.933H0.316V-0.07Q0.406 -0.064 0.529 -0.064Q0.712 -0.064 0.799 -0.172Q0.886 -0.28 0.886 -0.507ZM0.498 -1Q0.775 -1 0.908 -0.877Q1.042 -0.753 1.042 -0.506Q1.042 -0.255 0.913 -0.126Q0.784 0.003 0.529 0.003L0.172 0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1Z","adv":1.1029},"E":{"d":"M0.044 -0.04 0.172 -0.06V-0.941L0.044 -0.96V-1H0.794V-0.761H0.745L0.721 -0.922Q0.638 -0.933 0.479 -0.933H0.316V-0.542H0.586L0.609 -0.661H0.657V-0.354H0.609L0.586 -0.475H0.316V-0.067H0.513Q0.705 -0.067 0.765 -0.079L0.808 -0.264H0.857L0.843 0H0.044Z","adv":0.9329},"F":{"d":"M0.316 -0.449V-0.06L0.482 -0.04V0H0.054V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.794V-0.761H0.745L0.721 -0.922Q0.638 -0.933 0.479 -0.933H0.316V-0.516H0.611L0.634 -0.635H0.679V-0.328H0.634L0.611 -0.449Z","adv":0.8494},"G":{"d":"M0.957 -0.052Q0.871 -0.024 0.778 -0.004Q0.685 0.015 0.577 0.015Q0.334 0.015 0.198 -0.116Q0.063 -0.248 0.063 -0.488Q0.063 -0.751 0.194 -0.881Q0.326 -1.011 0.58 -1.011Q0.762 -1.011 0.931 -0.966V-0.752H0.881L0.861 -0.875Q0.81 -0.912 0.738 -0.932Q0.666 -0.952 0.586 -0.952Q0.395 -0.952 0.307 -0.838Q0.218 -0.724 0.218 -0.49Q0.218 -0.27 0.309 -0.156Q0.4 -0.043 0.579 -0.043Q0.641 -0.043 0.71 -0.057Q0.779 -0.072 0.814 -0.093V-0.377L0.686 -0.397V-0.437H1.055V-0.397L0.957 -0.377Z","adv":1.1029},"H":{"d":"M0.044 0V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.444V-0.96L0.316 -0.941V-0.548H0.787V-0.941L0.658 -0.96V-1H1.058V-0.96L0.93 -0.941V-0.06L1.058 -0.04V0H0.658V-0.04L0.787 -0.06V-0.481H0.316V-0.06L0.444 -0.04V0Z","adv":1.1029},"I":{"d":"M0.327 -0.06 0.455 -0.04V0H0.055V-0.04L0.183 -0.06V-0.941L0.055 -0.96V-1H0.455V-0.96L0.327 -0.941Z","adv":0.5086},"J":{"d":"M0.306 -0.941 0.177 -0.96V-1H0.562V-0.96L0.449 -0.941V-0.322Q0.449 -0.222 0.418 -0.147Q0.388 -0.072 0.326 -0.029Q0.263 0.015 0.186 0.015Q0.091 0.015 0.032 -0.007V-0.189H0.081L0.104 -0.086Q0.118 -0.069 0.144 -0.059Q0.17 -0.049 0.201 -0.049Q0.306 -0.049 0.306 -0.191Z","adv":0.5943},"K":{"d":"M1.009 -1V-0.96L0.893 -0.941L0.552 -0.607L0.979 -0.06L1.087 -0.04V0H0.843L0.451 -0.506L0.316 -0.397V-0.06L0.459 -0.04V0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.444V-0.96L0.316 -0.941V-0.47L0.795 -0.941L0.696 -0.96V-1Z","adv":1.1029},"L":{"d":"M0.471 -0.96 0.316 -0.941V-0.064H0.513Q0.672 -0.064 0.746 -0.079L0.793 -0.287H0.841L0.828 0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.471Z","adv":0.9329},"M":{"d":"M0.643 0H0.617L0.251 -0.86V-0.06L0.385 -0.04V0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.347L0.672 -0.239L1.027 -1H1.313V-0.96L1.185 -0.941V-0.06L1.313 -0.04V0H0.908V-0.04L1.042 -0.06V-0.86Z","adv":1.3579},"N":{"d":"M0.861 -0.941 0.727 -0.96V-1H1.068V-0.96L0.94 -0.941V0H0.867L0.251 -0.899V-0.06L0.385 -0.04V0H0.044V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.347L0.861 -0.26Z","adv":1.1029},"O":{"d":"M0.218 -0.501Q0.218 -0.26 0.299 -0.152Q0.38 -0.044 0.551 -0.044Q0.722 -0.044 0.803 -0.152Q0.884 -0.26 0.884 -0.501Q0.884 -0.74 0.804 -0.846Q0.723 -0.952 0.551 -0.952Q0.379 -0.952 0.299 -0.846Q0.218 -0.74 0.218 -0.501ZM0.063 -0.501Q0.063 -1.011 0.551 -1.011Q0.793 -1.011 0.916 -0.882Q1.04 -0.752 1.04 -0.501Q1.04 -0.246 0.915 -0.116Q0.79 0.015 0.551 0.015Q0.313 0.015 0.188 -0.115Q0.063 -0.245 0.063 -0.501Z","adv":1.1029},"P":{"d":"M0.64 -0.704Q0.64 -0.827 0.582 -0.88Q0.525 -0.933 0.389 -0.933H0.316V-0.459H0.394Q0.52 -0.459 0.58 -0.517Q0.64 -0.574 0.64 -0.704ZM0.316 -0.392V-0.06L0.475 -0.04V0H0.054V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.421Q0.788 -1 0.788 -0.705Q0.788 -0.552 0.695 -0.472Q0.603 -0.392 0.429 -0.392Z","adv":0.8494},"Q":{"d":"M0.218 -0.5Q0.218 -0.259 0.299 -0.151Q0.38 -0.044 0.551 -0.044Q0.722 -0.044 0.803 -0.151Q0.884 -0.257 0.884 -0.5Q0.884 -0.74 0.803 -0.846Q0.721 -0.952 0.551 -0.952Q0.38 -0.952 0.299 -0.845Q0.218 -0.739 0.218 -0.5ZM0.063 -0.5Q0.063 -1.011 0.551 -1.011Q0.791 -1.011 0.916 -0.882Q1.04 -0.752 1.04 -0.5Q1.04 -0.133 0.776 -0.025L0.813 0.022Q0.878 0.104 0.925 0.139Q0.971 0.174 1.016 0.174L1.077 0.171V0.22Q1.06 0.227 1.012 0.238Q0.965 0.248 0.93 0.248Q0.877 0.248 0.836 0.23Q0.795 0.213 0.753 0.174Q0.711 0.136 0.614 0.012Q0.587 0.015 0.551 0.015Q0.312 0.015 0.187 -0.116Q0.063 -0.247 0.063 -0.5Z","adv":1.1029},"R":{"d":"M0.316 -0.438V-0.06L0.468 -0.04V0H0.054V-0.04L0.172 -0.06V-0.941L0.044 -0.96V-1H0.476Q0.664 -1 0.753 -0.937Q0.843 -0.873 0.843 -0.733Q0.843 -0.633 0.788 -0.56Q0.734 -0.488 0.638 -0.459L0.908 -0.06L1.016 -0.04V0H0.777L0.496 -0.438ZM0.694 -0.723Q0.694 -0.837 0.639 -0.885Q0.583 -0.933 0.444 -0.933H0.316V-0.506H0.448Q0.582 -0.506 0.638 -0.555Q0.694 -0.605 0.694 -0.723Z","adv":1.0186},"S":{"d":"M0.104 -0.269H0.152L0.178 -0.134Q0.206 -0.099 0.273 -0.072Q0.341 -0.045 0.406 -0.045Q0.511 -0.045 0.569 -0.099Q0.628 -0.152 0.628 -0.246Q0.628 -0.3 0.605 -0.335Q0.582 -0.37 0.545 -0.394Q0.509 -0.418 0.462 -0.435Q0.415 -0.452 0.365 -0.469Q0.315 -0.486 0.268 -0.507Q0.221 -0.528 0.185 -0.56Q0.148 -0.592 0.125 -0.639Q0.102 -0.687 0.102 -0.756Q0.102 -0.875 0.192 -0.943Q0.281 -1.011 0.44 -1.011Q0.561 -1.011 0.702 -0.979V-0.771H0.654L0.628 -0.893Q0.552 -0.949 0.44 -0.949Q0.34 -0.949 0.284 -0.908Q0.227 -0.867 0.227 -0.796Q0.227 -0.747 0.25 -0.715Q0.273 -0.683 0.31 -0.66Q0.347 -0.638 0.394 -0.621Q0.441 -0.605 0.491 -0.587Q0.541 -0.57 0.588 -0.548Q0.635 -0.526 0.672 -0.492Q0.709 -0.458 0.732 -0.409Q0.755 -0.36 0.755 -0.289Q0.755 -0.144 0.666 -0.065Q0.577 0.015 0.41 0.015Q0.33 0.015 0.248 0.001Q0.167 -0.013 0.104 -0.038Z","adv":0.8494},"T":{"d":"M0.235 0V-0.04L0.394 -0.06V-0.936H0.356Q0.167 -0.936 0.098 -0.921L0.078 -0.765H0.028V-1H0.908V-0.765H0.857L0.837 -0.921Q0.814 -0.926 0.739 -0.93Q0.664 -0.934 0.574 -0.934H0.538V-0.06L0.696 -0.04V0Z","adv":0.9329},"U":{"d":"M0.864 -0.941 0.73 -0.96V-1H1.071V-0.96L0.943 -0.941V-0.344Q0.943 -0.164 0.844 -0.075Q0.745 0.015 0.557 0.015Q0.358 0.015 0.259 -0.075Q0.16 -0.165 0.16 -0.33V-0.941L0.032 -0.96V-1H0.432V-0.96L0.304 -0.941V-0.341Q0.304 -0.069 0.568 -0.069Q0.711 -0.069 0.788 -0.136Q0.864 -0.204 0.864 -0.338Z","adv":1.1029},"V":{"d":"M1.086 -1V-0.96L0.976 -0.941L0.574 0.023H0.536L0.13 -0.941L0.017 -0.96V-1H0.421V-0.96L0.287 -0.941L0.59 -0.205L0.892 -0.941L0.761 -0.96V-1Z","adv":1.1029},"W":{"d":"M1.025 0.023H0.985L0.726 -0.666L0.459 0.023H0.42L0.089 -0.941L0.001 -0.96V-1H0.383V-0.96L0.236 -0.941L0.474 -0.236L0.743 -0.93H0.777L1.037 -0.236L1.263 -0.941L1.107 -0.96V-1H1.438V-0.96L1.351 -0.941Z","adv":1.4415},"X":{"d":"M0.236 -0.06 0.36 -0.04V0H0.034V-0.04L0.144 -0.06L0.484 -0.512L0.194 -0.941L0.081 -0.96V-1H0.494V-0.96L0.367 -0.941L0.574 -0.632L0.806 -0.941L0.682 -0.96V-1H1.01V-0.96L0.899 -0.941L0.618 -0.567L0.962 -0.06L1.075 -0.04V0H0.663V-0.04L0.79 -0.06L0.527 -0.447Z","adv":1.1029},"Y":{"d":"M0.625 -0.394V-0.06L0.784 -0.04V0H0.322V-0.04L0.481 -0.06V-0.389L0.13 -0.941L0.017 -0.96V-1H0.44V-0.96L0.306 -0.941L0.593 -0.479L0.866 -0.941L0.739 -0.96V-1H1.064V-0.96L0.955 -0.941Z","adv":1.1029},"Z":{"d":"M0.073 -0.07 0.634 -0.936H0.447Q0.263 -0.936 0.194 -0.921L0.171 -0.764H0.119V-1H0.8V-0.936L0.236 -0.063H0.452Q0.538 -0.063 0.628 -0.071Q0.717 -0.079 0.753 -0.087L0.797 -0.278H0.849L0.829 0H0.073Z","adv":0.9329},"-":{"d":"M0.057 -0.303V-0.417H0.453V-0.303Z","adv":0.5086},".":{"d":"M0.281 -0.069Q0.281 -0.032 0.255 -0.005Q0.23 0.022 0.191 0.022Q0.152 0.022 0.126 -0.005Q0.101 -0.032 0.101 -0.069Q0.101 -0.107 0.127 -0.133Q0.153 -0.159 0.191 -0.159Q0.229 -0.159 0.255 -0.133Q0.281 -0.107 0.281 -0.069Z","adv":0.3818},"&":{"d":"M0.738 -0.808Q0.738 -0.749 0.713 -0.707Q0.688 -0.664 0.642 -0.632Q0.597 -0.6 0.49 -0.558L0.805 -0.271Q0.877 -0.419 0.881 -0.542L0.776 -0.562V-0.602H1.116V-0.562L1.013 -0.542Q0.956 -0.345 0.867 -0.213L1.037 -0.058L1.16 -0.04V0H0.904L0.776 -0.116Q0.699 -0.046 0.614 -0.016Q0.529 0.015 0.429 0.015Q0.244 0.015 0.151 -0.057Q0.058 -0.129 0.058 -0.265Q0.058 -0.338 0.085 -0.39Q0.112 -0.442 0.158 -0.479Q0.204 -0.516 0.304 -0.554Q0.192 -0.663 0.192 -0.798Q0.192 -0.905 0.263 -0.96Q0.335 -1.016 0.471 -1.016Q0.6 -1.016 0.669 -0.963Q0.738 -0.91 0.738 -0.808ZM0.449 -0.049Q0.611 -0.049 0.725 -0.163L0.353 -0.504Q0.274 -0.471 0.239 -0.413Q0.204 -0.356 0.204 -0.274Q0.204 -0.166 0.267 -0.107Q0.33 -0.049 0.449 -0.049ZM0.324 -0.813Q0.324 -0.691 0.438 -0.605Q0.511 -0.632 0.543 -0.657Q0.574 -0.683 0.59 -0.72Q0.606 -0.758 0.606 -0.813Q0.606 -0.956 0.471 -0.956Q0.392 -0.956 0.358 -0.92Q0.324 -0.884 0.324 -0.813Z","adv":1.1879}," ":{"d":"","adv":0.3818}},"sans":{"A":{"d":"M0.804 0 0.715 -0.256H0.334L0.246 0H0.036L0.401 -1H0.648L1.011 0ZM0.524 -0.846 0.52 -0.83Q0.513 -0.805 0.503 -0.772Q0.493 -0.74 0.381 -0.413H0.669L0.57 -0.7L0.539 -0.797Z","adv":1.0497},"B":{"d":"M0.984 -0.285Q0.984 -0.149 0.881 -0.075Q0.779 0 0.598 0H0.097V-1H0.555Q0.738 -1 0.832 -0.936Q0.926 -0.873 0.926 -0.749Q0.926 -0.664 0.879 -0.605Q0.832 -0.546 0.735 -0.526Q0.857 -0.512 0.92 -0.45Q0.984 -0.388 0.984 -0.285ZM0.715 -0.72Q0.715 -0.788 0.672 -0.816Q0.63 -0.845 0.545 -0.845H0.307V-0.597H0.546Q0.635 -0.597 0.675 -0.628Q0.715 -0.659 0.715 -0.72ZM0.774 -0.302Q0.774 -0.442 0.572 -0.442H0.307V-0.155H0.58Q0.681 -0.155 0.727 -0.192Q0.774 -0.229 0.774 -0.302Z","adv":1.0497},"C":{"d":"M0.564 -0.15Q0.754 -0.15 0.828 -0.341L1.01 -0.272Q0.951 -0.127 0.837 -0.056Q0.723 0.014 0.564 0.014Q0.323 0.014 0.191 -0.122Q0.06 -0.259 0.06 -0.505Q0.06 -0.751 0.187 -0.883Q0.314 -1.015 0.555 -1.015Q0.731 -1.015 0.842 -0.944Q0.952 -0.874 0.997 -0.737L0.813 -0.686Q0.789 -0.762 0.721 -0.806Q0.652 -0.85 0.559 -0.85Q0.417 -0.85 0.344 -0.762Q0.27 -0.674 0.27 -0.505Q0.27 -0.332 0.346 -0.241Q0.422 -0.15 0.564 -0.15Z","adv":1.0497},"D":{"d":"M0.989 -0.507Q0.989 -0.353 0.928 -0.237Q0.867 -0.122 0.756 -0.061Q0.645 0 0.502 0H0.097V-1H0.459Q0.712 -1 0.85 -0.873Q0.989 -0.745 0.989 -0.507ZM0.778 -0.507Q0.778 -0.669 0.694 -0.753Q0.61 -0.838 0.455 -0.838H0.307V-0.162H0.484Q0.619 -0.162 0.698 -0.255Q0.778 -0.348 0.778 -0.507Z","adv":1.0497},"E":{"d":"M0.097 0V-1H0.884V-0.838H0.307V-0.587H0.84V-0.425H0.307V-0.162H0.913V0Z","adv":0.9695},"F":{"d":"M0.307 -0.838V-0.529H0.818V-0.367H0.307V0H0.097V-1H0.835V-0.838Z","adv":0.8879},"G":{"d":"M0.572 -0.15Q0.654 -0.15 0.73 -0.174Q0.807 -0.197 0.849 -0.234V-0.373H0.605V-0.527H1.04V-0.16Q0.961 -0.078 0.834 -0.032Q0.706 0.014 0.566 0.014Q0.322 0.014 0.191 -0.121Q0.06 -0.256 0.06 -0.505Q0.06 -0.752 0.192 -0.883Q0.324 -1.015 0.571 -1.015Q0.923 -1.015 1.019 -0.754L0.826 -0.696Q0.795 -0.772 0.728 -0.811Q0.661 -0.85 0.571 -0.85Q0.424 -0.85 0.347 -0.761Q0.27 -0.671 0.27 -0.505Q0.27 -0.335 0.35 -0.242Q0.429 -0.15 0.572 -0.15Z","adv":1.1306},"H":{"d":"M0.742 0V-0.429H0.307V0H0.097V-1H0.307V-0.602H0.742V-1H0.952V0Z","adv":1.0497},"I":{"d":"M0.097 0V-1H0.307V0Z","adv":0.4038},"J":{"d":"M0.372 0.014Q0.216 0.014 0.133 -0.053Q0.05 -0.121 0.022 -0.271L0.23 -0.302Q0.243 -0.224 0.278 -0.187Q0.312 -0.15 0.373 -0.15Q0.436 -0.15 0.468 -0.192Q0.5 -0.233 0.5 -0.312V-0.836H0.301V-1H0.709V-0.317Q0.709 -0.16 0.62 -0.073Q0.532 0.014 0.372 0.014Z","adv":0.8084},"K":{"d":"M0.789 0 0.43 -0.459 0.307 -0.365V0H0.097V-1H0.307V-0.546L0.757 -1H1.001L0.574 -0.577L1.036 0Z","adv":1.0497},"L":{"d":"M0.097 0V-1H0.307V-0.162H0.843V0Z","adv":0.8879},"M":{"d":"M0.928 0V-0.606Q0.928 -0.627 0.928 -0.647Q0.928 -0.668 0.935 -0.824Q0.884 -0.633 0.86 -0.558L0.68 0H0.531L0.351 -0.558L0.275 -0.824Q0.283 -0.659 0.283 -0.606V0H0.097V-1H0.378L0.556 -0.441L0.572 -0.387L0.606 -0.253L0.651 -0.413L0.835 -1H1.114V0Z","adv":1.2108},"N":{"d":"M0.706 0 0.27 -0.77Q0.283 -0.658 0.283 -0.59V0H0.097V-1H0.336L0.779 -0.224Q0.766 -0.331 0.766 -0.419V-1H0.952V0Z","adv":1.0497},"O":{"d":"M1.07 -0.505Q1.07 -0.348 1.008 -0.23Q0.946 -0.111 0.831 -0.049Q0.716 0.014 0.563 0.014Q0.327 0.014 0.193 -0.125Q0.06 -0.263 0.06 -0.505Q0.06 -0.745 0.193 -0.88Q0.326 -1.015 0.564 -1.015Q0.802 -1.015 0.936 -0.879Q1.07 -0.742 1.07 -0.505ZM0.856 -0.505Q0.856 -0.666 0.779 -0.758Q0.703 -0.85 0.564 -0.85Q0.424 -0.85 0.347 -0.759Q0.27 -0.668 0.27 -0.505Q0.27 -0.34 0.349 -0.245Q0.427 -0.15 0.563 -0.15Q0.703 -0.15 0.78 -0.243Q0.856 -0.335 0.856 -0.505Z","adv":1.1306},"P":{"d":"M0.92 -0.683Q0.92 -0.587 0.876 -0.511Q0.832 -0.435 0.75 -0.394Q0.668 -0.352 0.555 -0.352H0.307V0H0.097V-1H0.546Q0.726 -1 0.823 -0.917Q0.92 -0.835 0.92 -0.683ZM0.709 -0.68Q0.709 -0.837 0.523 -0.837H0.307V-0.513H0.529Q0.615 -0.513 0.662 -0.556Q0.709 -0.599 0.709 -0.68Z","adv":0.9695},"Q":{"d":"M1.07 -0.505Q1.07 -0.304 0.971 -0.171Q0.873 -0.038 0.698 -0.003Q0.722 0.067 0.765 0.099Q0.809 0.13 0.888 0.13Q0.93 0.13 0.972 0.123L0.971 0.266Q0.881 0.286 0.799 0.286Q0.683 0.286 0.608 0.221Q0.532 0.157 0.485 0.007Q0.283 -0.012 0.171 -0.147Q0.06 -0.282 0.06 -0.505Q0.06 -0.745 0.193 -0.88Q0.326 -1.015 0.564 -1.015Q0.802 -1.015 0.936 -0.879Q1.07 -0.742 1.07 -0.505ZM0.856 -0.505Q0.856 -0.666 0.779 -0.758Q0.703 -0.85 0.564 -0.85Q0.424 -0.85 0.347 -0.759Q0.27 -0.668 0.27 -0.505Q0.27 -0.34 0.348 -0.245Q0.427 -0.15 0.563 -0.15Q0.703 -0.15 0.78 -0.242Q0.856 -0.334 0.856 -0.505Z","adv":1.1306},"R":{"d":"M0.784 0 0.552 -0.38H0.307V0H0.097V-1H0.597Q0.776 -1 0.873 -0.923Q0.97 -0.846 0.97 -0.702Q0.97 -0.597 0.911 -0.521Q0.851 -0.444 0.749 -0.42L1.02 0ZM0.759 -0.693Q0.759 -0.837 0.575 -0.837H0.307V-0.542H0.581Q0.669 -0.542 0.714 -0.582Q0.759 -0.622 0.759 -0.693Z","adv":1.0497},"S":{"d":"M0.913 -0.288Q0.913 -0.141 0.804 -0.064Q0.695 0.014 0.484 0.014Q0.292 0.014 0.182 -0.054Q0.073 -0.122 0.042 -0.26L0.244 -0.294Q0.265 -0.214 0.324 -0.178Q0.384 -0.143 0.49 -0.143Q0.709 -0.143 0.709 -0.276Q0.709 -0.319 0.684 -0.346Q0.659 -0.374 0.613 -0.392Q0.567 -0.411 0.437 -0.437Q0.325 -0.463 0.281 -0.479Q0.237 -0.495 0.202 -0.517Q0.166 -0.539 0.141 -0.569Q0.116 -0.6 0.103 -0.641Q0.089 -0.682 0.089 -0.735Q0.089 -0.871 0.191 -0.943Q0.292 -1.015 0.487 -1.015Q0.673 -1.015 0.766 -0.957Q0.859 -0.899 0.886 -0.764L0.683 -0.737Q0.668 -0.801 0.62 -0.834Q0.572 -0.867 0.483 -0.867Q0.292 -0.867 0.292 -0.747Q0.292 -0.708 0.313 -0.683Q0.333 -0.659 0.373 -0.641Q0.412 -0.624 0.534 -0.598Q0.678 -0.567 0.74 -0.541Q0.802 -0.515 0.838 -0.481Q0.874 -0.446 0.894 -0.399Q0.913 -0.351 0.913 -0.288Z","adv":0.9695},"T":{"d":"M0.549 -0.838V0H0.339V-0.838H0.016V-1H0.872V-0.838Z","adv":0.8879},"U":{"d":"M0.513 0.014Q0.307 0.014 0.197 -0.087Q0.087 -0.187 0.087 -0.375V-1H0.297V-0.391Q0.297 -0.273 0.353 -0.211Q0.41 -0.15 0.519 -0.15Q0.631 -0.15 0.691 -0.214Q0.752 -0.278 0.752 -0.398V-1H0.961V-0.385Q0.961 -0.195 0.844 -0.09Q0.726 0.014 0.513 0.014Z","adv":1.0497},"V":{"d":"M0.592 0H0.38L0.01 -1H0.229L0.434 -0.358Q0.454 -0.295 0.487 -0.169L0.502 -0.23L0.538 -0.358L0.743 -1H0.96Z","adv":0.9695},"W":{"d":"M1.112 0H0.864L0.728 -0.578Q0.703 -0.681 0.686 -0.792Q0.669 -0.699 0.659 -0.65Q0.648 -0.602 0.507 0H0.259L0.001 -1H0.214L0.358 -0.354L0.391 -0.198Q0.411 -0.297 0.43 -0.386Q0.449 -0.476 0.571 -1H0.806L0.932 -0.468Q0.947 -0.408 0.982 -0.198L1 -0.28L1.038 -0.444L1.158 -1H1.37Z","adv":1.3719},"X":{"d":"M0.737 0 0.485 -0.398 0.234 0H0.013L0.359 -0.526L0.042 -1H0.263L0.485 -0.647L0.708 -1H0.928L0.624 -0.526L0.957 0Z","adv":0.9695},"Y":{"d":"M0.59 -0.41V0H0.381V-0.41L0.025 -1H0.244L0.484 -0.577L0.727 -1H0.946Z","adv":0.9695},"Z":{"d":"M0.846 0H0.043V-0.148L0.584 -0.836H0.097V-1H0.817V-0.855L0.276 -0.164H0.846Z","adv":0.8879},"-":{"d":"M0.057 -0.29V-0.463H0.426V-0.29Z","adv":0.484},".":{"d":"M0.099 0V-0.216H0.304V0Z","adv":0.4038},"&":{"d":"M0.064 -0.273Q0.064 -0.369 0.121 -0.444Q0.179 -0.519 0.304 -0.577Q0.251 -0.683 0.251 -0.775Q0.251 -0.886 0.321 -0.946Q0.39 -1.006 0.519 -1.006Q0.638 -1.006 0.707 -0.949Q0.776 -0.892 0.776 -0.795Q0.776 -0.74 0.749 -0.696Q0.721 -0.652 0.67 -0.615Q0.62 -0.577 0.498 -0.52Q0.568 -0.396 0.671 -0.282Q0.745 -0.394 0.784 -0.539L0.932 -0.49Q0.884 -0.324 0.795 -0.192Q0.856 -0.14 0.921 -0.14Q0.967 -0.14 1.004 -0.151V-0.007Q0.965 0.009 0.911 0.009Q0.85 0.009 0.789 -0.013Q0.727 -0.035 0.677 -0.077Q0.556 0.014 0.408 0.014Q0.244 0.014 0.154 -0.061Q0.064 -0.137 0.064 -0.273ZM0.617 -0.793Q0.617 -0.834 0.59 -0.859Q0.564 -0.885 0.517 -0.885Q0.463 -0.885 0.434 -0.855Q0.405 -0.824 0.405 -0.774Q0.405 -0.712 0.444 -0.637Q0.518 -0.669 0.55 -0.691Q0.583 -0.713 0.6 -0.737Q0.617 -0.762 0.617 -0.793ZM0.559 -0.175Q0.441 -0.306 0.366 -0.442Q0.244 -0.385 0.244 -0.276Q0.244 -0.206 0.29 -0.163Q0.336 -0.121 0.416 -0.121Q0.462 -0.121 0.499 -0.138Q0.537 -0.155 0.559 -0.175Z","adv":1.0497}," ":{"d":"","adv":0.4038}},"serifb":{"A":{"d":"M0.319 -0.054V0H0.015V-0.054L0.089 -0.075L0.445 -1.008H0.661L1.016 -0.075L1.092 -0.054V0H0.647V-0.054L0.762 -0.075L0.667 -0.333H0.283L0.191 -0.075ZM0.478 -0.858 0.313 -0.415H0.638Z","adv":1.1029},"B":{"d":"M0.655 -0.753Q0.655 -0.84 0.617 -0.879Q0.579 -0.918 0.493 -0.918H0.389V-0.57H0.499Q0.579 -0.57 0.617 -0.611Q0.655 -0.653 0.655 -0.753ZM0.73 -0.292Q0.73 -0.391 0.68 -0.439Q0.631 -0.488 0.518 -0.488H0.389V-0.082Q0.497 -0.078 0.559 -0.078Q0.646 -0.078 0.688 -0.13Q0.73 -0.183 0.73 -0.292ZM0.025 0V-0.054L0.154 -0.075V-0.926L0.025 -0.946V-1H0.511Q0.71 -1 0.805 -0.947Q0.899 -0.893 0.899 -0.774Q0.899 -0.685 0.843 -0.62Q0.787 -0.555 0.694 -0.535Q0.833 -0.521 0.905 -0.459Q0.976 -0.397 0.976 -0.292Q0.976 -0.146 0.869 -0.071Q0.761 0.004 0.561 0.004L0.221 0Z","adv":1.0186},"C":{"d":"M0.608 0.015Q0.356 0.015 0.216 -0.119Q0.075 -0.252 0.075 -0.488Q0.075 -0.745 0.209 -0.878Q0.344 -1.011 0.607 -1.011Q0.781 -1.011 0.967 -0.961L0.972 -0.721H0.905L0.884 -0.866Q0.785 -0.933 0.655 -0.933Q0.482 -0.933 0.402 -0.825Q0.322 -0.717 0.322 -0.491Q0.322 -0.281 0.406 -0.172Q0.489 -0.062 0.649 -0.062Q0.733 -0.062 0.796 -0.084Q0.859 -0.107 0.895 -0.137L0.919 -0.301H0.987L0.982 -0.048Q0.915 -0.022 0.808 -0.003Q0.7 0.015 0.608 0.015Z","adv":1.1029},"D":{"d":"M0.781 -0.5Q0.781 -0.716 0.702 -0.817Q0.623 -0.918 0.444 -0.918H0.389V-0.085Q0.461 -0.079 0.519 -0.079Q0.616 -0.079 0.672 -0.121Q0.729 -0.163 0.755 -0.252Q0.781 -0.341 0.781 -0.5ZM0.502 -1Q0.771 -1 0.9 -0.878Q1.028 -0.756 1.028 -0.506Q1.028 -0.248 0.905 -0.123Q0.782 0.003 0.533 0.003L0.198 0H0.027V-0.054L0.155 -0.075V-0.926L0.027 -0.946V-1Z","adv":1.1029},"E":{"d":"M0.026 -0.054 0.154 -0.075V-0.926L0.026 -0.946V-1H0.878V-0.746H0.81L0.786 -0.908Q0.702 -0.918 0.544 -0.918H0.389V-0.551H0.651L0.674 -0.661H0.74V-0.354H0.674L0.651 -0.468H0.389V-0.082H0.578Q0.77 -0.082 0.83 -0.094L0.872 -0.279H0.94L0.926 0H0.026Z","adv":1.0186},"F":{"d":"M0.389 -0.427V-0.075L0.556 -0.054V0H0.036V-0.054L0.154 -0.075V-0.926L0.026 -0.946V-1H0.86V-0.731H0.79L0.766 -0.908Q0.729 -0.913 0.645 -0.915Q0.561 -0.918 0.512 -0.918H0.389V-0.509H0.633L0.656 -0.635H0.723V-0.298H0.656L0.633 -0.427Z","adv":0.9329},"G":{"d":"M1.048 -0.052Q0.956 -0.022 0.834 -0.003Q0.711 0.015 0.614 0.015Q0.45 0.015 0.328 -0.045Q0.207 -0.104 0.141 -0.218Q0.075 -0.333 0.075 -0.488Q0.075 -0.74 0.218 -0.875Q0.362 -1.011 0.628 -1.011Q0.693 -1.011 0.746 -1.006Q0.799 -1.001 0.846 -0.992Q0.892 -0.983 1.016 -0.948V-0.718H0.949L0.931 -0.848Q0.872 -0.888 0.801 -0.911Q0.73 -0.933 0.655 -0.933Q0.481 -0.933 0.402 -0.825Q0.322 -0.717 0.322 -0.49Q0.322 -0.279 0.406 -0.17Q0.49 -0.062 0.649 -0.062Q0.735 -0.062 0.814 -0.088V-0.377L0.685 -0.397V-0.452H1.146V-0.397L1.048 -0.377Z","adv":1.1879},"H":{"d":"M0.026 0V-0.055L0.154 -0.075V-0.925L0.026 -0.946V-1H0.518V-0.946L0.389 -0.925V-0.556H0.798V-0.925L0.67 -0.946V-1H1.163V-0.946L1.034 -0.925V-0.075L1.163 -0.055V0H0.67V-0.055L0.798 -0.075V-0.474H0.389V-0.075L0.518 -0.055V0Z","adv":1.1879},"I":{"d":"M0.415 -0.075 0.543 -0.055V0H0.051V-0.055L0.18 -0.075V-0.925L0.051 -0.946V-1H0.543V-0.946L0.415 -0.925Z","adv":0.5943},"J":{"d":"M0.374 -0.926 0.245 -0.946V-1H0.722V-0.946L0.609 -0.926V-0.322Q0.609 -0.16 0.519 -0.073Q0.43 0.015 0.264 0.015Q0.208 0.015 0.154 0.009Q0.1 0.002 0.068 -0.007V-0.234H0.134L0.157 -0.101Q0.171 -0.084 0.197 -0.074Q0.223 -0.064 0.254 -0.064Q0.306 -0.064 0.34 -0.1Q0.374 -0.136 0.374 -0.206Z","adv":0.7636},"K":{"d":"M1.095 -1V-0.946L0.973 -0.926L0.643 -0.635L1.083 -0.075L1.176 -0.054V0H0.849L0.476 -0.482L0.389 -0.407V-0.075L0.533 -0.054V0H0.026V-0.054L0.154 -0.075V-0.926L0.026 -0.946V-1H0.518V-0.946L0.389 -0.926V-0.519L0.845 -0.926L0.753 -0.946V-1Z","adv":1.1879},"L":{"d":"M0.544 -0.946 0.389 -0.926V-0.079H0.593Q0.752 -0.079 0.826 -0.094L0.887 -0.302H0.955L0.926 0H0.026V-0.054L0.154 -0.075V-0.926L0.027 -0.946V-1H0.544Z","adv":1.0186},"M":{"d":"M0.658 0H0.617L0.248 -0.845V-0.075L0.382 -0.054V0H0.026V-0.054L0.154 -0.075V-0.926L0.026 -0.946V-1H0.419L0.705 -0.342L0.996 -1H1.397V-0.946L1.269 -0.926V-0.075L1.397 -0.054V0H0.9V-0.054L1.034 -0.075V-0.845Z","adv":1.4415},"N":{"d":"M0.861 -0.926 0.727 -0.946V-1H1.083V-0.946L0.955 -0.926V0H0.867L0.251 -0.804V-0.075L0.385 -0.054V0H0.029V-0.054L0.157 -0.075V-0.926L0.029 -0.946V-1H0.371L0.861 -0.361Z","adv":1.1029},"O":{"d":"M0.322 -0.501Q0.322 -0.263 0.387 -0.161Q0.453 -0.06 0.594 -0.06Q0.735 -0.06 0.801 -0.162Q0.866 -0.264 0.866 -0.501Q0.866 -0.738 0.801 -0.837Q0.735 -0.936 0.594 -0.936Q0.453 -0.936 0.387 -0.837Q0.322 -0.738 0.322 -0.501ZM0.075 -0.501Q0.075 -1.011 0.594 -1.011Q0.851 -1.011 0.982 -0.882Q1.113 -0.752 1.113 -0.501Q1.113 -0.247 0.981 -0.116Q0.848 0.015 0.594 0.015Q0.342 0.015 0.208 -0.116Q0.075 -0.246 0.075 -0.501Z","adv":1.1879},"P":{"d":"M0.65 -0.704Q0.65 -0.823 0.605 -0.871Q0.561 -0.918 0.449 -0.918H0.39V-0.474H0.452Q0.556 -0.474 0.603 -0.526Q0.65 -0.579 0.65 -0.704ZM0.39 -0.392V-0.075L0.556 -0.054V0H0.036V-0.054L0.154 -0.075V-0.926L0.026 -0.946V-1H0.467Q0.679 -1 0.784 -0.929Q0.89 -0.858 0.89 -0.705Q0.89 -0.392 0.524 -0.392Z","adv":0.9329},"Q":{"d":"M0.075 -0.501Q0.075 -1.011 0.594 -1.011Q0.851 -1.011 0.982 -0.882Q1.113 -0.752 1.113 -0.501Q1.113 -0.13 0.834 -0.024L0.872 0.022Q0.981 0.159 1.06 0.159Q1.098 0.159 1.121 0.153V0.217Q1.105 0.224 1.048 0.236Q0.991 0.248 0.945 0.248Q0.89 0.248 0.848 0.238Q0.806 0.227 0.77 0.206Q0.734 0.185 0.699 0.15Q0.664 0.116 0.585 0.015Q0.337 0.013 0.206 -0.118Q0.075 -0.25 0.075 -0.501ZM0.322 -0.501Q0.322 -0.263 0.387 -0.161Q0.453 -0.06 0.594 -0.06Q0.735 -0.06 0.801 -0.162Q0.866 -0.264 0.866 -0.501Q0.866 -0.738 0.801 -0.837Q0.735 -0.936 0.594 -0.936Q0.453 -0.936 0.387 -0.837Q0.322 -0.738 0.322 -0.501Z","adv":1.1879},"R":{"d":"M0.39 -0.424V-0.075L0.518 -0.054V0H0.036V-0.054L0.154 -0.075V-0.926L0.026 -0.946V-1H0.504Q0.725 -1 0.834 -0.932Q0.943 -0.864 0.943 -0.72Q0.943 -0.506 0.741 -0.444L1.008 -0.075L1.116 -0.054V0H0.793L0.514 -0.424ZM0.71 -0.719Q0.71 -0.831 0.664 -0.874Q0.617 -0.918 0.494 -0.918H0.39V-0.506H0.498Q0.613 -0.506 0.661 -0.553Q0.71 -0.601 0.71 -0.719Z","adv":1.1029},"S":{"d":"M0.081 -0.306H0.147L0.18 -0.146Q0.212 -0.11 0.275 -0.085Q0.339 -0.06 0.406 -0.06Q0.62 -0.06 0.62 -0.236Q0.62 -0.292 0.58 -0.33Q0.539 -0.368 0.452 -0.397Q0.324 -0.44 0.267 -0.466Q0.211 -0.493 0.172 -0.529Q0.133 -0.565 0.11 -0.616Q0.087 -0.667 0.087 -0.741Q0.087 -0.873 0.177 -0.942Q0.267 -1.011 0.44 -1.011Q0.565 -1.011 0.717 -0.979V-0.741H0.651L0.617 -0.878Q0.541 -0.934 0.44 -0.934Q0.348 -0.934 0.299 -0.9Q0.25 -0.866 0.25 -0.796Q0.25 -0.746 0.291 -0.71Q0.332 -0.675 0.419 -0.647Q0.59 -0.591 0.654 -0.55Q0.717 -0.509 0.751 -0.447Q0.784 -0.386 0.784 -0.304Q0.784 0.015 0.409 0.015Q0.324 0.015 0.235 0Q0.145 -0.014 0.081 -0.038Z","adv":0.8494},"T":{"d":"M0.231 0V-0.054L0.39 -0.075V-0.921H0.352Q0.181 -0.921 0.112 -0.906L0.092 -0.72H0.024V-1H0.996V-0.72H0.927L0.907 -0.906Q0.845 -0.919 0.662 -0.919H0.626V-0.075L0.784 -0.054V0Z","adv":1.0186},"U":{"d":"M0.625 -0.091Q0.737 -0.091 0.798 -0.154Q0.859 -0.216 0.859 -0.338V-0.926L0.725 -0.946V-1H1.065V-0.946L0.952 -0.926V-0.344Q0.952 -0.171 0.852 -0.078Q0.752 0.014 0.566 0.014Q0.365 0.014 0.258 -0.079Q0.151 -0.173 0.151 -0.35V-0.926L0.038 -0.946V-1H0.515V-0.946L0.386 -0.926V-0.339Q0.386 -0.219 0.447 -0.155Q0.508 -0.091 0.625 -0.091Z","adv":1.1029},"V":{"d":"M1.086 -1V-0.946L0.991 -0.925L0.605 0.023H0.506L0.099 -0.925L0.017 -0.946V-1H0.452V-0.946L0.348 -0.925L0.629 -0.27L0.892 -0.925L0.791 -0.946V-1Z","adv":1.1029},"W":{"d":"M1.119 0.023H1.028L0.779 -0.594L0.532 0.023H0.44L0.109 -0.926L0.022 -0.946V-1H0.471V-0.946L0.353 -0.926L0.567 -0.33L0.801 -0.915H0.894L1.129 -0.332L1.306 -0.926L1.18 -0.946V-1H1.503V-0.946L1.416 -0.926Z","adv":1.5272},"X":{"d":"M0.246 -0.075 0.37 -0.054V0H0.028V-0.054L0.139 -0.075L0.46 -0.483L0.174 -0.926L0.061 -0.946V-1H0.548V-0.946L0.421 -0.926L0.596 -0.656L0.808 -0.926L0.685 -0.946V-1H1.027V-0.946L0.916 -0.926L0.644 -0.581L0.972 -0.075L1.085 -0.054V0H0.598V-0.054L0.725 -0.075L0.509 -0.408Z","adv":1.1029},"Y":{"d":"M0.679 -0.394V-0.075L0.838 -0.054V0H0.285V-0.054L0.444 -0.075V-0.389L0.139 -0.926L0.027 -0.946V-1H0.541V-0.946L0.407 -0.926L0.635 -0.507L0.856 -0.926L0.734 -0.946V-1H1.074V-0.946L0.968 -0.926Z","adv":1.1029},"Z":{"d":"M0.073 -0.085 0.626 -0.921H0.447Q0.278 -0.921 0.209 -0.906L0.186 -0.749H0.119V-1H0.892V-0.921L0.335 -0.078H0.544Q0.629 -0.078 0.711 -0.086Q0.793 -0.094 0.83 -0.102L0.874 -0.293H0.941L0.921 0H0.073Z","adv":1.0186},"-":{"d":"M0.056 -0.295V-0.424H0.453V-0.295Z","adv":0.5086},".":{"d":"M0.191 0.022Q0.139 0.022 0.103 -0.014Q0.067 -0.05 0.067 -0.102Q0.067 -0.154 0.103 -0.19Q0.139 -0.226 0.191 -0.226Q0.242 -0.226 0.279 -0.19Q0.315 -0.154 0.315 -0.102Q0.315 -0.051 0.279 -0.015Q0.243 0.022 0.191 0.022Z","adv":0.3818},"&":{"d":"M0.778 -0.8Q0.778 -0.743 0.755 -0.702Q0.733 -0.66 0.691 -0.628Q0.649 -0.597 0.561 -0.562L0.844 -0.306Q0.882 -0.403 0.888 -0.535L0.805 -0.554V-0.602H1.161V-0.554L1.079 -0.535L1.059 -0.467Q1.013 -0.313 0.947 -0.213L1.111 -0.066L1.198 -0.047V0H0.911L0.823 -0.082Q0.691 0.015 0.492 0.015Q0.287 0.015 0.188 -0.055Q0.088 -0.125 0.088 -0.265Q0.088 -0.337 0.114 -0.39Q0.14 -0.444 0.186 -0.482Q0.232 -0.521 0.321 -0.556Q0.227 -0.664 0.227 -0.796Q0.227 -0.899 0.3 -0.957Q0.373 -1.016 0.508 -1.016Q0.638 -1.016 0.708 -0.96Q0.778 -0.905 0.778 -0.8ZM0.492 -0.064Q0.647 -0.064 0.745 -0.154L0.389 -0.485Q0.339 -0.45 0.316 -0.399Q0.294 -0.348 0.294 -0.274Q0.294 -0.167 0.347 -0.116Q0.4 -0.064 0.492 -0.064ZM0.413 -0.812Q0.413 -0.764 0.429 -0.723Q0.445 -0.682 0.493 -0.629Q0.55 -0.66 0.57 -0.701Q0.591 -0.742 0.591 -0.812Q0.591 -0.941 0.508 -0.941Q0.457 -0.941 0.435 -0.909Q0.413 -0.876 0.413 -0.812Z","adv":1.2722}," ":{"d":"","adv":0.3818}}};
+  function markOf() {
+    const m = (LOOK && LOOK.mark) || OUTFITS.amiri.mark;
+    const G = GLYPHS[m.font] || GLYPHS.serif, text = m.text.toUpperCase();
+    const track = m.track ?? (m.font === 'sans' ? 0.14 : 0.3);
+    const raw = [...text].reduce((s, ch) => s + (G[ch] ? G[ch].adv : 0.6), 0) + track * (text.length - 1);
+    if (m.size === 'small') return { G, text, track, h: Math.min(12.5, 80 / raw), y: -132, W: 215, D: 118, c: 2, at: 0.25 };
+    // a pendant or a hoodie's cords hang over the top of his chest, so then the print sits lower
+    const hung = LOOK && (LOOK.kind === 'hoodie' || (LOOK.chains || []).some((c) => c.pendant));
+    return { G, text, track, h: Math.min(hung ? 24 : 29, 196 / raw), y: hung ? (LOOK.kind === 'hoodie' ? -166 : -160) : -153, W: 215, D: 118, c: 2, at: 0 };
+  }
   // When he faces the other way the whole drawing is mirrored, but a print never is: then the
   // letters go in the other order, each mirrored back.
   const wordmarkCache = {};
   function wordmark(flip) {
-    if (wordmarkCache[flip]) return wordmarkCache[flip];
-    const g = WORDMARK, cam = cam3(...BODY_VIEWS['34']);
+    const key = `${LOOK ? LOOK.name : 'amiri'}|${flip}`;
+    if (wordmarkCache[key]) return wordmarkCache[key];
+    const g = markOf(), cam = cam3(...BODY_VIEWS['34']);
     const text = flip ? [...g.text].reverse().join('') : g.text;
-    const adv = [...text].map((ch) => GLYPHS[ch].adv);
+    const adv = [...text].map((ch) => (g.G[ch] ? g.G[ch].adv : 0.6));
     const total = adv.reduce((s, a) => s + a, 0) + g.track * (g.text.length - 1);
-    // an arc length round his chest from its middle, to the angle there
+    // the arc length round his chest from its middle to an angle, and back
+    const arcLen = (th) => { let run = 0; const step = 0.001 * Math.sign(th); for (let a = 0; Math.abs(a) < Math.abs(th); a += step) run += Math.hypot(g.W * Math.cos(a), g.D * Math.sin(a)) * step; return run; };
     const arcTo = (s) => {
       let th = 0, run = 0;
       const step = 0.001 * Math.sign(s);
       while (Math.abs(run) < Math.abs(s)) { run += Math.hypot(g.W * Math.cos(th), g.D * Math.sin(th)) * Math.abs(step); th += step; }
       return th;
     };
+    // a small print sits on his left chest, on the far side (mirrored with the rest of him when he
+    // faces left)
+    const s0 = arcLen(g.at);
     let pos = -total / 2;
     const letters = [...text].map((ch, i) => {
       const mid = (pos + adv[i] / 2) * g.h;
       pos += adv[i] + g.track;
-      const th = arcTo(mid);
+      if (!g.G[ch] || !g.G[ch].d) return '';
+      const th = arcTo(s0 + mid);
       const P = [g.W * Math.sin(th), g.y, g.c + g.D * Math.cos(th)];
       const t = unit3([g.W * Math.cos(th), 0, -g.D * Math.sin(th)]);
       const O = cam.at(P), U = cam.at([P[0] + t[0], P[1], P[2] + t[2]]), V = cam.at([P[0], P[1] - 1, P[2]]);
       const u = [(U[0] - O[0]) * g.h, (U[1] - O[1]) * g.h], v = [(V[0] - O[0]) * g.h, (V[1] - O[1]) * g.h];
-      return `<path transform="matrix(${n(u[0])} ${n(u[1])} ${n(v[0])} ${n(v[1])} ${n(O[0])} ${n(O[1])})${flip ? ' scale(-1 1)' : ''} translate(${n(-adv[i] / 2)} 0.5)" d="${GLYPHS[ch].d}"/>`;
+      return `<path transform="matrix(${n(u[0])} ${n(u[1])} ${n(v[0])} ${n(v[1])} ${n(O[0])} ${n(O[1])})${flip ? ' scale(-1 1)' : ''} translate(${n(-adv[i] / 2)} 0.5)" d="${g.G[ch].d}"/>`;
     }).join('');
-    wordmarkCache[flip] = letters;
+    wordmarkCache[key] = letters;
     return letters;
   }
   function torso34(p, id) {
@@ -902,6 +1140,7 @@
         ${blob([[78, 206], [128, 218], [150, 292], [142, 430], [104, 430], [86, 300]], C.topHi, 0.3, f('soft2'))}
         <g fill="#000" opacity="0.35" transform="translate(${p.flip ? -0.8 : 0.8} 1)">${wordmark(!!p.flip)}</g>
         <g fill="${C.print}">${wordmark(!!p.flip)}</g>
+        ${garment(p, id)}
         ${ink(off(M.front.map((q) => q.o), 0, 7), 10, C.topDark, [0.15, 0.15], 0.6, f('soft'))}
         ${ink(off(TORSO_NEAR.slice(1, 5), 3, 9), 12, C.topHi, [0.3, 0.3], 0.26, f('soft'))}
         ${ink(off(TORSO_FAR.slice(7, 11).reverse(), -3, 9), 10, C.topHi, [0.3, 0.3], 0.3, f('soft'))}
@@ -919,10 +1158,12 @@
       </g>
       ${ink(TORSO_NEAR, 2.4, C.lineCloth, [0.03, 0.03], 0.92)}
       ${ink(TORSO_FAR, 2.2, C.lineCloth, [0.03, 0.12], 0.88)}
+      ${LOOK && LOOK.kind === 'hoodie' ? hoodSVG(id) : ''}
       ${collarSVG(M, 'back')}
       ${chainSVG(M, id, 'back')}
       ${neckSVG(p, id, M)}
       ${collarSVG(M, 'front')}
+      ${LOOK && LOOK.kind === 'hoodie' ? cordsSVG(id) : ''}
       ${chainSVG(M, id, 'front')}`;
   }
 
@@ -948,7 +1189,7 @@
     let ribs = '';
     for (let k = 1; k < 11; k++) {
       const t = k / 11;
-      ribs += `<path d="M ${xy([lerp(o0[0], i0[0], t), lerp(o0[1], i0[1], t)])} L ${xy([lerp(o1[0], i1[0], t), lerp(o1[1], i1[1], t)])}" stroke="${C.topHi}" stroke-width="${n(0.9 * lw)}" opacity="0.4"/>`;
+      ribs += `<path d="M ${xy([lerp(o0[0], i0[0], t), lerp(o0[1], i0[1], t)])} L ${xy([lerp(o1[0], i1[0], t), lerp(o1[1], i1[1], t)])}" stroke="${C.ribHi}" stroke-width="${n(0.9 * lw)}" opacity="0.4"/>`;
     }
     const mid = (a, b, t, bow) => {
       const m = [lerp(a[0], b[0], t), lerp(a[1], b[1], t)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
@@ -958,28 +1199,52 @@
     const lit = light > 0 ? litEdge : litEdge === 'inn' ? 'out' : 'inn';
     const litPts = lit === 'inn' ? inn : out, darkPts = lit === 'inn' ? out : inn;
     const fx = id.replace(/[^\w]/g, '');
+    // a track top's two stripes down the outside of the sleeve, stopping short of the cuff; a puffer's
+    // quilting across it; a varsity's stripes round the cuff
+    let extra = '';
+    if (C.slStripe || C.quilt) {
+      const cut = (pts, d) => { let left = d; const out = pts.slice(); while (out.length > 2) { const a = out[out.length - 1], b = out[out.length - 2], L = Math.hypot(a[0] - b[0], a[1] - b[1]); if (L > left) { out[out.length - 1] = [a[0] + (b[0] - a[0]) * left / L, a[1] + (b[1] - a[1]) * left / L]; break; } left -= L; out.pop(); } return out; };
+      const ci = inn.reduce((m, q) => [m[0] + q[0] / inn.length, m[1] + q[1] / inn.length], [0, 0]);
+      const o = cut(out, cuffK + 6), om = o[Math.floor(o.length / 2)];
+      const inward = (pts, d) => pts.map((q, i) => {
+        const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+        let nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L;
+        if (nx * (ci[0] - om[0]) + ny * (ci[1] - om[1]) < 0) { nx = -nx; ny = -ny; }
+        return [q[0] + nx * d, q[1] + ny * d];
+      });
+      if (C.slStripe) extra += `${ink(inward(o.slice(2), 7), 4.2 * lw, C.slStripe, [0.02, 0.02], 0.95)}${ink(inward(o.slice(2), 14), 4.2 * lw, C.slStripe, [0.02, 0.02], 0.95)}`;
+      if (C.quilt) {
+        for (let k = 1; k < 6; k++) {
+          const d = cuffK + 8 + k * 30, a = back(out, d), b = back(inn, d);
+          if (Math.hypot(a[0] - b[0], a[1] - b[1]) > 140) continue;
+          extra += `${ink([a, mid(a, b, 0.5, 4), b], 2.2 * lw, C.slDark, [0.1, 0.1], 0.75)}${ink([back(out, d + 13), mid(back(out, d + 13), back(inn, d + 13), 0.5, 4), back(inn, d + 13)], 9 * lw, C.slHi, [0.2, 0.2], LOOK && LOOK.light ? 0.45 : 0.2, ` filter="url(#${fx}y)"`)}`;
+        }
+      }
+    }
+    const cuffStripes = C.ribStripe ? C.ribStripe.map((c, k) => { const t = 0.36 + k * 0.3, a = back(out, cuffK * t), b = back(inn, cuffK * t); return ink([a, mid(a, b, 0.5, 1.5), b], 2.4 * lw, c, [0.02, 0.02], 0.95); }).join('') : '';
     return {
       body: `
       <defs><filter color-interpolation-filters="sRGB" id="${fx}x" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
         <filter color-interpolation-filters="sRGB" id="${fx}y" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
         <filter color-interpolation-filters="sRGB" id="${fx}z" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4"/></filter>
         <clipPath id="${id}"><path d="${shape}"/></clipPath></defs>
-      <path d="${shape}" fill="${C.top}"/>
+      <path d="${shape}" fill="${C.slTop}"/>
       <g clip-path="url(#${id})">
-        ${ink(darkPts, 22, C.topDark, [0.1, 0.1], 0.75, ` filter="url(#${fx}x)"`)}
-        ${ink(litPts, 10, C.topHi, [0.15, 0.15], 0.42, ` filter="url(#${fx}y)"`)}
+        ${ink(darkPts, 22, C.slDark, [0.1, 0.1], 0.75, ` filter="url(#${fx}x)"`)}
+        ${ink(litPts, 10, C.slHi, [0.15, 0.15], 0.42, ` filter="url(#${fx}y)"`)}
         ${s.shade ? s.shade(fx) : ''}
         ${s.rim ? ink(litPts, 7, s.rim.colour, [0.1, 0.2], s.rim.op, ` filter="url(#${fx}z)"`) : ''}
-        ${(s.folds || []).map((f) => `${ink(f, 2.6, C.topDark, [0.4, 0.4], 0.55)}${ink(off(f, -1.4, -1.7), 1.3, C.topHi, [0.4, 0.4], 0.3)}`).join('')}
-        ${ink([o3, mid(o3, i3, 0.5, 3), i3], 2.2, C.topDark, [0.3, 0.3], 0.5)}${ink([o2, mid(o2, i2, 0.5, 2.4), i2], 2.2, C.topDark, [0.3, 0.3], 0.5)}
-        ${ink(off([o3, mid(o3, i3, 0.5, 3), i3], 0, -2), 1.2, C.topHi, [0.3, 0.3], 0.25)}
+        ${(s.folds || []).map((f) => `${ink(f, 2.6, C.slDark, [0.4, 0.4], 0.55)}${ink(off(f, -1.4, -1.7), 1.3, C.slHi, [0.4, 0.4], 0.3)}`).join('')}
+        ${extra}
+        ${ink([o3, mid(o3, i3, 0.5, 3), i3], 2.2, C.slDark, [0.3, 0.3], 0.5)}${ink([o2, mid(o2, i2, 0.5, 2.4), i2], 2.2, C.slDark, [0.3, 0.3], 0.5)}
+        ${ink(off([o3, mid(o3, i3, 0.5, 3), i3], 0, -2), 1.2, C.slHi, [0.3, 0.3], 0.25)}
       </g>
       ${s.seam ? `<path d="${smooth(s.seam)}" fill="none" stroke="${C.stitchTop}" stroke-width="1" stroke-dasharray="3 2.5"/>` : ''}
       ${ink(out, 2.4 * lw, C.lineCloth, [s.outTaper ?? 0.03, 0.03], 0.92)}
       ${ink(inn, 2.1 * lw, C.lineCloth, [s.innTaper ?? 0.2, 0.03], 0.88)}`,
       cuff: `
-      <path d="M ${xy(o0)} L ${xy(o1)} L ${xy(i1)} L ${xy(i0)} Z" fill="${mixC(C.top, C.topDark, 0.35)}"/>
-      ${ribs}
+      <path d="M ${xy(o0)} L ${xy(o1)} L ${xy(i1)} L ${xy(i0)} Z" fill="${C.cuff}"/>
+      ${ribs}${cuffStripes}
       ${ink([o0, mid(o0, i0, 0.5, 1.5), i0], 1.4 * lw, C.lineCloth, [0.1, 0.1], 0.7)}
       ${ink([o0, o1], 2.4 * lw, C.lineCloth, [0.05, 0.05], 0.92)}${ink([i0, i1], 2.1 * lw, C.lineCloth, [0.05, 0.05], 0.88)}
       ${ink([o1, mid(o1, i1, 0.5, 2), i1], 2.1 * lw, C.lineCloth, [0.05, 0.05], 0.92)}`,
@@ -1080,12 +1345,12 @@
     ];
     const rf = (t) => radius(MUSCLE.upper.front, t), rff = (t) => radius(MUSCLE.fore.front, t);
     const shade = (fx) => `
-        ${ink([...cap.slice(1), ...O.pts.slice(k, k + 3)].map((p) => [lerp(p[0], S[0], 0.3), lerp(p[1], S[1], 0.3)]), 16, C.topHi, [0.3, 0.3], 0.2, ` filter="url(#${fx}y)"`)}
-        ${ink([U(0.36, 56 * sgOut), U(0.43, 40 * sgOut), U(0.5, 22 * sgOut)], 5, C.topDark, [0.3, 0.3], 0.3, ` filter="url(#${fx}z)"`)}
-        ${ink([U(0.34, rf(0.34) * sgFront * 0.92), U(0.42, rf(0.42) * sgFront * 0.5), U(0.5, rf(0.5) * sgFront * 0.1)], 4.5, C.topDark, [0.3, 0.3], 0.32, ` filter="url(#${fx}z)"`)}
-        ${ink([U(0.38, rf(0.38) * sgFront * 0.5), U(0.52, rf(0.52) * sgFront * 0.52), U(0.66, rf(0.66) * sgFront * 0.48)], 18, C.topHi, [0.3, 0.3], 0.15, ` filter="url(#${fx}y)"`)}
-        ${ink([U(0.8, rf(0.8) * sgFront * 0.8), U(0.88, rf(0.88) * sgFront * 0.55), U(0.95, rf(0.95) * sgFront * 0.25)], 9, C.topDark, [0.3, 0.3], 0.32, ` filter="url(#${fx}z)"`)}
-        ${ink([F(0.08, rff(0.08) * sgFront * 0.5), F(0.24, rff(0.24) * sgFront * 0.5), F(0.4, rff(0.4) * sgFront * 0.45)], 14, C.topHi, [0.3, 0.3], 0.13, ` filter="url(#${fx}y)"`)}`;
+        ${ink([...cap.slice(1), ...O.pts.slice(k, k + 3)].map((p) => [lerp(p[0], S[0], 0.3), lerp(p[1], S[1], 0.3)]), 16, C.slHi, [0.3, 0.3], 0.2, ` filter="url(#${fx}y)"`)}
+        ${ink([U(0.36, 56 * sgOut), U(0.43, 40 * sgOut), U(0.5, 22 * sgOut)], 5, C.slDark, [0.3, 0.3], 0.3, ` filter="url(#${fx}z)"`)}
+        ${ink([U(0.34, rf(0.34) * sgFront * 0.92), U(0.42, rf(0.42) * sgFront * 0.5), U(0.5, rf(0.5) * sgFront * 0.1)], 4.5, C.slDark, [0.3, 0.3], 0.32, ` filter="url(#${fx}z)"`)}
+        ${ink([U(0.38, rf(0.38) * sgFront * 0.5), U(0.52, rf(0.52) * sgFront * 0.52), U(0.66, rf(0.66) * sgFront * 0.48)], 18, C.slHi, [0.3, 0.3], 0.15, ` filter="url(#${fx}y)"`)}
+        ${ink([U(0.8, rf(0.8) * sgFront * 0.8), U(0.88, rf(0.88) * sgFront * 0.55), U(0.95, rf(0.95) * sgFront * 0.25)], 9, C.slDark, [0.3, 0.3], 0.32, ` filter="url(#${fx}z)"`)}
+        ${ink([F(0.08, rff(0.08) * sgFront * 0.5), F(0.24, rff(0.24) * sgFront * 0.5), F(0.4, rff(0.4) * sgFront * 0.45)], 14, C.slHi, [0.3, 0.3], 0.13, ` filter="url(#${fx}y)"`)}`;
     return { out, inn, seam, folds, shade, litEdge: J.lit || 'inn', cuff: 16, crease: X, outUpper: out.slice(0, cap.length + O.nUp - k) };
   }
 
@@ -1503,6 +1768,10 @@
       <radialGradient id="${id}pearl" cx="0.38" cy="0.32" r="0.72">
         <stop offset="0" stop-color="#FFFFFF"/><stop offset="0.4" stop-color="${C.pearl}"/><stop offset="1" stop-color="${C.pearlShade}"/>
       </radialGradient>
+      <radialGradient id="${id}ice" cx="0.36" cy="0.32" r="0.75">
+        <stop offset="0" stop-color="#FFFFFF"/><stop offset="0.45" stop-color="#E8F1FB"/><stop offset="1" stop-color="#9EB2CB"/>
+      </radialGradient>
+      ${Object.entries(METALS).map(([k, m]) => `<linearGradient id="${id}m${k}" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="${m.hi}"/><stop offset="0.45" stop-color="${m.mid}"/><stop offset="1" stop-color="${m.lo}"/></linearGradient>`).join('')}
       <linearGradient id="${id}goldg" x1="0" y1="0" x2="0.3" y2="1">
         <stop offset="0" stop-color="${C.goldHi}"/><stop offset="0.45" stop-color="${C.gold}"/><stop offset="1" stop-color="${C.goldLo}"/>
       </linearGradient>
@@ -1525,6 +1794,7 @@
   // the 'body' part defines, so draw both into one document.
   function founderSVG(p, id = 'f', part = 'all') {
     p = p.view ? p : pose(p);
+    dress(p);
     const flip = p.flip ? 'scale(-1 1)' : '';
     if (p.view === 'back') return part === 'arm' ? '' : `<g transform="${flip}">${defs(p, id)}${back(p, id)}</g>`;
     const body = `<g transform="translate(0 -20)">${arms34(p, id, 'back')}${torso34(p, id)}</g>
@@ -1534,5 +1804,6 @@
       <g transform="rotate(${n(p.lean)} 0 520)">${part === 'body' ? body : part === 'arm' ? arm : body + arm}</g></g>`;
   }
 
-  window.Founder = { pose, blendPose, founderSVG, handSVG, HANDS, HAND_SCALE, sleeveSVG: sleeve, colours: C };
+  // (a sleeve drawn on its own, as in a close-up of his hand, is in the episode's outfit too)
+  window.Founder = { pose, blendPose, founderSVG, handSVG, HANDS, HAND_SCALE, sleeveSVG: (...a) => { dress({}); return sleeve(...a); }, colours: C, OUTFITS, dress };
 })();
