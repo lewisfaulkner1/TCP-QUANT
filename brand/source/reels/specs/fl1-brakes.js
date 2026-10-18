@@ -40,8 +40,8 @@ const shot = (set, a, b, cam, more = {}) => ({ kind: 'toon', set, from: a, to: b
   drive: [{ t: T.ask + 1.6, x: 0 }, { t: T.end + 0.6, x: -2000 }],
   flow: [{ t: 0, k: 0 }, { t: T.start + 1.0, k: 0 }, { t: T.road, k: 0.5 }, { t: T.road + 0.3, k: 1 }],
   door: [{ t: 0, k: 1 }, { t: T.wide + 0.25, k: 1 }, { t: T.wide + 1.15, k: 0 }], lights: [{ t: 0, k: 0.15 }, { t: T.wide + 1.2, k: 0.15 }, { t: T.wide + 1.3, k: 1 }], fi: 0.01, fo: 0.01, ...more });
-const CAR = (a, b) => shot('street', a, b, [{ t: a, s: 1.1, x: 540, y: 1270 }, { t: b, s: 1.22, x: 520, y: 1290, ease: 'linear' }], { dof: { bg: 2, mid: 1 } });
-const DOOR = (a, b) => shot('street', a, b, [{ t: a, s: 2.7, x: 470, y: 1300 }, { t: b, s: 2.85, x: 466, y: 1302, ease: 'linear' }], { dof: { bg: 6, mid: 3 } });
+const CAR = (a, b) => shot('street', a, b, [{ t: a, s: 0.94, x: 540, y: 1330 }, { t: b, s: 1.0, x: 532, y: 1334, ease: 'linear' }], { dof: { bg: 2, mid: 1 } });
+const DOOR = (a, b) => shot('street', a, b, [{ t: a, s: 2.1, x: 500, y: 1298 }, { t: b, s: 2.2, x: 496, y: 1300, ease: 'linear' }], { dof: { bg: 6, mid: 3 } });
 const POV = (a, b) => shot('road', a, b, [{ t: a, s: 1.0, x: 540, y: 960 }, { t: b, s: 1.03, x: 540, y: 950, ease: 'linear' }]);
 const WHEEL = (a, b) => shot('driver', a, b, [{ t: a, s: 1.5, x: 530, y: 740 }, { t: b, s: 1.56, x: 532, y: 736, ease: 'linear' }], { dof: { bg: 3 } });
 const FACE = (a, b) => shot('driver', a, b, [{ t: a, s: 2.05, x: 372, y: 880 }, { t: b, s: 2.18, x: 372, y: 874, ease: 'linear' }], { dof: { bg: 6 }, screen: false });

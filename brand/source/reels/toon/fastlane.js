@@ -6,7 +6,7 @@
 //            [{ t, k }] lifts it (0 shut, 1 up). Him in the driver's seat behind it, seen through the
 //            opening (or faintly through the tinted glass when it's shut). s.drive: [{ t, x }] moves
 //            the car along the road (negative is forwards, to the left); s.lights: [{ t, k }] its lights;
-//            s.tag: a dealer's sticker on the door's glass (TEST DRIVE)
+//            s.tag: a dealer's sticker at the front of the door's window (TEST DRIVE)
 //   driver   him at the wheel, from the passenger seat: hands on the wheel, the dials behind it, the
 //            city going past his window and the road through the windscreen. s.dash: [{ t, speed,
 //            fuel, brake }] (speed in mph, fuel 0..1, brake 0..1 lights the brake light on the dash);
@@ -30,82 +30,170 @@
   const smoothstep = (k) => k * k * (3 - 2 * k);
 
   // ------------------------------------------------------------ the car, side on, facing left
-  // Car space: its nose at x 0, its tail at x 1000, the ground at y 0, its roof at y -250 (1.15 m high,
-  // 4.6 m long). The wheels' centres at x 180 and 770, 80 in radius.
-  const BODY = 'M 6 -82 C 30 -100, 90 -118, 160 -132 C 210 -142, 240 -156, 262 -170 L 318 -210 C 350 -232, 380 -246, 430 -250 L 560 -250 C 600 -248, 630 -238, 680 -222 C 760 -200, 860 -172, 958 -152 C 972 -146, 980 -132, 980 -110 L 976 -62 C 974 -48, 966 -40, 952 -38 L 868 -36 A 98 98 0 0 0 672 -36 L 278 -36 A 98 98 0 0 0 82 -36 L 26 -34 C 12 -34, 2 -44, 0 -58 Z';
-  // the side window: from the A-pillar's foot up to the roof, back to the C-pillar
-  const DLO = 'M 286 -196 L 338 -228 C 362 -240, 392 -244, 432 -244 L 548 -244 C 580 -242, 604 -232, 624 -220 L 640 -206 C 600 -196, 560 -190, 520 -188 L 360 -186 C 320 -186, 300 -190, 286 -196 Z';
-  // the door: its front edge behind the front wheel, up the A-pillar, over the roof to the window's
-  // back, down to the sill; it pivots near its front at the A-pillar's foot
-  const DOOR = 'M 292 -60 L 284 -150 L 286 -196 L 338 -228 C 362 -240, 392 -244, 432 -244 L 548 -244 C 572 -243, 590 -238, 606 -230 L 600 -150 L 586 -60 Z';
-  const HINGE = [292, -140];
-  function wheel(id, cx, spin, glow) {
-    let spokes = '';
-    for (let i = 0; i < 10; i++) {
-      const a = spin + (i * Math.PI) / 5, a2 = a + 0.13;
-      spokes += `<path d="M ${n(cx + Math.cos(a) * 15)} ${n(-80 + Math.sin(a) * 15)} L ${n(cx + Math.cos(a) * 60)} ${n(-80 + Math.sin(a) * 60)} L ${n(cx + Math.cos(a2) * 60)} ${n(-80 + Math.sin(a2) * 60)} L ${n(cx + Math.cos(a2) * 15)} ${n(-80 + Math.sin(a2) * 15)} Z" fill="url(#${id}cgold)"/>`;
+  // A mid-engined V12 supercar drawn to a real one's proportions (the scissor-doored Lamborghini
+  // Aventador LP 700-4: 4.78 m long, 1.14 m high, a 2.70 m wheelbase, 255/35 R19 tyres at the front
+  // and 335/30 R20 at the back) and its design language (one wedge line from nose to tail, a raked
+  // windscreen, angular arches, a crease rising to the back, the big side intake), in our own lines,
+  // with the TCP crown and no maker's badge. Car space: the nose at x 0, the tail at x 1000 (a unit is
+  // 4.78 mm), the ground at y 0, the roof at y -238.
+  const FW = { x: 222, r: 69, rim: 50 }, RW = { x: 787, r: 74, rim: 53 };
+  // the wheel arches, angular as on the real car and a little clear of the tyres
+  const ARCH_F = [[132, -28], [138, -96], [172, -150], [268, -152], [302, -112], [310, -28]];
+  const ARCH_R = [[694, -28], [700, -104], [732, -162], [839, -164], [875, -120], [882, -28]];
+  const pts = (list) => list.map(([x, y]) => `${x} ${y}`).join(' L ');
+  const rev = (list) => list.slice().reverse();
+  // the body: the nose, the bonnet rising to the windscreen, the roof, the engine cover falling to the
+  // tail, the diffuser, then back along the bottom through the arches and the sill
+  const BODY = `M 12 -22 C 4 -30, 0 -44, 0 -60 C 2 -76, 10 -92, 24 -102 C 90 -118, 200 -142, 300 -160
+    C 360 -190, 420 -218, 468 -232 C 500 -239, 556 -239, 592 -234 C 700 -224, 830 -210, 930 -201 L 988 -196 L 999 -188
+    C 1001 -160, 1000 -120, 995 -84 L 984 -60 L 962 -44 L 940 -38 L ${pts(rev(ARCH_R))} L ${pts(rev(ARCH_F))} L 40 -26 Z`;
+  // the side window: the A-pillar's foot, up the windscreen's edge, along the roof, down its back
+  // edge and forward along the beltline, which rises towards the back
+  const DLO = 'M 334 -172 L 462 -225 C 496 -232, 552 -232, 582 -228 L 612 -186 C 520 -183, 420 -178, 334 -172 Z';
+  // the scissor door: behind the front arch, up the A-pillar, over the roof, down its back edge to the
+  // side intake and the sill; it swings up about a hinge at the A-pillar's foot
+  const DOOR = 'M 314 -36 L 308 -148 L 322 -166 L 466 -229 C 500 -236, 556 -236, 588 -232 L 634 -152 L 606 -36 Z';
+  const HINGE = [310, -150];
+  // the character line: from the door's front, rising along it to the side intake and on over the
+  // rear haunch to the tail
+  const CREASE = 'M 300 -118 C 420 -128, 540 -140, 636 -150 L 722 -162 C 790 -172, 900 -182, 996 -187';
+  // a wheel: the tyre and its sidewall, the drilled disc and its calliper (which stays put as the
+  // wheel turns), five twin spokes in gold, the lug nuts and the crown on the centre cap
+  function wheel(id, w, spin, glow) {
+    const cx = w.x, cy = -w.r, R = w.r, M = w.rim, P = (r, a) => `${n(cx + Math.cos(a) * r)} ${n(cy + Math.sin(a) * r)}`;
+    let holes = '', spokes = '', nuts = '';
+    for (let i = 0; i < 24; i++) holes += `<circle cx="${n(cx + Math.cos(spin + i * Math.PI / 12) * M * 0.7)}" cy="${n(cy + Math.sin(spin + i * Math.PI / 12) * M * 0.7)}" r="1.6" fill="#1A1B1F"/>`;
+    for (let i = 0; i < 5; i++) {
+      const a = spin + (i * 2 * Math.PI) / 5;
+      // each spoke a stem from the hub that splits in two towards the rim; its side face, darker,
+      // shows its depth
+      for (const d of [-0.2, 0.2]) {
+        const b = a + d;
+        spokes += `<path d="M ${P(M * 0.26, a - 0.16)} L ${P(M * 0.52, a + d * 0.35 - 0.1)} L ${P(M - 1, b - 0.07)} L ${P(M - 1, b + 0.07)} L ${P(M * 0.52, a + d * 0.35 + 0.1)} L ${P(M * 0.26, a + 0.16)} Z" fill="#6E5320"/>`;
+        spokes += `<path d="M ${P(M * 0.26, a - 0.13)} L ${P(M * 0.52, a + d * 0.35 - 0.08)} L ${P(M - 2, b - 0.055)} L ${P(M - 2, b + 0.055)} L ${P(M * 0.52, a + d * 0.35 + 0.08)} L ${P(M * 0.26, a + 0.13)} Z" fill="url(#${id}cgold)"/>`;
+      }
+      nuts += `<circle cx="${n(cx + Math.cos(a + Math.PI / 5) * M * 0.35)}" cy="${n(cy + Math.sin(a + Math.PI / 5) * M * 0.35)}" r="2.2" fill="#8C6420"/>`;
     }
-    return `<circle cx="${cx}" cy="-80" r="80" fill="#0B0B0D"/><circle cx="${cx}" cy="-80" r="80" fill="none" stroke="#1E1E22" stroke-width="5"/>
-      <circle cx="${cx}" cy="-80" r="66" fill="#141416"/>
-      <path d="M ${cx - 30} -120 C ${cx - 10} -132, ${cx + 22} -132, ${cx + 40} -116 L ${cx + 34} -98 C ${cx + 20} -110, ${cx - 6} -112, ${cx - 22} -104 Z" fill="${GOLD}" opacity="0.9"/>
+    // the calliper over the disc, behind the spokes, at the top towards the back of the car
+    const ca = [-1.25, -0.45], co = M * 0.86, ci = M * 0.54;
+    const calliper = `<path d="M ${P(co, ca[0])} A ${n(co)} ${n(co)} 0 0 1 ${P(co, ca[1])} L ${P(ci, ca[1])} A ${n(ci)} ${n(ci)} 0 0 0 ${P(ci, ca[0])} Z" fill="#B3121A"/>
+      <path d="M ${P(co - 2, ca[0] + 0.06)} A ${n(co - 2)} ${n(co - 2)} 0 0 1 ${P(co - 2, ca[1] - 0.06)}" stroke="#E2484E" stroke-width="2" fill="none" opacity="0.8"/>`;
+    return `<circle cx="${cx}" cy="${n(cy)}" r="${R}" fill="#09090B"/>
+      <circle cx="${cx}" cy="${n(cy)}" r="${n((R + M) / 2)}" fill="none" stroke="#18181C" stroke-width="${n(R - M - 4)}"/>
+      <path d="M ${P(R - 3, -2.5)} A ${R - 3} ${R - 3} 0 0 1 ${P(R - 3, -0.65)}" stroke="#30313A" stroke-width="2.6" fill="none" opacity="0.9"/>
+      <circle cx="${cx}" cy="${n(cy)}" r="${M}" fill="#0D0D10"/>
+      <circle cx="${cx}" cy="${n(cy)}" r="${n(M * 0.82)}" fill="#4A4C53"/><circle cx="${cx}" cy="${n(cy)}" r="${n(M * 0.82)}" fill="none" stroke="#2C2D33" stroke-width="2.5"/>
+      <circle cx="${cx}" cy="${n(cy)}" r="${n(M * 0.58)}" fill="none" stroke="#5E6068" stroke-width="1.6" opacity="0.7"/>${holes}
+      <circle cx="${cx}" cy="${n(cy)}" r="${n(M * 0.37)}" fill="#26272C"/>
+      ${calliper}
       ${spokes}
-      <circle cx="${cx}" cy="-80" r="64" fill="none" stroke="url(#${id}cgold)" stroke-width="6"/>
-      <circle cx="${cx}" cy="-80" r="17" fill="#121214" stroke="url(#${id}cgold)" stroke-width="3"/>${crown(cx, -80, 0.07)}
-      <path d="M ${cx - 58} -112 A 66 66 0 0 1 ${cx + 30} -138" fill="none" stroke="${glow}" stroke-width="3" opacity="0.35"/>`;
+      <circle cx="${cx}" cy="${n(cy)}" r="${M - 1}" fill="none" stroke="url(#${id}cgold)" stroke-width="3.6"/>
+      <circle cx="${cx}" cy="${n(cy)}" r="${M - 3}" fill="none" stroke="#5C4418" stroke-width="1" opacity="0.8"/>
+      <circle cx="${cx}" cy="${n(cy)}" r="${n(M * 0.28)}" fill="url(#${id}cgold)"/>${nuts}
+      <circle cx="${cx}" cy="${n(cy)}" r="${n(M * 0.2)}" fill="#121214" stroke="#8C6420" stroke-width="1.3"/>${crown(cx, cy, 0.055)}
+      <path d="M ${P(M + 6, -2.6)} A ${M + 6} ${M + 6} 0 0 1 ${P(M + 6, -1.6)}" fill="none" stroke="${glow}" stroke-width="2.6" opacity="0.3"/>`;
   }
   // The car: k.door (0..1), k.spin (wheel turn, radians), k.lights (0..1), k.tag, k.inside: what is
   // drawn in the cabin (him), k.reflect: drawn as its own reflection (no cabin, no glow)
   function car(id, k) {
-    const ang = -78 * smoothstep(cl(k.door || 0));
+    const ang = -76 * smoothstep(cl(k.door || 0));
     const lit = cl(k.lights || 0);
+    // the door's skin: the paint and its gloss, the glass, the crease running on from the body, the
+    // wing mirror at the door's front, the dealer's sticker at the front of the window
     const doorSkin = `<path d="${DOOR} ${DLO}" fill="url(#${id}cpaint)" fill-rule="evenodd"/>
       <clipPath id="${id}cdc"><path d="${DOOR}"/></clipPath>
       <g clip-path="url(#${id}cdc)">
-        <path d="${DLO}" fill="url(#${id}cglass)" opacity="0.86"/>
-        <path d="M 300 -196 L 350 -226 L 380 -226 L 330 -196 Z" fill="#FFFFFF" opacity="0.08"/>
-        <path d="M 300 -150 C 420 -158, 520 -160, 604 -156" stroke="${GOLD}" stroke-width="2.5" fill="none" opacity="0.85"/>
-        <path d="M 296 -120 C 420 -126, 520 -126, 600 -122" stroke="#3A3C44" stroke-width="2" fill="none" opacity="0.6"/>
-        ${k.tag ? `<g transform="translate(566 -206)"><rect x="-34" y="-11" width="68" height="22" rx="3" fill="#F4F1EA"/><text x="0" y="5" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="10" fill="#C8281E">${k.tag}</text></g>` : ''}
+        <rect x="290" y="-240" width="360" height="120" fill="url(#${id}csky)"/>
+        <path d="${DLO}" fill="url(#${id}cglass)"/>
+        <path d="M 352 -176 L 440 -216 L 470 -216 L 386 -177 Z" fill="#FFFFFF" opacity="0.07"/>
+        <path d="M 488 -228 L 530 -229 L 486 -182 L 456 -181 Z" fill="#FFFFFF" opacity="0.04"/>
+        <path d="${CREASE}" stroke="url(#${id}cline)" stroke-width="2.6" fill="none"/>
+        <path d="${CREASE}" stroke="#030304" stroke-width="2" fill="none" transform="translate(0 4)" opacity="0.8"/>
+        <path d="M 320 -100 C 420 -110, 520 -118, 630 -126" stroke="#9FB4D8" stroke-width="5" fill="none" opacity="0.07"/>
+        <path d="M 316 -58 L 606 -56" stroke="#24262D" stroke-width="2" opacity="0.7"/>
+        ${k.tag ? `<g transform="translate(474 -195) rotate(-3)"><rect x="-38" y="-10" width="76" height="20" rx="3" fill="#F4F1EA"/><rect x="-35" y="-7" width="70" height="14" rx="2" fill="none" stroke="#C8281E" stroke-width="0.8"/><text x="0" y="3.6" text-anchor="middle" font-family="TCP Display" font-weight="800" font-size="8.4" fill="#C8281E">${k.tag}</text></g>` : ''}
       </g>
-      <path d="${DOOR}" fill="none" stroke="#050506" stroke-width="2.5"/>
-      <path d="M 560 -140 L 584 -140" stroke="#5A5C66" stroke-width="5" stroke-linecap="round"/>`;
+      <path d="${DOOR}" fill="none" stroke="#020203" stroke-width="2"/>
+      <path d="${DLO}" fill="none" stroke="#020203" stroke-width="2.6"/>
+      <path d="M 338 -172 L 344 -180" stroke="#0A0B0E" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 314 -186 L 348 -195 L 358 -183 L 324 -176 Z" fill="url(#${id}cpaint)" stroke="#020203" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M 318 -187 L 348 -194" stroke="#9FB4D8" stroke-width="1.4" opacity="0.6"/>`;
     const cabin = `<clipPath id="${id}cop"><path d="${DOOR}"/></clipPath>
       <g clip-path="url(#${id}cop)">
-        <rect x="270" y="-260" width="360" height="240" fill="#0B0C10"/>
-        <path d="M 600 -240 L 640 -240 L 640 -40 L 560 -40 Z" fill="#141519"/>
+        <rect x="290" y="-250" width="360" height="230" fill="#0B0C10"/>
+        <path d="M 590 -240 L 650 -240 L 650 -40 L 580 -40 Z" fill="#141519"/>
         ${k.inside || ''}
-        <path d="M 270 -70 L 630 -70 L 630 -30 L 270 -30 Z" fill="#17181C"/><path d="M 270 -70 L 630 -70" stroke="${GOLD}" stroke-width="2" opacity="0.6"/>
+        <path d="M 290 -62 L 650 -62 L 650 -30 L 290 -30 Z" fill="#17181C"/><path d="M 290 -62 L 650 -62" stroke="${GOLD}" stroke-width="2" opacity="0.6"/>
       </g>`;
+    // the engine cover's louvres, following it down towards the tail
+    let louvres = '';
+    for (let i = 0; i < 10; i++) {
+      const x = 640 + i * 26, y = -230 + i * 2.8;
+      louvres += `<path d="M ${x} ${n(y)} L ${x + 16} ${n(y + 1.4)}" stroke="#1C1E25" stroke-width="3" stroke-linecap="round"/>`;
+    }
+    const wells = `<path d="M ${pts(ARCH_F)} Z" fill="#030304"/><path d="M ${pts(ARCH_R)} Z" fill="#030304"/>`;
     return `
       ${k.reflect ? '' : cabin}
       <g ${k.reflect ? '' : `mask="url(#${id}chole)"`}>
+      <clipPath id="${id}cbc"><path d="${BODY}"/></clipPath>
       <path d="${BODY}" fill="url(#${id}cpaint)"/>
-      <path d="M 900 -160 L 968 -176 L 976 -164 L 958 -150 Z" fill="#0B0C0F"/><path d="M 900 -160 L 968 -176" stroke="#3A3F4C" stroke-width="2"/>
-      <path d="M 40 -96 C 200 -138, 560 -170, 960 -134" fill="none" stroke="url(#${id}cline)" stroke-width="7" opacity="0.75"/>
-      <path d="M 70 -60 L 270 -58 M 700 -56 L 950 -60" stroke="#26272D" stroke-width="3" opacity="0.8"/>
-      <path d="M 616 -178 L 700 -170 L 690 -96 L 640 -104 Z" fill="#050506"/><path d="M 626 -170 L 692 -164" stroke="#2A2B31" stroke-width="2"/>
-      ${[0, 1, 2, 3].map((i) => `<path d="M ${634 + i * 13} -162 L ${630 + i * 13} -108" stroke="#1A1B1F" stroke-width="3"/>`).join('')}
-      <path d="M 640 -206 C 600 -196, 560 -190, 520 -188 L 360 -186 C 320 -186, 300 -190, 286 -196" fill="none" stroke="#050506" stroke-width="3"/>
-      <path d="M 16 -84 L 70 -100 L 92 -96 L 40 -78 Z" fill="${lit > 0.05 ? '#EAF4FF' : '#3A4150'}"/>
-      ${lit > 0.05 && !k.reflect ? `<ellipse cx="40" cy="-88" rx="${n(120 * lit)}" ry="${n(30 * lit)}" fill="url(#${id}cbeam)" opacity="${n(lit)}"/>` : ''}
-      <path d="M 960 -132 L 978 -126 L 978 -96 L 964 -100 Z" fill="${lit > 0.05 ? '#FF3A2E' : '#5A1414'}"/>
-      ${lit > 0.05 && !k.reflect ? `<ellipse cx="972" cy="-112" rx="${n(46 * lit)}" ry="${n(22 * lit)}" fill="#FF3A2E" opacity="${n(0.35 * lit)}" filter="url(#${id}cb6)"/>` : ''}
-      ${crown(118, -122, 0.1)}
-      <path d="M 300 -244 C 400 -252, 520 -252, 600 -244" stroke="#9FB4D8" stroke-width="3" fill="none" opacity="0.45"/>
-      <path d="M 262 -172 L 300 -168 L 296 -150 L 270 -152 Z" fill="#0B0C0F"/><path d="M 262 -172 L 300 -168" stroke="#4A4F5C" stroke-width="2"/>
+      <g clip-path="url(#${id}cbc)">
+        <!-- the sky in the upper surfaces, the street in the side, a soft horizon line between -->
+        <rect x="-10" y="-250" width="1020" height="120" fill="url(#${id}csky)"/>
+        <path d="M 30 -98 C 200 -122, 420 -130, 620 -138 C 780 -146, 900 -160, 1000 -168" stroke="#9FB4D8" stroke-width="7" fill="none" opacity="0.08"/>
+        <path d="M 120 -104 C 300 -112, 520 -118, 700 -126" stroke="#C8D6F0" stroke-width="1.6" fill="none" opacity="0.28"/>
+        <rect x="-10" y="-70" width="1020" height="60" fill="#000" opacity="0.35"/>
+        ${[[180, -128], [520, -142], [860, -176]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="26" ry="3" fill="#FFE1A8" opacity="0.22"/>`).join('')}
       </g>
-      ${wheel(id, 180, k.spin || 0, '#9FB4D8')}${wheel(id, 770, k.spin || 0, '#9FB4D8')}
-      <path d="M 278 -36 A 98 98 0 0 0 82 -36 M 868 -36 A 98 98 0 0 0 672 -36" fill="none" stroke="#050506" stroke-width="4"/>
-
+      <!-- the character line and its highlight; the sill's crisp edge and the carbon skirt -->
+      <path d="${CREASE}" stroke="url(#${id}cline)" stroke-width="2.6" fill="none"/>
+      <path d="${CREASE}" stroke="#030304" stroke-width="2" fill="none" transform="translate(0 4)" opacity="0.8"/>
+      <path d="M 310 -52 L 694 -54 L 694 -28 L 310 -28 Z" fill="#0A0A0C"/><path d="M 310 -52 L 694 -54" stroke="#2E313A" stroke-width="1.8"/>
+      <!-- the nose: the bonnet's edge, the crown, the slim headlight with its Y of light, the intake and
+        splitter under it -->
+      <path d="M 26 -100 C 100 -118, 210 -142, 300 -160" stroke="#3A3F4C" stroke-width="1.6" fill="none" opacity="0.8"/>
+      ${crown(54, -104, 0.07)}
+      <path d="M 12 -88 L 98 -112 L 106 -106 L 22 -82 Z" fill="#11131A" stroke="#020203" stroke-width="1.4"/>
+      <path d="M 26 -88 L 60 -98 M 60 -98 L 74 -106 M 60 -98 L 78 -97" stroke="${lit > 0.05 ? '#FFFFFF' : '#5A6378'}" stroke-width="2" stroke-linecap="round" opacity="${lit > 0.05 ? n(0.45 + 0.55 * lit) : 1}"/>
+      ${lit > 0.05 && !k.reflect ? `<ellipse cx="34" cy="-90" rx="34" ry="9" fill="#EAF4FF" opacity="${n(0.6 * lit)}" filter="url(#${id}cb6)"/>
+        <path d="M 14 -92 L -320 -134 L -320 -24 L 14 -72 Z" fill="url(#${id}cbeam2)" opacity="${n(0.4 * lit)}" filter="url(#${id}cb6)"/>` : ''}
+      <path d="M 6 -46 L 92 -62 L 120 -36 L 16 -28 Z" fill="#050506"/>
+      ${[0, 1, 2].map((i) => `<path d="M ${30 + i * 26} -54 L ${42 + i * 26} -32" stroke="#16171C" stroke-width="2.4"/>`).join('')}
+      <path d="M 4 -24 L 132 -26" stroke="#22242B" stroke-width="3"/>
+      <!-- the bonnet's vent, the engine cover and its louvres, the roof catching the sky -->
+      <path d="M 214 -142 L 268 -152 L 270 -147 L 216 -137 Z" fill="#050506"/>
+      <path d="M 600 -234 C 700 -224, 830 -210, 928 -201 L 924 -192 C 830 -201, 700 -214, 604 -224 Z" fill="#0A0B0F"/>${louvres}
+      <path d="M 606 -232 C 700 -223, 820 -211, 920 -202" stroke="#8FA2C8" stroke-width="1.8" fill="none" opacity="0.35"/>
+      <path d="M 430 -224 C 480 -238, 560 -239, 620 -232" stroke="#B4C6E6" stroke-width="2.6" fill="none" opacity="0.5"/>
+      <!-- the side intake behind the door, its fins, and the scoop on the haunch above it -->
+      <path d="M 606 -40 L 636 -150 L 722 -160 L 699 -104 L 693 -40 Z" fill="#030304"/>
+      ${[0, 1, 2, 3, 4].map((i) => `<path d="M ${n(640 + i * 17)} ${n(-148 - i * 2.4)} L ${n(612 + i * 17)} -42" stroke="#14151A" stroke-width="2.4"/>`).join('')}
+      <path d="M 606 -40 L 636 -150 L 722 -160" stroke="#3A3F4C" stroke-width="1.8" fill="none"/>
+      <path d="M 646 -204 L 712 -212 L 716 -198 L 652 -192 Z" fill="#030304"/><path d="M 646 -204 L 712 -212" stroke="#4A4F5C" stroke-width="1.6"/>
+      <!-- the tail: the light's slim Y and its glow, the diffuser's fins, the tail's edge -->
+      <path d="M 948 -199 L 998 -192 L 999 -184 L 950 -191 Z" fill="${lit > 0.05 ? '#FF3A2E' : '#5A1414'}"/>
+      <path d="M 958 -195 L 976 -194 L 986 -199 M 976 -194 L 988 -189" stroke="${lit > 0.05 ? '#FFB0A8' : '#7A2020'}" stroke-width="1.6" stroke-linecap="round"/>
+      ${lit > 0.05 && !k.reflect ? `<ellipse cx="972" cy="-193" rx="${n(56 * lit)}" ry="${n(16 * lit)}" fill="#FF3A2E" opacity="${n(0.35 * lit)}" filter="url(#${id}cb6)"/>` : ''}
+      <path d="M 930 -62 L 992 -72 L 984 -46 L 932 -38 Z" fill="#050506"/>
+      ${[0, 1, 2].map((i) => `<path d="M ${944 + i * 16} -64 L ${940 + i * 16} -40" stroke="#1B1C22" stroke-width="2.6"/>`).join('')}
+      <path d="M 999 -188 C 1001 -160, 1000 -120, 995 -84" stroke="#2A2D36" stroke-width="2" fill="none"/>
+      <!-- the C-pillar's edge behind the window -->
+      <path d="M 588 -232 L 634 -152" stroke="#020203" stroke-width="2" opacity="0.9"/>
+      </g>
+      ${wells}
+      ${wheel(id, FW, k.spin || 0, '#9FB4D8')}${wheel(id, RW, k.spin || 0, '#9FB4D8')}
+      <path d="M ${pts(ARCH_F)} M ${pts(ARCH_R)}" fill="none" stroke="#020203" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M 138 -96 L 172 -150 L 268 -152 M 700 -104 L 732 -162 L 839 -164" fill="none" stroke="url(#${id}cline)" stroke-width="2" opacity="0.55"/>
       ${k.reflect ? `<path d="${DOOR}" fill="url(#${id}cpaint)"/>` : `<g transform="rotate(${n(ang)} ${HINGE[0]} ${HINGE[1]})">${doorSkin}</g>`}`;
   }
   function carDefs(id) {
     return `<defs>
-      <linearGradient id="${id}cpaint" x1="0" y1="-250" x2="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3B4152"/><stop offset="0.22" stop-color="#15171D"/><stop offset="0.5" stop-color="#0D0E12"/><stop offset="0.62" stop-color="#2A2E3A"/><stop offset="0.7" stop-color="#0B0C0F"/><stop offset="1" stop-color="#060607"/></linearGradient>
-      <linearGradient id="${id}cglass" x1="0" y1="-244" x2="0" y2="-186" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2A3346"/><stop offset="1" stop-color="#090B10"/></linearGradient>
+      <linearGradient id="${id}cpaint" x1="0" y1="-240" x2="0" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2C3242"/><stop offset="0.2" stop-color="#14161C"/><stop offset="0.45" stop-color="#0C0D11"/><stop offset="0.58" stop-color="#1C1F28"/><stop offset="0.66" stop-color="#0B0C0F"/><stop offset="1" stop-color="#050506"/></linearGradient>
+      <linearGradient id="${id}csky" x1="0" y1="-250" x2="0" y2="-130" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9FB4D8" stop-opacity="0.26"/><stop offset="0.5" stop-color="#5A6A8E" stop-opacity="0.1"/><stop offset="1" stop-color="#5A6A8E" stop-opacity="0"/></linearGradient>
+      <linearGradient id="${id}cglass" x1="0" y1="-232" x2="0" y2="-172" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2A3346"/><stop offset="1" stop-color="#090B10"/></linearGradient>
       <linearGradient id="${id}cline" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.3" stop-color="#C9D6F2" stop-opacity="0.8"/><stop offset="0.7" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
       <linearGradient id="${id}cgold" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="${GOLDHI}"/><stop offset="0.5" stop-color="${GOLD}"/><stop offset="1" stop-color="#8C6420"/></linearGradient>
-      <radialGradient id="${id}cbeam" cx="0" cy="0.5" r="1"><stop offset="0" stop-color="#EAF4FF" stop-opacity="0.9"/><stop offset="1" stop-color="#EAF4FF" stop-opacity="0"/></radialGradient>
+      <linearGradient id="${id}cbeam2" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#EAF4FF" stop-opacity="0.55"/><stop offset="1" stop-color="#EAF4FF" stop-opacity="0"/></linearGradient>
       <filter id="${id}cb6" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="6"/></filter>
       <mask id="${id}chole" maskUnits="userSpaceOnUse" x="-200" y="-500" width="1400" height="700"><rect x="-200" y="-500" width="1400" height="700" fill="#fff"/><path d="${DOOR}" fill="#000"/></mask>
     </defs>`;
@@ -114,7 +202,7 @@
   // ------------------------------------------------------------ the street
   // The car's nose at x 40, the kerb behind it; the ground at y 1500. Him in the driver's seat: a 0.228
   // scale founder (a car 1000 long is 4.6 m), his head under the roof.
-  const STREET = { x: 40, y: 1500, him: { x: 430, y: -205, s: 0.228 } };
+  const STREET = { x: 40, y: 1500, him: { x: 520, y: -194, s: 0.228 } };
   SETS.street = (s, t, st, p, id) => {
     p.light = { ...p.light, tint: '#F6C27A', rim: 0.9 };
     p.flip = true;
@@ -144,11 +232,11 @@
     // him in the driver's seat: the seat's back behind him, the wheel ahead of him
     const h = STREET.him;
     const inside = `<g>
-      <path d="M 520 -236 C 548 -236, 566 -220, 566 -196 L 566 -40 L 470 -40 L 486 -200 C 490 -224, 502 -236, 520 -236 Z" fill="#17171B"/>
-      <path d="M 528 -228 C 546 -228, 556 -214, 556 -196 L 556 -60" stroke="${GOLD}" stroke-width="1.6" fill="none" stroke-dasharray="4 3" opacity="0.8"/>${crown(524, -206, 0.07)}
+      <path d="M 598 -224 C 622 -224, 636 -210, 636 -190 L 636 -40 L 552 -40 L 566 -192 C 570 -214, 580 -224, 598 -224 Z" fill="#17171B"/>
+      <path d="M 604 -216 C 620 -216, 628 -204, 628 -190 L 628 -60" stroke="${GOLD}" stroke-width="1.6" fill="none" stroke-dasharray="4 3" opacity="0.8"/>${crown(600, -198, 0.07)}
       <g transform="translate(${h.x} ${h.y}) scale(${h.s})">${F.founderSVG(p, id + 'f', 'all')}</g>
-      <ellipse cx="352" cy="-128" rx="16" ry="44" fill="none" stroke="#202024" stroke-width="9" transform="rotate(-14 352 -128)"/>
-      <path d="M 300 -110 L 380 -112 L 384 -80 L 300 -78 Z" fill="#101114"/></g>`;
+      <ellipse cx="452" cy="-140" rx="14" ry="40" fill="none" stroke="#202024" stroke-width="8" transform="rotate(-18 452 -140)"/>
+      <path d="M 396 -150 L 468 -158 L 472 -128 L 396 -122 Z" fill="#101114"/></g>`;
     const subject = `${carDefs(id)}${carDefs(id + 'r')}
       <defs><linearGradient id="${id}swet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1018"/><stop offset="1" stop-color="#05060A"/></linearGradient>
         <linearGradient id="${id}sref" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.32"/><stop offset="0.6" stop-color="#fff" stop-opacity="0"/></linearGradient>
@@ -292,16 +380,30 @@
       const az = val(s.ahead, t, 'z', 2), side = val(s.ahead, t, 'side', 0), lit = val(s.ahead, t, 'brake', 0);
       if (az <= 1 && az > 0.02) {
         const [x, y, k] = proj(az, side), w = 40 + 900 * k;
-        // its tyres, the body and bumper, the rear window and roof, the tail lights (a glow when braking), the plate
+        // a modern saloon from behind, in proportion to a real one (1.85 m wide, 1.45 m high): its tyres
+        // and their sidewalls, the bumper, diffuser and twin exhausts, the boot and its shut line, the
+        // full-width tail lights (brighter, with the high brake light, when braking), the yellow rear
+        // plate, the rear screen between its C-pillars, the roof and the wing mirrors
         const W2 = (v) => n(v * w);
-        things.push({ z: az, svg: `<g transform="translate(${n(x)} ${n(y)})"><ellipse cx="0" cy="${W2(-0.01)}" rx="${W2(0.56)}" ry="${W2(0.04)}" fill="#000" opacity="0.55"/>
-          <rect x="${W2(-0.48)}" y="${W2(-0.13)}" width="${W2(0.13)}" height="${W2(0.13)}" rx="${W2(0.02)}" fill="#0A0A0C"/><rect x="${W2(0.35)}" y="${W2(-0.13)}" width="${W2(0.13)}" height="${W2(0.13)}" rx="${W2(0.02)}" fill="#0A0A0C"/>
-          <path d="M ${W2(-0.4)} ${W2(-0.54)} L ${W2(0.4)} ${W2(-0.54)} L ${W2(0.47)} ${W2(-0.36)} L ${W2(-0.47)} ${W2(-0.36)} Z" fill="#7A0E12"/>
-          <path d="M ${W2(-0.34)} ${W2(-0.51)} L ${W2(0.34)} ${W2(-0.51)} L ${W2(0.41)} ${W2(-0.38)} L ${W2(-0.41)} ${W2(-0.38)} Z" fill="#14161E"/><path d="M ${W2(-0.3)} ${W2(-0.49)} L ${W2(-0.12)} ${W2(-0.49)} L ${W2(-0.2)} ${W2(-0.4)} L ${W2(-0.37)} ${W2(-0.4)} Z" fill="#FFFFFF" opacity="0.08"/>
-          <rect x="${W2(-0.52)}" y="${W2(-0.37)}" width="${W2(1.04)}" height="${W2(0.27)}" rx="${W2(0.05)}" fill="#9C1418"/>
-          <rect x="${W2(-0.5)}" y="${W2(-0.14)}" width="${W2(1)}" height="${W2(0.06)}" rx="${W2(0.02)}" fill="#3A0A0C"/>
-          ${[-1, 1].map((q) => `<rect x="${W2(q > 0 ? 0.3 : -0.48)}" y="${W2(-0.33)}" width="${W2(0.18)}" height="${W2(0.06)}" rx="${W2(0.015)}" fill="${lit > 0.5 ? '#FF4A3E' : '#E0302A'}"/>${lit > 0.05 ? `<ellipse cx="${W2(q * 0.39)}" cy="${W2(-0.3)}" rx="${W2(0.13)}" ry="${W2(0.05)}" fill="#FF3A2E" opacity="${n(0.35 * lit)}"/>` : ''}`).join('')}
-          <rect x="${W2(-0.1)}" y="${W2(-0.25)}" width="${W2(0.2)}" height="${W2(0.06)}" rx="${W2(0.01)}" fill="#F2C230"/></g>` });
+        const tail = lit > 0.5 ? '#FF4A3E' : '#C8231E', bar = lit > 0.5 ? '#FFD0C8' : '#F06A60';
+        things.push({ z: az, svg: `<g transform="translate(${n(x)} ${n(y)})"><ellipse cx="0" cy="${W2(-0.005)}" rx="${W2(0.58)}" ry="${W2(0.035)}" fill="#000" opacity="0.6"/>
+          ${[-1, 1].map((q) => `<rect x="${W2(q > 0 ? 0.33 : -0.47)}" y="${W2(-0.15)}" width="${W2(0.14)}" height="${W2(0.15)}" rx="${W2(0.025)}" fill="#0A0A0C"/><rect x="${W2(q > 0 ? 0.345 : -0.455)}" y="${W2(-0.14)}" width="${W2(0.11)}" height="${W2(0.12)}" rx="${W2(0.02)}" fill="none" stroke="#24252B" stroke-width="${W2(0.008)}"/>`).join('')}
+          <path d="M ${W2(-0.5)} ${W2(-0.42)} C ${W2(-0.5)} ${W2(-0.47)}, ${W2(-0.46)} ${W2(-0.49)}, ${W2(-0.4)} ${W2(-0.5)} L ${W2(0.4)} ${W2(-0.5)} C ${W2(0.46)} ${W2(-0.49)}, ${W2(0.5)} ${W2(-0.47)}, ${W2(0.5)} ${W2(-0.42)} L ${W2(0.5)} ${W2(-0.16)} C ${W2(0.5)} ${W2(-0.12)}, ${W2(0.47)} ${W2(-0.1)}, ${W2(0.42)} ${W2(-0.1)} L ${W2(-0.42)} ${W2(-0.1)} C ${W2(-0.47)} ${W2(-0.1)}, ${W2(-0.5)} ${W2(-0.12)}, ${W2(-0.5)} ${W2(-0.16)} Z" fill="#9C1418"/>
+          <path d="M ${W2(-0.49)} ${W2(-0.44)} L ${W2(0.49)} ${W2(-0.44)} L ${W2(0.49)} ${W2(-0.38)} L ${W2(-0.49)} ${W2(-0.38)} Z" fill="#C0262A" opacity="0.55"/>
+          <path d="M ${W2(-0.36)} ${W2(-0.66)} C ${W2(-0.33)} ${W2(-0.7)}, ${W2(-0.27)} ${W2(-0.72)}, ${W2(-0.2)} ${W2(-0.72)} L ${W2(0.2)} ${W2(-0.72)} C ${W2(0.27)} ${W2(-0.72)}, ${W2(0.33)} ${W2(-0.7)}, ${W2(0.36)} ${W2(-0.66)} L ${W2(0.45)} ${W2(-0.48)} L ${W2(-0.45)} ${W2(-0.48)} Z" fill="#8A1216"/>
+          <path d="M ${W2(-0.3)} ${W2(-0.65)} L ${W2(0.3)} ${W2(-0.65)} L ${W2(0.37)} ${W2(-0.5)} L ${W2(-0.37)} ${W2(-0.5)} Z" fill="#12141B"/>
+          <path d="M ${W2(-0.26)} ${W2(-0.63)} L ${W2(-0.08)} ${W2(-0.63)} L ${W2(-0.18)} ${W2(-0.52)} L ${W2(-0.33)} ${W2(-0.52)} Z" fill="#FFFFFF" opacity="0.07"/>
+          <rect x="${W2(-0.07)}" y="${W2(-0.665)}" width="${W2(0.14)}" height="${W2(0.012)}" rx="${W2(0.006)}" fill="${lit > 0.5 ? '#FF3A2E' : '#4A0E10'}"/>
+          ${[-1, 1].map((q) => `<path d="M ${W2(q * 0.46)} ${W2(-0.52)} L ${W2(q * 0.56)} ${W2(-0.54)} L ${W2(q * 0.57)} ${W2(-0.48)} L ${W2(q * 0.47)} ${W2(-0.47)} Z" fill="#7A0E12"/>`).join('')}
+          <path d="M ${W2(-0.3)} ${W2(-0.47)} L ${W2(-0.32)} ${W2(-0.3)} L ${W2(0.32)} ${W2(-0.3)} L ${W2(0.3)} ${W2(-0.47)}" fill="none" stroke="#5A0A0D" stroke-width="${W2(0.006)}"/>
+          ${[-1, 1].map((q) => `<path d="M ${W2(q * 0.49)} ${W2(-0.43)} L ${W2(q * 0.2)} ${W2(-0.43)} L ${W2(q * 0.2)} ${W2(-0.385)} L ${W2(q * 0.49)} ${W2(-0.37)} Z" fill="${tail}"/><path d="M ${W2(q * 0.47)} ${W2(-0.405)} L ${W2(q * 0.22)} ${W2(-0.405)}" stroke="${bar}" stroke-width="${W2(0.008)}"/>${lit > 0.05 ? `<ellipse cx="${W2(q * 0.35)}" cy="${W2(-0.4)}" rx="${W2(0.16)}" ry="${W2(0.045)}" fill="#FF3A2E" opacity="${n(0.4 * lit)}"/>` : ''}`).join('')}
+          <path d="M ${W2(-0.2)} ${W2(-0.405)} L ${W2(0.2)} ${W2(-0.405)}" stroke="${lit > 0.5 ? '#FF6A5E' : '#7A1414'}" stroke-width="${W2(0.006)}"/>
+          <rect x="${W2(-0.13)}" y="${W2(-0.29)}" width="${W2(0.26)}" height="${W2(0.07)}" rx="${W2(0.008)}" fill="#F2C230"/>
+          ${[0, 1, 2, 3, 4, 5, 6].map((i) => `<rect x="${W2(-0.105 + i * 0.031)}" y="${W2(-0.275)}" width="${W2(0.018)}" height="${W2(0.04)}" fill="#1A1A1A"/>`).join('')}
+          <path d="M ${W2(-0.44)} ${W2(-0.2)} L ${W2(0.44)} ${W2(-0.2)} L ${W2(0.42)} ${W2(-0.1)} L ${W2(-0.42)} ${W2(-0.1)} Z" fill="#6E0C10"/>
+          <path d="M ${W2(-0.3)} ${W2(-0.14)} L ${W2(0.3)} ${W2(-0.14)} L ${W2(0.28)} ${W2(-0.1)} L ${W2(-0.28)} ${W2(-0.1)} Z" fill="#141418"/>
+          ${[-1, 1].map((q) => `<ellipse cx="${W2(q * 0.24)}" cy="${W2(-0.125)}" rx="${W2(0.035)}" ry="${W2(0.016)}" fill="#050506" stroke="#5A5C66" stroke-width="${W2(0.006)}"/>`).join('')}
+          ${[-1, 1].map((q) => `<rect x="${W2(q > 0 ? 0.36 : -0.42)}" y="${W2(-0.19)}" width="${W2(0.06)}" height="${W2(0.015)}" fill="#7A1414"/>`).join('')}</g>` });
       }
     }
     const sig = step(s.signal, t, null), lightZ = val(s.lightz, t, 'z', 2);
@@ -356,10 +458,14 @@
 
   // ------------------------------------------------------------ the tarmac
   // His jet on the apron at sunrise, side on and facing left. 150 units to a metre: the apron at y
-  // 1500, the cabin floor (the door's sill) 1 m up, the fuselage 2 m deep. The door behind the
-  // cockpit; the airstair from its sill down to a red carpet, with a solid side wall as high as his
-  // hips, so that from here only his top half shows as he climbs. Him: a 0.157 scale founder.
-  const JET = { ground: 1500, door: [450, 1066, 140, 280], foot: [900, 1500] };
+  // 1500, the cabin floor (the door's sill) 1.2 m up, the fuselage 2 m deep, the door 1.55 m high and
+  // 0.8 m wide behind the cockpit, its own door swung back against the fuselage. At the door, a VIP
+  // stair truck as at any airport: a platform level with the sill, seven 17 cm steps down to the
+  // apron at 35 degrees, solid side panels 0.85 m above the steps with a handrail on top (so, as on
+  // real ones, people on it show from the waist up), the bottom step left open with the red carpet
+  // down it, and the truck's chassis and wheels under it. Him: a 1.70 m founder (0.182 scale).
+  const JET = { ground: 1500, door: [452, 1088, 120, 232], foot: [848, 1500] };
+  const STAIR = { top: [596, 1320], rise: 180 / 7, tread: 42, steps: 7, rail: 128, open: 800, deck: 436 };
   SETS.tarmac = (s, t, st, p, id) => {
     p.light = { ...p.light, tint: '#FFC98A', rim: 1 };
     p.flip = true;
@@ -375,7 +481,8 @@
     const [DX, DY, DW, DH] = JET.door, sill = DY + DH, [fx, fy] = JET.foot;
     const jet = `<defs><linearGradient id="${id}tfus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.45" stop-color="#F1EDE7"/><stop offset="0.8" stop-color="#CFC8BE"/><stop offset="1" stop-color="#A39B91"/></linearGradient>
         <linearGradient id="${id}tapr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9A79A"/><stop offset="1" stop-color="#6F625B"/></linearGradient>
-        <linearGradient id="${id}tglow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFC98A" stop-opacity="0.55"/><stop offset="1" stop-color="#FFC98A" stop-opacity="0"/></linearGradient></defs>
+        <linearGradient id="${id}tglow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFC98A" stop-opacity="0.55"/><stop offset="1" stop-color="#FFC98A" stop-opacity="0"/></linearGradient>
+        <linearGradient id="${id}tpanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF8F3"/><stop offset="0.55" stop-color="#ECE6DD"/><stop offset="1" stop-color="#C9C1B6"/></linearGradient></defs>
       <rect x="-1400" y="1300" width="4400" height="1500" fill="url(#${id}tapr)"/>
       <path d="M -1400 1580 L 3000 1580" stroke="#E8C547" stroke-width="10" opacity="0.8"/><path d="M -1400 1720 L 3000 1720" stroke="#F2EEE6" stroke-width="6" opacity="0.4"/>
       <ellipse cx="1000" cy="1506" rx="1050" ry="26" fill="#000" opacity="0.28"/>
@@ -402,26 +509,54 @@
       <rect x="${DX}" y="${DY}" width="${DW}" height="${DH}" rx="22" fill="#2A1C12"/>
       <rect x="${DX}" y="${DY}" width="${DW}" height="${DH}" rx="22" fill="url(#${id}tglow)"/>
       <rect x="${DX + 26}" y="${DY + 40}" width="60" height="70" rx="20" fill="#F2D6A8" opacity="0.35"/>
-      <rect x="${DX}" y="${DY}" width="${DW}" height="${DH}" rx="22" fill="none" stroke="#9B9189" stroke-width="5"/>`;
-    // the stairs: from the sill down to the carpet, the steps behind him, the wall in front of him
-    const A = [DX + DW, sill], B = [fx, fy];
-    const at2 = (u) => [mix(A[0], B[0], u), mix(A[1], B[1], u)];
-    const steps = Array.from({ length: 7 }, (_, i) => { const [x, y] = at2((i + 0.5) / 7); return `<path d="M ${n(x - 40)} ${n(y)} L ${n(x + 30)} ${n(y)}" stroke="#4E4844" stroke-width="7"/><path d="M ${n(x - 40)} ${n(y - 4)} L ${n(x + 30)} ${n(y - 4)}" stroke="#7A726A" stroke-width="2"/>`; }).join('');
-    const stairsBack = `<path d="M ${A[0] - 20} ${A[1] - 6} L ${B[0] + 40} ${B[1] - 6} L ${B[0] + 40} ${B[1] + 4} L ${A[0] - 20} ${A[1] + 10} Z" fill="#3E3935"/>${steps}`;
-    const H = 172;
-    const ext = (u) => at2(u);
-    const [w0, w1] = [ext(-0.06), ext(1.08)];
-    const wall = `<path d="M ${n(w0[0])} ${n(w0[1] - H)} L ${n(w1[0])} ${n(w1[1] - H)} L ${n(w1[0])} ${n(w1[1] + 6)} L ${n(w0[0])} ${n(w0[1] + 60)} Z" fill="url(#${id}tfus)"/>
-      <path d="M ${n(w0[0])} ${n(w0[1] - H + 30)} L ${n(w1[0])} ${n(w1[1] - H + 30)}" stroke="${GOLD}" stroke-width="6"/>
-      <path d="M ${n(w0[0])} ${n(w0[1] - H)} L ${n(w1[0])} ${n(w1[1] - H)}" stroke="#8C8378" stroke-width="9" stroke-linecap="round"/>
-      <path d="M ${n(w0[0])} ${n(w0[1] - H)} L ${n(w1[0])} ${n(w1[1] - H)}" stroke="#E9E4DC" stroke-width="3" stroke-linecap="round"/>
-      <path d="M ${n(w1[0])} ${n(w1[1] + 6)} L ${n(w0[0])} ${n(w0[1] + 60)}" stroke="#7A726A" stroke-width="4"/>`;
-    const carpet = `<path d="M ${fx - 30} ${fy} L ${fx + 700} ${fy} L ${fx + 820} ${fy + 190} L ${fx - 60} ${fy + 190} Z" fill="#9E1C22"/><path d="M ${fx - 30} ${fy} L ${fx + 700} ${fy}" stroke="${GOLD}" stroke-width="5"/>
-      <path d="M ${fx - 44} ${fy + 96} L ${fx + 760} ${fy + 96}" stroke="#7E141A" stroke-width="3" opacity="0.6"/>`;
-    // him: his feet on the stair at k (0 at the foot, 1 at the sill), his top half above the wall
-    const hs = 0.157, foot = k < 1 ? at2(1 - k) : A, bob = Math.abs(Math.sin(k * Math.PI * 7)) * 4;
-    const him = `<g transform="translate(${n(foot[0] + 10)} ${n(foot[1] - 248 - bob)}) scale(${hs})">${F.founderSVG(p, id + 'f', 'all')}</g>`;
-    const subject = `${jet}${carpet}${stairsBack}${him}${wall}`;
+      <rect x="${DX}" y="${DY}" width="${DW}" height="${DH}" rx="22" fill="none" stroke="#9B9189" stroke-width="5"/>
+      <rect x="${DX - DW - 10}" y="${DY + 4}" width="${DW}" height="${DH - 8}" rx="20" fill="#E9E4DC" stroke="#9B9189" stroke-width="4"/>
+      <rect x="${DX - DW + 18}" y="${DY + 40}" width="${DW - 56}" height="56" rx="18" fill="#C9C1B6"/>
+      <rect x="${DX - 30}" y="${DY + DH / 2}" width="14" height="4" rx="2" fill="#7A726A"/>`;
+    // the stair truck. Nosing j (0 at the platform's edge) at x0 + j*tread, y0 + j*rise; the last riser
+    // meets the apron
+    const [x0, y0] = STAIR.top, R = STAIR.rise, Tr = STAIR.tread, N = STAIR.steps, RH = STAIR.rail;
+    const nose = (x) => (x <= x0 ? y0 : y0 + ((x - x0) / Tr) * R);
+    const xEnd = x0 + (N - 1) * Tr, open = STAIR.open, deck = STAIR.deck;
+    const railY = (x) => nose(Math.min(x, open)) - RH;
+    // the chassis and wheels under it, the struts up to the platform, a brace under the steps
+    const chassis = `<path d="M ${deck - 16} 1440 L ${open - 30} 1440 L ${open - 30} 1462 L ${deck - 16} 1462 Z" fill="#3A3D45"/>
+      <path d="M ${deck - 16} 1440 L ${open - 30} 1440" stroke="#5A5E68" stroke-width="2"/>
+      ${[deck + 12, x0 - 12].map((x) => `<rect x="${x - 6}" y="${y0 + 18}" width="12" height="${1440 - y0 - 18}" fill="#4A4E58"/>`).join('')}
+      <path d="M ${x0 - 8} ${y0 + 40} L ${open - 40} 1440" stroke="#4A4E58" stroke-width="9"/>
+      ${[deck + 34, open - 70].map((x) => `<circle cx="${x}" cy="1476" r="24" fill="#141416"/><circle cx="${x}" cy="1476" r="11" fill="#7A7F8A"/><circle cx="${x}" cy="1476" r="4" fill="#3A3D45"/>`).join('')}
+      <path d="M ${deck - 16} 1452 L ${deck - 30} 1452 L ${deck - 30} 1492 L ${deck - 40} 1500 L ${deck - 10} 1500 L ${deck - 20} 1492 Z" fill="#4A4E58"/>`;
+    // the open bottom step: its side, the carpet down its tread and riser, and down the last riser onto
+    // the apron
+    const lastY = nose(xEnd);
+    const steps = `<path d="M ${open} ${n(nose(open))} L ${xEnd - Tr + 6} ${n(nose(open))} L ${xEnd - Tr + 6} ${n(lastY)} L ${xEnd} ${n(lastY)} L ${xEnd} ${JET.ground} L ${open} ${JET.ground} Z" fill="#D9D3CA"/>
+      <path d="M ${xEnd - Tr + 6} ${n(nose(open))} L ${xEnd - Tr + 6} ${n(lastY)} L ${xEnd} ${n(lastY)} L ${xEnd} ${JET.ground}" fill="none" stroke="#9E1C22" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M ${open} ${n(nose(open) - 3)} L ${xEnd - Tr + 9} ${n(nose(open) - 3)}" stroke="#9E1C22" stroke-width="6"/>
+      <path d="M ${open} ${n(nose(open) + 22)} L ${xEnd - Tr + 3} ${n(nose(open) + 22)} M ${xEnd - Tr + 9} ${n(lastY + 22)} L ${xEnd - 3} ${n(lastY + 22)}" stroke="#B8B1A7" stroke-width="2"/>`;
+    // the side panels: the platform's, level with the sill, and the stairs', parallel to the steps, as
+    // high above them as his waist; a gold stripe, the crown; the handrail on top, carried on over the
+    // open step on a post
+    const yA = y0 - RH, yB = nose(open) - RH, base = 30;
+    const panel = `<path d="M ${deck} ${yA} L ${x0} ${yA} L ${open} ${n(yB)} L ${open} ${n(nose(open) + base)} L ${x0} ${y0 + base} L ${deck} ${y0 + base} Z" fill="url(#${id}tpanel)"/>
+      <path d="M ${deck} ${yA + 18} L ${x0} ${yA + 18} L ${open} ${n(yB + 18)}" stroke="${GOLD}" stroke-width="5" fill="none"/>
+      <path d="M ${deck} ${y0 + base} L ${x0} ${y0 + base} L ${open} ${n(nose(open) + base)}" stroke="#8C8378" stroke-width="3" fill="none"/>
+      <path d="M ${x0} ${yA + 4} L ${x0} ${y0 + base}" stroke="#B8B1A7" stroke-width="2"/>
+      <path d="M ${open} ${n(yB)} L ${open} ${n(nose(open) + base)}" stroke="#8C8378" stroke-width="3"/>
+      ${crown((deck + x0) / 2, yA + 66, 0.16)}
+      <path d="M ${deck - 8} ${yA - 4} L ${x0} ${yA - 4} L ${xEnd + 6} ${n(railY(xEnd + 6) - 4 + (xEnd + 6 - open) / Tr * R)}" stroke="#7A7F8A" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M ${deck - 8} ${yA - 6} L ${x0} ${yA - 6} L ${xEnd + 6} ${n(railY(xEnd + 6) - 6 + (xEnd + 6 - open) / Tr * R)}" stroke="#E4E7EC" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="${xEnd - 2}" y="${n(railY(xEnd) + (xEnd - open) / Tr * R)}" width="7" height="${n(lastY - railY(xEnd) - (xEnd - open) / Tr * R)}" fill="#7A7F8A"/>
+      <rect x="${deck - 12}" y="${yA - 4}" width="7" height="${RH + base + 4}" fill="#7A7F8A"/>`;
+    const carpet = `<path d="M ${xEnd - 2} ${fy} L ${xEnd + 700} ${fy} L ${xEnd + 820} ${fy + 190} L ${xEnd - 40} ${fy + 190} Z" fill="#9E1C22"/><path d="M ${xEnd - 2} ${fy} L ${xEnd + 700} ${fy}" stroke="${GOLD}" stroke-width="5"/>
+      <path d="M ${xEnd - 20} ${fy + 96} L ${xEnd + 760} ${fy + 96}" stroke="#7E141A" stroke-width="3" opacity="0.6"/>`;
+    // him: up the steps from the fifth (k 0) to the platform's edge (k 0.8), then across it to the
+    // door (k 1), a small lift at each step; behind the panels from the waist down
+    const hs = 0.182, xs = x0 + 4.2 * Tr, door = DX + DW / 2;
+    const fxk = k < 0.8 ? mix(xs, x0, k / 0.8) : mix(x0, door, (k - 0.8) / 0.2);
+    const stepIdx = (xs - fxk) / Tr, bob = fxk > x0 ? Math.sin(Math.PI * (stepIdx % 1)) * 4 : Math.abs(Math.sin(Math.PI * (x0 - fxk) / 34)) * 2;
+    const footY = nose(fxk) - bob;
+    const him = `<g transform="translate(${n(fxk)} ${n(footY - 1258 * hs)}) scale(${hs})">${F.founderSVG(p, id + 'f', 'all')}</g>`;
+    const subject = `${jet}${chassis}${carpet}${him}${steps}${panel}`;
     return [{ f: 0.3, svg: bg, blur: s.dof && s.dof.bg }, { f: 1, svg: subject, blur: s.dof && s.dof.all }, T.topShade(id)];
   };
 })();

@@ -23,8 +23,8 @@ const POSE = [
 const CHART = [{ t: 0, story: 'clutter', i: 50, ind: 0 }, { t: T.end, story: 'clutter', i: 60, ind: 0, ease: 'linear' }];
 
 const shot = (set, a, b, cam, more = {}) => ({ kind: 'toon', set, from: a, to: b, cam, pose: POSE, chart: CHART, climb: [{ t: 0, k: 0 }, { t: T.cabin - 0.95, k: 1, ease: 'linear' }], fi: 0.01, fo: 0.01, ...more });
-const APRON = (a, b) => shot('tarmac', a, b, [{ t: a, s: 1.05, x: 760, y: 1240 }, { t: b, s: 1.14, x: 740, y: 1240, ease: 'linear' }], { dof: { bg: 2 } });
-const STAIRS = (a, b) => shot('tarmac', a, b, [{ t: a, s: 2.3, x: 752, y: 1230 }, { t: b - 0.9, s: 2.4, x: 612, y: 1160, ease: 'linear' }, { t: b, s: 2.42, x: 606, y: 1156, ease: 'linear' }], { dof: { bg: 5 } });
+const APRON = (a, b) => shot('tarmac', a, b, [{ t: a, s: 1.26, x: 700, y: 1330 }, { t: b, s: 1.34, x: 684, y: 1324, ease: 'linear' }], { dof: { bg: 2 } });
+const STAIRS = (a, b) => shot('tarmac', a, b, [{ t: a, s: 2.3, x: 700, y: 1290 }, { t: b - 0.9, s: 2.5, x: 548, y: 1196, ease: 'linear' }, { t: b, s: 2.54, x: 544, y: 1192, ease: 'linear' }], { dof: { bg: 5 } });
 const WIDE = (a, b) => shot('cabin', a, b, [{ t: a, s: 1.0, x: 540, y: 960 }, { t: b, s: 1.06, x: 530, y: 955, ease: 'linear' }], { dof: { bg: 2 } });
 const FACE = (a, b) => shot('cabin', a, b, [{ t: a, s: 2.05, x: 400, y: 900 }, { t: b, s: 2.2, x: 400, y: 894, ease: 'linear' }], { dof: { bg: 6 } });
 const WINDOW = (a, b) => shot('window', a, b, [{ t: a, s: 1.0, x: 540, y: 900 }, { t: b, s: 1.07, x: 540, y: 900, ease: 'linear' }]);
