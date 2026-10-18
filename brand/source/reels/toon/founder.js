@@ -27,7 +27,7 @@
 //   brow: [near, far],                 raise each brow, -1 (frown) .. 1 (up)
 //   mouth: { open, smile, smirk },     0..1, -1..1, 0..1
 //   cap: 'fwd' | 'back' | 'none', shades: 0..1 (sunglasses on),
-//   arms: 'rest' | 'desk' | 'fold' | 'phone',
+//   arms: 'rest' | 'desk' | 'fold' | 'phone' | 'wheel',
 //   hand: { x, y, click },             the mouse hand's offset and its click (desk)
 //   light: { key: 1 (from the right) | -1, tint: '#hex', rim: 0..1 }
 // }
@@ -1379,6 +1379,13 @@
     phone: {
       far: { E: [128, 450], W: [146, 640] },
       near: { E: [-120, 412], W: [38, 352], hand: { kind: 'phoneBack', rot: -29 }, phone: true },
+    },
+    // both hands on a steering wheel in front of him, gripping it as they grip his arm when his arms
+    // are folded (the set draws the wheel between his far hand and his near one): the near hand
+    // round the rim at nine o'clock, the far one behind it at three
+    wheel: {
+      far: { E: [214, 404], W: [290, 352], hand: { kind: 'grip', rot: 6 } },
+      near: { E: [-92, 402], W: [96, 350], hand: { kind: 'grip', rot: -2 } },
     },
   };
   // the part of the picture past his body's far side, for his far arm (just outside the line round

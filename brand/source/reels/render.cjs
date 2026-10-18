@@ -172,9 +172,10 @@ function ffmpeg(list) {
   const video = ['-framerate', String(FPS), '-i', path.join(frameDir, '%05d.jpg')];
   // capped at 8 Mbps so a bright, grainy reel still comes in under 30 MB (TikTok and Instagram recompress anyway)
   const enc = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-maxrate', '8M', '-bufsize', '16M', '-pix_fmt', 'yuv420p', '-profile:v', 'high', '-movflags', '+faststart', '-r', String(FPS)];
-  // -14 LUFS, then a limiter at -2 dBFS: a single loudness pass can let a sharp effect through, and
-  // the AAC encoder adds up to a decibel of its own on a bright transient
-  const loud = ['-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,alimiter=limit=0.8:level=false', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'];
+  // -14 LUFS, then a limiter at -2.5 dBFS: a single loudness pass can let a sharp effect through, and
+  // the AAC encoder adds up to two decibels of its own on a bright transient (a brass stab), less
+  // once the inaudible top above 18 kHz is gone
+  const loud = ['-af', 'loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,lowpass=f=18000,alimiter=limit=0.75:level=false', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000'];
   const made = [];
   if (VOICE) {
     ffmpeg([...video, '-i', path.join(DIR, 'mix.wav'), ...enc, ...loud, '-shortest', path.join(OUT, `tcp-${TAG}-voice.mp4`)]);

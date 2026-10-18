@@ -18,6 +18,7 @@ usage: python3 music.py --dur 28.5 --out mix.wav [--voice voice.wav] [--cues cue
   fight   a fight night in E minor: heavy half-time drums, a growling bass, brass hits
   gameshow  big-band swing in B flat: brass shouts, walking bass, ride cymbal, snare fills
   horror  a horror film's score: a beating low drone, a slow heartbeat, a music box, string tremolo
+  phonk   drift phonk in F minor: a distorted, sliding 808, a pitched cowbell riff, a hard clap, rolling hats
 Cues are {t, sfx} with sfx one of tick, pop, slam, whoosh, rise, click, chime (an airliner's cabin
 chime), ding (one soft bell), gps (a sat nav's prompt), blip, level and error (a game's), buzzer (a
 line-up's), boing, wah (a sad trombone), flash (a camera), ring (a boxing bell, twice), punch,
@@ -680,6 +681,57 @@ def fair_style():
         tb += ln * beat
         j += 1
 
+def cowbell(m, start, gain=0.05, pan=0.0):
+    # an 808 cowbell, pitched to a note: two square waves a fifth and a bit apart through a band,
+    # driven hard, a quick knock then a ring
+    n = int(0.32 * SR)
+    t = tt(n)
+    f = midi(m)
+    x = signal.square(2 * np.pi * f * t) + signal.square(2 * np.pi * f * 1.48 * t)
+    x = bandpass(x, f * 0.9, min(f * 5, 9000)) * (np.exp(-t * 34) * 0.7 + np.exp(-t * 8) * 0.3)
+    put(music, start, np.tanh(x * 2.5) * gain, pan=pan, rv=0.2)
+
+
+def phonk_style():
+    # drift phonk in F minor at a half-time feel: a distorted 808 sliding between roots, a pitched
+    # cowbell riff in sixteenths, a hard clap on 3, rolling hats, and a dark pad under it all
+    prog = [(41, [65, 68, 72]), (37, [61, 65, 68]), (39, [63, 67, 70]), (36, [60, 64, 67])]
+    riffs = [[77, 80, 77, 75, 72, 75, 77, 80, 82, 80, 77, 75, 77, 75, 72, 70],
+             [72, 72, 80, 72, 79, 72, 77, 75, 72, 72, 80, 72, 79, 77, 75, 72]]
+    riff = riffs[args.seed % 2]
+    t0, k = 0.0, 0
+    while t0 < args.dur:
+        root, chord = prog[k % 4]
+        pad_chord(chord, t0, bar + 0.3, gain=0.05)
+        for b in range(4):
+            tb = t0 + b * beat
+            if tb >= args.dur:
+                break
+            if b in (0, 2) or (b == 3 and k % 2):
+                put(music, tb, kick(0.9 if b == 0 else 0.7))
+                kicks.append(tb)
+            if b == 2:
+                put(music, tb, clap(0.8), rv=0.3)
+                put(music, tb + 0.012, snare(0.35), pan=0.1)
+            for h in range(4):
+                th = tb + h * beat / 4
+                roll = (k % 2 == 1 and b == 3 and h >= 2)
+                put(music, th, hat(0.12 if h % 2 else 0.18), pan=0.25)
+                if roll:
+                    for r2 in range(1, 3):
+                        put(music, th + r2 * beat / 12, hat(0.1), pan=-0.25)
+            # the 808: the root on the bar, sliding down a fourth into beat 3
+            if b == 0:
+                b808(root, tb, beat * 2, gain=0.55)
+            if b == 2:
+                b808(root - 5 if k % 2 else root, tb, beat * 2, gain=0.5)
+            for s16 in range(4):
+                note = riff[(b * 4 + s16) % len(riff)] - (0 if k % 4 < 2 else 2)
+                cowbell(note, tb + s16 * beat / 4, gain=0.07 if s16 % 2 else 0.09, pan=-0.15 if s16 % 2 else 0.15)
+        t0 += bar
+        k += 1
+
+
 # D minor: i - VI - III - VII, two bars each
 PROG = [([50, 53, 57], 38), ([46, 50, 53], 34), ([53, 57, 60], 41), ([48, 52, 55], 36)]
 style = args.style
@@ -710,6 +762,8 @@ elif style == 'classical':
     classical_style()
 elif style == 'fair':
     fair_style()
+elif style == 'phonk':
+    phonk_style()
 else:
     t0 = 0.0
     k = 0
@@ -746,7 +800,7 @@ else:
 
 # sidechain pump: music dips on each kick
 pump = np.ones(N)
-DEPTH = {'lofi': 0.2, 'lounge': 0.1, 'trap': 0.3, 'nature': 0.08, 'sport': 0.15, 'classical': 0.0, 'fair': 0.1}.get(style, 0.45)
+DEPTH = {'lofi': 0.2, 'lounge': 0.1, 'trap': 0.3, 'nature': 0.08, 'sport': 0.15, 'classical': 0.0, 'fair': 0.1, 'phonk': 0.5}.get(style, 0.45)
 for tb in kicks:
     i = int(tb * SR)
     n = int(beat * 0.9 * SR)
@@ -1094,7 +1148,7 @@ def sfx_swish():
 KEYS = {'pulse': (50, True), 'drive': (50, True), 'calm': (50, True), 'lofi': (53, False), 'lounge': (46, False),
         'trap': (49, True), 'noir': (50, True), 'bounce': (53, False), 'news': (48, True), 'fight': (52, True),
         'gameshow': (46, False), 'horror': (52, True), 'nature': (50, False), 'sport': (50, False),
-        'classical': (55, False), 'fair': (48, False)}
+        'classical': (55, False), 'fair': (48, False), 'phonk': (53, True)}
 
 
 def sfx_sting():
@@ -1362,7 +1416,7 @@ for c in cues:
 bed = bus * fade + sfx
 
 mix = bed * {'drive': 0.55, 'pulse': 0.42, 'lofi': 0.5, 'lounge': 0.5, 'trap': 0.55, 'noir': 0.5, 'bounce': 0.5,
-             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5, 'sport': 0.5, 'classical': 0.5, 'fair': 0.5}.get(style, 0.35)
+             'news': 0.5, 'fight': 0.55, 'gameshow': 0.5, 'horror': 0.6, 'nature': 0.5, 'sport': 0.5, 'classical': 0.5, 'fair': 0.5, 'phonk': 0.55}.get(style, 0.35)
 if args.voice:
     vsr, v = wavfile.read(args.voice)
     v = v.astype(np.float64) / (32768.0 if v.dtype == np.int16 else 1.0)
@@ -1379,7 +1433,7 @@ if args.voice:
     duck = 1 - 0.55 * np.clip(e, 0, 1)
     mix = mix * duck + np.vstack([v, v])
 
-if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror', 'nature', 'sport', 'classical', 'fair'):
+if style in ('lofi', 'lounge', 'trap', 'noir', 'bounce', 'news', 'fight', 'gameshow', 'horror', 'nature', 'sport', 'classical', 'fair', 'phonk'):
     # the newer styles are sparser, so one bright effect can set the peak and the loudness pass then
     # pushes it over: a peak limiter holds anything above 3.5 times the mix's RMS (1 ms look-ahead,
     # 120 ms release)
