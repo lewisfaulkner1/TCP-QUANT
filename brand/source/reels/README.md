@@ -115,10 +115,11 @@ loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
   whose track is a price chart, the car and its riders tilted with it, and him at the ride's
   controls). Load it after the other three:
   `modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js']`.
-- `toon/fastlane.js` adds the Fast Lane's sets: `street` (his car at night, its scissor door, `drive`
-  to pull away), `driver` (him at the wheel, the dash display and the sat nav), `road` (the road
-  through the windscreen, on the left, with signs, traffic lights, a speed camera and a car ahead)
-  and `tarmac` (his jet on the apron, the airstair). Load it after `toon/toon.js`:
+- `toon/fastlane.js` adds the Fast Lane's sets: `street` (his car at night, drawn to a real
+  supercar's measurements, its scissor door, `drive` to pull away), `driver` (him at the wheel, the
+  dash display and the sat nav), `road` (the road through the windscreen, on the left, with signs,
+  traffic lights, a speed camera and a saloon ahead) and `tarmac` (his jet on the apron and a VIP
+  stair truck at its door; its waist-high side panels are why he shows from the waist up). Load it after `toon/toon.js`:
   `modules: ['toon/founder.js', 'toon/toon.js', 'toon/fastlane.js']`.
 - `node toon/sheet.cjs <out.png>` draws the founder's character sheet, `node toon/cast-sheet.cjs
   <out.png>` the cast's, to check a change to them.

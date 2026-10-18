@@ -1302,14 +1302,17 @@ Education, not financial advice. Trading carries risk. A drawn track, not a real
 
 Six episodes at speed, made on 17 and 18 October 2026 at Lewis's request: the founder in his
 supercar and his private jet, each episode one trading lesson told through driving or flying. The
-car is gloss black with gold wheels, a scissor door and the TCP crown on its nose; the jet is cream
-and gold. Both are cartoon props, drawn for the metaphor and never shown as what trading paid for.
+car is drawn to a real one's measurements (the scissor-doored Lamborghini Aventador: 4.78 m long,
+1.14 m high, a 2.70 m wheelbase, bigger tyres at the back than the front) and in its design
+language, gloss black with gold wheels, red callipers and the TCP crown instead of a maker's badge;
+the jet is cream and gold, boarded by a VIP stair truck. Both are cartoon props, drawn for the
+metaphor and never shown as what trading paid for.
 
 **What's new in the studio.** `toon/fastlane.js` adds four sets: `street` (the car on a wet street at
 night, its door lifting, him inside; it can pull away), `driver` (him at the wheel, seen from the
 passenger seat, with the dash display: the speed, a brake light and the sat nav), `road` (the road
 through the windscreen, on the left as in the UK, with signs, traffic lights, a speed camera and a car
-ahead) and `tarmac` (the jet on the apron at sunrise, an airstair and a red carpet). The jet's cabin,
+ahead) and `tarmac` (the jet on the apron at sunrise, a VIP stair truck and a red carpet). The jet's cabin,
 window and overhead panel come from EP01. He has a driving pose (`arms: 'wheel'`), and the music has
 a new style, `phonk` (drift phonk: a cowbell riff, a distorted 808 and a hard kick, with two riffs).
 
@@ -1439,8 +1442,8 @@ Education, not financial advice. Trading carries risk. A cartoon car, not a trad
 ### FL4 · Flight Plan (21.6 s, lounge)
 
 `specs/fl4-flight-plan.js`. Dior puffer jacket; an iced white-gold tennis chain with a crown.
-Sunrise on the apron: his jet, a red carpet, him climbing the airstair: *no pilot takes off without
-a flight plan.* In the cabin, the plan in three notes: *1 THE ROUTE, where you get in. 2 THE FUEL,
+Sunrise on the apron: his jet, its door open, a VIP stair truck and a red carpet, him climbing the
+stairs: *no pilot takes off without a flight plan.* At the top he looks back. In the cabin, the plan in three notes: *1 THE ROUTE, where you get in. 2 THE FUEL,
 how much you risk. 3 THE ALTERNATE, where you land if it goes wrong.* The wing over the clouds: *then
 you fly it.* Close on him: *your trade needs one too.* *no plan, no take-off.* *do you file a plan
 before every trade?*

@@ -1,5 +1,5 @@
 // The Fast Lane · 4 · Flight Plan. Sunrise on the apron: his jet, a red carpet, him climbing the
-// airstair. No pilot takes off without a flight plan: the route (where you get in), the fuel (how
+// stairs to its door. No pilot takes off without a flight plan: the route (where you get in), the fuel (how
 // much you risk) and the alternate (where you land if it goes wrong). Then you fly it. Your trade
 // needs one too: no plan, no take-off. Do you file a plan before every trade? A lounge bossa at
 // 100 bpm under the cabin's hum, the cuts on its bars. The jet is a cartoon prop, not a trading
@@ -44,7 +44,7 @@ const SPEC = {
   sound: false,
   sfx: true,
   scenes: [
-    // 1 · the hook: the jet at sunrise, him on the airstair
+    // 1 · the hook: the jet at sunrise, him on the stairs
     APRON(0, T.follow),
     { id: 'kicker', kind: 'kicker', from: -0.5, to: T.cabin, y: 250, text: 'The Fast Lane · 4', fi: 0.01 },
     { id: 'hook', kind: 'caption', from: -0.5, to: T.cabin, y: 300, text: 'no pilot takes off\nwithout a *flight plan.*', sfx: false, fi: 0.01 },
