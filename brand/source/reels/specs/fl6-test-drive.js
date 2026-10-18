@@ -65,7 +65,7 @@ const SPEC = {
     // 4 · the lesson
     FACE(T.face, T.ask),
     LINE('a demo account\nis your *test drive.*', T.face + 0.1, T.ask),
-    FACE(T.ask, T.end),
+    WHEEL(T.ask, T.end),
     LINE('did you test drive\nyour strategy?', T.ask + 0.1, T.end),
     // 5 · the end card: one ask
     { id: 'end', kind: 'end', from: T.end, to: T.end + 2.4, cta: 'Follow TCP', sub: 'One lesson an episode.', fo: 0.01,

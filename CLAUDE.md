@@ -34,7 +34,7 @@ can't pay for services yet: prefer free tiers, and ask before anything that cost
 | `bridge/` | TCP bridge for a Windows PC with MT5: reads connected members' accounts read-only and sends the Worker percentages only | `cd bridge && python3.12 -m unittest -v` |
 | `signals/` | Signal publisher for the VPS: the algo's signals and results as branded cards | `cd signals && npm install && npm test` |
 | `tools/card-studio/` | Card Studio (a private Claude artifact) for signal and results images | — |
-| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music; `toon/` adds the animated founder and his cast for the TikTok episodes (`brand/video/reels/EPISODES.md`) | see its README |
+| `brand/source/reels/` | Reel studio: a short script → a vertical video with an AI voice, subtitles, graphics, terminal footage and original music; `toon/` adds the animated founder, his cast and the Fast Lane's cars and jet for the TikTok episodes (`brand/video/reels/EPISODES.md`) | see its README |
 | `brand/`, `community/` | Logo pack, videos and reels (`brand/video/reels/POSTS.md`), captions, business cards; the Inner Circle kit, pinned posts and socials setup | — |
 
 The terminal builds into one file, `terminal/dist/worker.js`, which Lewis pastes into the Cloudflare
@@ -61,9 +61,13 @@ dashboard. Always run `npm test` (it builds first) and commit the rebuilt `dist/
 - The cloud container reaches PyPI and npm but not GitHub releases or Hugging Face: the reels' voice
   model comes from an npm package (see `brand/source/reels/README.md`). Models aren't committed.
 - Reels teach and never ask viewers to open an account (a UK financial promotion); the link in bio and
-  the bot do that, with the disclosures. Label AI voices and demo data.
+  the bot do that, with the disclosures. Label AI voices and demo data. Cars, jets and designer
+  clothes are props for a lesson, never shown as what trading paid for: no winnings on screen, and
+  the Fast Lane's end cards say the car or the jet is a cartoon.
 - The animated founder (`toon/founder.js`) is canonical: Lewis approved character sheet V6 on
-  5 October 2026. Change his look only on purpose. His reference photos are personal: keep them out
+  5 October 2026. Change his face and cap only on purpose. His clothes are the exception: at his
+  request (16 October 2026) every episode picks its own designer outfit and chains with `outfit:`,
+  and no two episodes share one. Brand names appear as plain lettering, never logos. His reference photos are personal: keep them out
   of the repo. So is his cast, the trading emotions (`toon/cast.js`: FOMO, REVENGE, GREED, FEAR and
   PATIENCE): Lewis approved cast sheet V1 (`brand/video/reels/tcp-cast-sheet.png`) on 14 October 2026.
 - Every episode ships with its post descriptions for both accounts (TCP and the founder's), in

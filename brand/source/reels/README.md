@@ -24,7 +24,7 @@ Instagram play at). The captions and posting plan are in `brand/video/reels/POST
 | `reel.html`, `reel.js` | The engine: draws any moment of a reel from its script, in Chromium. Background, headlines, stamps, tables, coin grids, compounding curves, lists, a phone playing app footage, the probability swarm, the end card, and the subtitles |
 | `toon/` | The animated founder and his sets, for the episodes |
 | `voice.py` | The voice: Kokoro through sherpa-onnx, offline. Speaks each line, trims it, and times every word for the subtitles |
-| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s); `noir` (a detective's jazz), `bounce` (a cartoon's oom-pah), `news` (a news theme), `fight` (fight-night drums and brass), `gameshow` (big-band swing), `horror` (a drone, a heartbeat, a music box and string clusters), `nature` (a wildlife film's strings, marimba and flute), `sport` (a sports broadcast's brass, strings and timpani), `classical` (a gallery's minuet on a harpsichord) and `fair` (a fairground organ). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt, a game's blips, a line-up buzzer, a boing, a sad trombone, camera flashes, a boxing bell, a punch, a drum roll, applause, a horror film's stinger, a heartbeat, a creak, a splash, a float's plop, a fishing reel, a bird, a starting pistol, a crowd's roar, a museum's alarm and a slide whistle, and `ambience: 'cabin'` for an airliner's roar, `'savanna'` for a breeze, insects and birds, `'crowd'` for a stadium or `'hall'` for a big quiet room. Ducks under the voice |
+| `music.py` | Original music, synthesised: `pulse` under a voice, `drive` without and `calm` for the welcome video (D minor); `lofi` (F major sevenths, electric piano, vinyl crackle), `lounge` (a bossa in B flat) and `trap` (half time in C sharp minor, 808s); `noir` (a detective's jazz), `bounce` (a cartoon's oom-pah), `news` (a news theme), `fight` (fight-night drums and brass), `gameshow` (big-band swing), `horror` (a drone, a heartbeat, a music box and string clusters), `nature` (a wildlife film's strings, marimba and flute), `sport` (a sports broadcast's brass, strings and timpani), `classical` (a gallery's minuet on a harpsichord), `fair` (a fairground organ) and `phonk` (drift phonk: a cowbell riff, a distorted 808 and a hard kick; the seed picks one of two riffs). The sound effects on the cues the frames report, including a cabin chime, a seatbelt ding, a sat nav's prompt, a game's blips, a line-up buzzer, a boing, a sad trombone, camera flashes, a boxing bell, a punch, a drum roll, applause, a horror film's stinger, a heartbeat, a creak, a splash, a float's plop, a fishing reel, a bird, a starting pistol, a crowd's roar, a museum's alarm and a slide whistle, and `ambience: 'cabin'` for an airliner's roar, `'savanna'` for a breeze, insects and birds, `'crowd'` for a stadium or `'hall'` for a big quiet room. Ducks under the voice |
 | `render.cjs` | Runs the lot: voice, frames (4 browsers at once), sound, and the videos with ffmpeg |
 | `capture.cjs` | Records the terminal in demo mode, as a phone shows it, frame by frame, for the phone scenes |
 | `hear.py` | Transcribes a voice track, to check the voice read the script |
@@ -92,7 +92,9 @@ A spec is a list of voice lines and a list of scenes. Copy one close to what you
 loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
 
 - `toon/founder.js` draws him from parameters: view, head turn, lean, eyes, lids, brows, mouth, cap,
-  shades and arms. Poses blend, so one drawing serves every shot.
+  shades and arms (`wheel` puts both hands on a steering wheel). Poses blend, so one drawing serves
+  every shot. His clothes come from the spec: `outfit: 'versace-zip'` picks one of the looks in
+  `OUTFITS` (a designer top, its lettering and its chains), and every episode has its own.
 - `toon/toon.js` adds the `toon` kind (a shot: a set, a camera that moves by keys, his pose track and
   the story chart's track, depth of field, and a shake when a stop is hit), `caption` (meme text, a
   numbered lesson `note`, or a line of `steps`) and `handPhone` (the phone scene, held in his hand).
@@ -113,6 +115,11 @@ loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
   whose track is a price chart, the car and its riders tilted with it, and him at the ride's
   controls). Load it after the other three:
   `modules: ['toon/founder.js', 'toon/toon.js', 'toon/cast.js', 'toon/places.js']`.
+- `toon/fastlane.js` adds the Fast Lane's sets: `street` (his car at night, its scissor door, `drive`
+  to pull away), `driver` (him at the wheel, the dash display and the sat nav), `road` (the road
+  through the windscreen, on the left, with signs, traffic lights, a speed camera and a car ahead)
+  and `tarmac` (his jet on the apron, the airstair). Load it after `toon/toon.js`:
+  `modules: ['toon/founder.js', 'toon/toon.js', 'toon/fastlane.js']`.
 - `node toon/sheet.cjs <out.png>` draws the founder's character sheet, `node toon/cast-sheet.cjs
   <out.png>` the cast's, to check a change to them.
 
@@ -128,4 +135,6 @@ loads it with `modules: ['toon/founder.js', 'toon/toon.js']`:
 - **AI label.** The voice is AI: label voiceover reels as AI-generated when posting. The animated
   founder is drawn in code, not by an AI model.
 - **One founder.** Don't redraw him per episode: change `toon/founder.js` only on purpose, and check
-  the sheet.
+  the sheet. His outfit is the exception: each episode picks a look no other episode wears.
+- **Cars and jets are props.** The Fast Lane's car and jet stand for discipline, never for what
+  trading paid for: no winnings on screen, and the end card's risk line says they're cartoons.

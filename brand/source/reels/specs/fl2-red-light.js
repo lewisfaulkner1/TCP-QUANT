@@ -1,7 +1,7 @@
 // The Fast Lane · 2 · Red Light. At a red light at night, a red car in front revs at it. He waits. It
 // goes on red, past a speed camera: flash. Six points and a fine. Then the light goes red and amber,
-// then green, and he moves off. No setup is a red light: wait for your green. How many red lights did
-// you jump this week? Trap at 140 bpm, the cuts on its bars. The cars are cartoon props, not trading
+// then green: now you go. No setup is a red light: wait for your green. How many red lights have
+// you jumped? Trap at 140 bpm, the cuts on its bars. The cars are cartoon props, not trading
 // results. The base cut is for the TCP account; --variant=personal is the founder's own account.
 // Notes: brand/video/reels/EPISODES.md.
 
@@ -52,7 +52,7 @@ const SPEC = {
     { id: 'hook', kind: 'caption', from: -0.5, to: T.watch, y: 300, text: 'red light.\nthe car in front *revs.*', sfx: false, fi: 0.01 },
     // 2 · he waits
     WHEEL(T.watch, T.jump),
-    LINE('he can’t wait.', T.watch + 0.1, T.jump),
+    LINE('the driver in front\ncan’t *wait.*', T.watch + 0.1, T.jump),
     // 3 · it goes on red; the camera
     POV(T.jump, T.fine),
     LINE('he goes on red.', T.jump + 0.1, T.jump + 1.45),
@@ -63,7 +63,7 @@ const SPEC = {
     // 5 · green
     POV(T.green, T.face),
     LINE('then it’s *green.*', T.green + 1.0, T.green + 2.2),
-    LINE('and he goes.', T.green + 2.2, T.face),
+    LINE('*now* you go.', T.green + 2.2, T.face),
     // 6 · the lesson
     FACE(T.face, T.ask),
     LINE('no setup?\nthat’s a *red light.*', T.face + 0.1, T.face + 1.7),

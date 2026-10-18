@@ -2,7 +2,8 @@
 // fastest cars have the best brakes. The door comes down, the engine wakes, the road at speed: not to
 // go slow, but to take the bends. He brakes before the bend (the brake light on the dash, the speed
 // falling): your stop loss is your brakes. Through the bend: set it before the bend, not in it. No
-// brakes isn't brave; it's a crash. Would you drive this without brakes? Drift phonk at 140 bpm, the
+// brakes isn't brave; it's a crash. Back on the street, would you drive this without brakes? It
+// revs and pulls away. Drift phonk at 140 bpm, the
 // cuts on its bars. The car is a cartoon prop, not a trading result. The base cut is for the TCP
 // account; --variant=personal is the founder's own account. Notes: brand/video/reels/EPISODES.md.
 
@@ -35,6 +36,8 @@ const DASH = [
 const SIGN = [{ kind: 'bend', side: -0.58, keys: [{ t: T.road + 1.9, z: 1 }, { t: T.brake, z: 0.42, ease: 'linear' }, { t: T.bend, z: 0.42 }, { t: T.bend + 2.2, z: 0.03, ease: 'linear' }] }];
 
 const shot = (set, a, b, cam, more = {}) => ({ kind: 'toon', set, from: a, to: b, cam, pose: POSE, road: ROAD, dash: DASH, sign: SIGN,
+  // the car pulls away at the end, gone just before the end card
+  drive: [{ t: T.ask + 1.6, x: 0 }, { t: T.end + 0.6, x: -2000 }],
   flow: [{ t: 0, k: 0 }, { t: T.start + 1.0, k: 0 }, { t: T.road, k: 0.5 }, { t: T.road + 0.3, k: 1 }],
   door: [{ t: 0, k: 1 }, { t: T.wide + 0.25, k: 1 }, { t: T.wide + 1.15, k: 0 }], lights: [{ t: 0, k: 0.15 }, { t: T.wide + 1.2, k: 0.15 }, { t: T.wide + 1.3, k: 1 }], fi: 0.01, fo: 0.01, ...more });
 const CAR = (a, b) => shot('street', a, b, [{ t: a, s: 1.1, x: 540, y: 1270 }, { t: b, s: 1.22, x: 520, y: 1290, ease: 'linear' }], { dof: { bg: 2, mid: 1 } });
@@ -78,7 +81,7 @@ const SPEC = {
     FACE(T.face, T.ask),
     LINE('no brakes\nisn’t brave.', T.face + 0.1, T.face + 1.7),
     LINE('it’s a *crash.*', T.face + 1.7, T.ask),
-    FACE(T.ask, T.end),
+    CAR(T.ask, T.end),
     LINE('would you drive this\nwithout brakes?', T.ask + 0.1, T.end),
     // 7 · the end card: one ask
     { id: 'end', kind: 'end', from: T.end, to: T.end + 2.4, cta: 'Follow TCP', sub: 'One lesson an episode.', fo: 0.01,
@@ -90,6 +93,7 @@ const SPEC = {
     { t: T.start + 0.25, sfx: 'rev' },
     { t: T.brake + 0.05, sfx: 'tyres' },
     { t: T.bend + 0.3, sfx: 'indicator' },
+    { t: T.ask + 1.45, sfx: 'rev' },
   ],
   variants: {
     personal: {

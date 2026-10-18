@@ -17,7 +17,12 @@ What's built, what comes next, and the decisions behind it. Updated as work land
   its production package, descriptions and posting times: EP01, EP02, EP04 and EP06 to EP24 so far,
   in many places (his desk, a jet, a city map, a café, a press conference, a boxing ring, a game show,
   a cinema, a watering hole, a stadium, a museum, a theme park) with their own music. Lewis approved character sheet V6 on 5 October 2026, and on
-  14 October his cast, the trading emotions (FOMO, REVENGE, GREED, FEAR and PATIENCE).
+  14 October his cast, the trading emotions (FOMO, REVENGE, GREED, FEAR and PATIENCE). Since
+  16 October he wears a different designer outfit and different diamond chains in every episode (his
+  face and cap stay as the sheet shows), and the sound was remastered; every episode was re-rendered
+  in its own look. A new series, **The Fast Lane** (FL1 to FL6), teaches discipline through his
+  supercar and his private jet: brakes, red lights, a missed exit, a flight plan, turbulence and a
+  test drive, the car and the jet labelled as cartoons on every end card.
 - **Community:** the Inner Circle kit (description, welcome, rules, post formats, topics, banner), and
   the pinned posts for Start here (`community/PINNED.md`).
 - **Onboarding bot:** link in bio → 18+ check → broker → verification → single-use invite, with the
