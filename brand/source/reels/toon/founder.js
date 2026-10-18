@@ -1029,28 +1029,71 @@
     }
     return '';
   }
-  // A hoodie's hood, down: a soft roll of cloth lying round the back of his neck on his shoulders,
-  // rising out of the neckline either side of his throat, fullest behind his neck.
-  function hoodSVG(id) {
-    const cam = cam3(...BODY_VIEWS['34']), top = [], base = [], crest = [], N = 56;
+  // A hoodie's hood, down, as it really sits: thick soft cloth round the sides and back of his neck,
+  // standing about half way up his neck at the sides and a little higher behind it, its two edges
+  // coming down to meet under his throat, where the cords come out; the hood's lining shows along
+  // its edge. part 'back' is what lies behind his neck (drawn before the neck), 'front' what comes
+  // round in front of it on the near side and under his throat (drawn after it).
+  function hoodSVG(id, part) {
+    const cam = cam3(...BODY_VIEWS['34']);
+    const S = (v) => { const k = Math.max(0, Math.min(1, v)); return k * k * (3 - 2 * k); };
+    // a: the angle round from the front of his neck (0) to the back (pi)
+    const height = (a) => 9 + 44 * S((a - 0.03 * Math.PI) / (0.4 * Math.PI)) + 16 * S((a - 0.5 * Math.PI) / (0.5 * Math.PI));
+    const reach = (a) => 82 + 24 * S((a - 0.12 * Math.PI) / (0.88 * Math.PI));
+    const N = 90, ring = [];
     for (let i = 0; i <= N; i++) {
-      const u = i / N, th = (0.28 + u * 1.44) * Math.PI, k = Math.sin(u * Math.PI);
-      // its ends rise out of the neckline; its middle is a roll as thick as his neck is wide
-      const e = Math.sin(Math.min(1, Math.min(u, 1 - u) / 0.32) * Math.PI / 2);
-      const r = (10 + 26 * Math.pow(k, 0.7)) * e, R = 79 + r * 1.25, y0 = -4 - 22 * Math.cos(th);
-      top.push(cam.at([R * Math.sin(th), y0 + r * 0.8, R * Math.cos(th) - 4]));
-      crest.push(cam.at([(R - 4) * Math.sin(th), y0 + r * 0.6, (R - 4) * Math.cos(th) - 4]));
-      base.push(cam.at(collarPt(th, true)));
+      const th = (0.035 + (i / N) * 1.93) * Math.PI, a = Math.min(th, 2 * Math.PI - th);
+      const y0 = -4 - 22 * Math.cos(th), h = height(a), R = reach(a);
+      ring.push({
+        top: cam.at([R * Math.sin(th), y0 + h, R * Math.cos(th) - 4]),
+        lip: cam.at([(R - 10) * Math.sin(th), y0 + h - 8, (R - 10) * Math.cos(th) - 4]),
+        crest: cam.at([(R + 4) * Math.sin(th), y0 + h * 0.72, (R + 4) * Math.cos(th) - 4]),
+        base: cam.at(collarPt(th, true)),
+        facing: cam.rot([Math.sin(th), 0, Math.cos(th)])[2] > 0,
+      });
     }
-    const shape = `${smooth(top)} L ${base.slice().reverse().map(xy).join(' L ')} Z`;
-    return `<clipPath id="${id}hood"><path d="${shape}"/></clipPath>
+    // the runs of the band facing us (in front of his neck) or facing away (behind it), each a
+    // little overlapped so no seam shows
+    const runs = [];
+    let cur = null;
+    ring.forEach((q, i) => {
+      if (!cur || cur.facing !== q.facing) { cur = { facing: q.facing, from: Math.max(0, i - 1), to: i }; runs.push(cur); } else cur.to = i;
+    });
+    const lining = mixC(C.top, '#000000', LOOK && LOOK.light ? 0.28 : 0.4);
+    return runs.filter((r) => (part === 'front') === r.facing).map((r, ri) => {
+      const pts = ring.slice(r.from, Math.min(ring.length, r.to + 2));
+      if (pts.length < 2) return '';
+      const top = pts.map((q) => q.top), base = pts.map((q) => q.base), lip = pts.map((q) => q.lip), crest = pts.map((q) => q.crest);
+      const shape = `${smooth(top)} L ${base.slice().reverse().map(xy).join(' L ')} Z`;
+      const band = `${smooth(top)} L ${lip.slice().reverse().map(xy).join(' L ')} Z`;
+      const cid = `${id}hood${part}${ri}`;
+      return `<clipPath id="${cid}"><path d="${shape}"/></clipPath>
+        <path d="${shape}" fill="${C.top}"/>
+        <g clip-path="url(#${cid})">
+          ${r.facing ? `<path d="${band}" fill="${lining}"/>` : ''}
+          ${ink(crest, 16, C.topHi, [0.25, 0.25], LOOK && LOOK.light ? 0.55 : 0.32, ` filter="url(#${id}soft)"`)}
+          ${ink(base, 16, C.topDark, [0.1, 0.1], 0.7, ` filter="url(#${id}soft)"`)}
+          ${ink(off(lip, 0, 3), 5, '#000', [0.2, 0.2], 0.22, ` filter="url(#${id}softer)"`)}
+        </g>
+        ${ink(top, 2.3, C.lineCloth, [0.04, 0.04], 0.9)}`;
+    }).join('');
+  }
+  // From behind, the hood lies down his upper back from the neckline to his shoulder blades: its
+  // rolled rim round his neck, its crown's seam down the middle, a soft shadow under its edge.
+  function hoodBackSVG(id) {
+    const shape = 'M -108 156 C -122 200, -104 262, -60 300 C -34 320, 34 320, 60 300 C 104 262, 122 200, 108 156 C 70 176, -70 176, -108 156 Z';
+    return `<path d="M -104 166 C -116 214, -98 270, -56 306 C -30 326, 30 326, 56 306 C 98 270, 116 214, 104 166" fill="none" stroke="#000" stroke-width="14" opacity="0.22" filter="url(#${id}soft2)"/>
+      <clipPath id="${id}hoodb"><path d="${shape}"/></clipPath>
       <path d="${shape}" fill="${C.top}"/>
-      <g clip-path="url(#${id}hood)">
-        ${ink(base, 18, C.topDark, [0.1, 0.1], 0.75, ` filter="url(#${id}soft)"`)}
-        ${ink(crest, 12, C.topHi, [0.25, 0.25], LOOK && LOOK.light ? 0.7 : 0.4, ` filter="url(#${id}soft)"`)}
-        ${ink(off(top, 0, 5), 6, C.topDark, [0.2, 0.2], 0.35, ` filter="url(#${id}softer)"`)}
+      <g clip-path="url(#${id}hoodb)">
+        ${blob([[-90, 170], [0, 186], [90, 170], [70, 230], [0, 246], [-70, 230]], C.topHi, LOOK && LOOK.light ? 0.4 : 0.22, ` filter="url(#${id}soft2)"`)}
+        ${blob([[-100, 250], [-40, 290], [40, 290], [100, 250], [60, 320], [-60, 320]], C.topDark, 0.55, ` filter="url(#${id}soft2)"`)}
+        ${ink([[0, 182], [0, 240], [0, 312]], 2.4, C.topDark, [0.3, 0.3], 0.7)}
+        ${ink([[-2, 184], [-2, 300]], 1, C.topHi, [0.3, 0.3], 0.3)}
+        ${ink([[-104, 160], [-52, 176], [0, 180], [52, 176], [104, 160]], 18, mixC(C.top, '#000000', 0.35), [0.05, 0.05], 0.85)}
+        ${ink([[-100, 172], [-50, 188], [0, 192], [50, 188], [100, 172]], 6, C.topHi, [0.2, 0.2], 0.35, ` filter="url(#${id}softer)"`)}
       </g>
-      ${ink(top, 2.3, C.lineCloth, [0.04, 0.04], 0.9)}`;
+      ${ink([[-108, 156], [-122, 200], [-104, 262], [-60, 300], [0, 316], [60, 300], [104, 262], [122, 200], [108, 156]], 2.3, C.lineCloth, [0.05, 0.05], 0.9)}`;
   }
   // its cords, hanging from the neckline down his chest, metal tips at their ends
   function cordsSVG(id) {
@@ -1158,11 +1201,12 @@
       </g>
       ${ink(TORSO_NEAR, 2.4, C.lineCloth, [0.03, 0.03], 0.92)}
       ${ink(TORSO_FAR, 2.2, C.lineCloth, [0.03, 0.12], 0.88)}
-      ${LOOK && LOOK.kind === 'hoodie' ? hoodSVG(id) : ''}
+      ${LOOK && LOOK.kind === 'hoodie' ? hoodSVG(id, 'back') : ''}
       ${collarSVG(M, 'back')}
       ${chainSVG(M, id, 'back')}
       ${neckSVG(p, id, M)}
       ${collarSVG(M, 'front')}
+      ${LOOK && LOOK.kind === 'hoodie' ? hoodSVG(id, 'front') : ''}
       ${LOOK && LOOK.kind === 'hoodie' ? cordsSVG(id) : ''}
       ${chainSVG(M, id, 'front')}`;
   }
@@ -1722,6 +1766,7 @@
       <clipPath id="${id}bnotneck"><path d="M -300 -100 H 300 V 700 H -300 Z ${BACK_NECK}" clip-rule="evenodd"/>
         <path d="M ${[...M.front.map((f) => f.o), ...M.front.map((f) => f.n).reverse()].map(xy).join(' L ')} Z"/></clipPath>
       <g clip-path="url(#${id}bnotneck)">${collarSVG(C2, 'front')}</g>
+      ${LOOK && LOOK.kind === 'hoodie' ? hoodBackSVG(id) : ''}
       ${chainSVG(M, id, 'front')}`;
   }
   const BACK_NECK = 'M -50 36 C -51 66, -52 96, -54 116 C -56 130, -58 140, -61 152 L -61 175 L 61 175 L 61 152 C 58 140, 56 130, 54 116 C 52 96, 51 66, 50 36 Z';
