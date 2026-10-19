@@ -1,0 +1,14 @@
+{
+  "name": "tcp-quant-terminal",
+  "private": true,
+  "type": "module",
+  "description": "TCP Quant Terminal: a members-only Telegram Mini App on a Cloudflare Worker",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node --test"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "0.128.0",
+    "esbuild": "0.28.2"
+  }
+}

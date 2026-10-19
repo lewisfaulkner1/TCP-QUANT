@@ -1,0 +1,13 @@
+{
+  "worker_url": "https://tcp-quant-terminal.YOUR-ACCOUNT.workers.dev",
+  "every_minutes": 30,
+  "history_days": 60,
+  "terminals": {
+    "puprime": "C:/TCP/MT5-PUPrime/terminal64.exe",
+    "vantage": "C:/TCP/MT5-Vantage/terminal64.exe"
+  },
+  "companies": {
+    "puprime": "pu\\s*prime",
+    "vantage": "vantage"
+  }
+}

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TCP Quant Terminal · launch film</title>
+<style>
+@font-face { font-family: "Archivo"; src: url(fonts/archivo-400.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: "TCP Display"; src: url(fonts/archivo-expanded-800.woff2) format("woff2"); font-weight: 800; }
+@font-face { font-family: "JB Mono"; src: url(fonts/jetbrains-mono-500.woff2) format("woff2"); font-weight: 500; }
+@font-face { font-family: "JB Mono"; src: url(fonts/jetbrains-mono-600.woff2) format("woff2"); font-weight: 600; }
+@font-face { font-family: "Serif"; src: url(fonts/instrument-serif-italic.woff2) format("woff2"); font-style: italic; }
+:root { --ink:#0E0D0B; --gold:#D8AD4E; --gold-hi:#F6E3A3; --gold-lo:#B0812F; --ivory:#F2ECDF; --stone:#A69D8C; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #060504; }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+canvas.full { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+.foil { background: linear-gradient(180deg, #F6E3A3 0%, #E3C06D 30%, #D8AD4E 52%, #B0812F 76%, #E3C06D 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* -------------------------------------------------------------- title */
+#title { position: absolute; inset: 0; }
+#crown { position: absolute; left: 390px; top: 596px; width: 300px; height: 244.4px; }
+#tcp { position: absolute; left: 0; right: 0; top: 880px; text-align: center; font: 800 206px/1 "TCP Display"; letter-spacing: -0.02em; }
+#qt { position: absolute; left: 0; right: 0; top: 1118px; text-align: center; font: 600 40px/1 "JB Mono"; color: var(--ivory); white-space: nowrap; }
+#tagline { position: absolute; left: 0; right: 0; top: 1206px; text-align: center; font: italic 74px/1 "Serif"; color: var(--ivory); }
+.sweep { position: absolute; pointer-events: none; mix-blend-mode: screen; }
+/* ----------------------------------------------------------- captions */
+#cap { position: absolute; left: 60px; right: 60px; top: 236px; text-align: center; }
+#capLabel { display: inline-flex; align-items: center; gap: 18px; font: 600 27px/1 "JB Mono"; letter-spacing: .3em; color: var(--gold); text-transform: uppercase; }
+#capLabel i { display: block; width: 46px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold)); }
+#capLabel i:last-child { background: linear-gradient(90deg, var(--gold), transparent); }
+#capHead { margin-top: 26px; font: 800 70px/1.06 "TCP Display"; letter-spacing: -0.025em; color: var(--ivory); }
+#capAccent { margin-top: 6px; font: italic 92px/1.02 "Serif"; }
+.w { display: inline-block; white-space: pre; will-change: transform, opacity, filter; }
+#capSub { position: absolute; left: 80px; right: 80px; text-align: center; font: 400 31px/1.35 "Archivo"; color: rgba(242,236,223,.72); }
+#capTag { display: inline-block; margin-top: 22px; padding: 12px 22px; border-radius: 999px; border: 1.5px solid rgba(216,173,78,.6); font: 600 24px/1 "JB Mono"; letter-spacing: .22em; color: var(--gold-hi); background: rgba(216,173,78,.08); }
+/* -------------------------------------------------------------- phone */
+#phoneWrap { position: absolute; inset: 0; perspective: 2600px; perspective-origin: 540px 980px; }
+#phone { position: absolute; left: 0; top: 0; width: 604px; height: 1260px; transform-origin: 302px 630px; }
+#shell { position: absolute; inset: 0; border-radius: 92px;
+  background: linear-gradient(135deg, #5b544a 0%, #2a2621 18%, #16130f 40%, #3b352d 62%, #15120e 80%, #6a6154 100%);
+  box-shadow: 0 60px 120px rgba(0,0,0,.75), 0 0 0 1.5px rgba(246,227,163,.18) inset, 0 0 0 5px #0b0a08 inset; }
+#shell::after { content: ""; position: absolute; inset: 7px; border-radius: 86px; background: #050404; }
+#screenBox { position: absolute; left: 20px; top: 20px; width: 564px; height: 1220px; border-radius: 72px; overflow: hidden; background: #0E0D0B; }
+#screen { position: absolute; left: 0; top: 0; width: 564px; height: 1220px; }
+#glare { position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.07) 42%, rgba(255,255,255,0) 54%); mix-blend-mode: screen; }
+#island { position: absolute; left: 234px; top: 42px; width: 136px; height: 38px; border-radius: 20px; background: #000; }
+#btn1, #btn2, #btn3 { position: absolute; width: 5px; border-radius: 3px; background: linear-gradient(90deg, #3b352d, #6a6154); }
+#btn1 { left: -4px; top: 250px; height: 70px; } #btn2 { left: -4px; top: 350px; height: 110px; } #btn3 { right: -4px; top: 330px; height: 150px; }
+#glow { position: absolute; left: 0; top: 0; width: 1400px; height: 1400px; border-radius: 50%; background: radial-gradient(circle, rgba(216,173,78,.30) 0%, rgba(216,173,78,.10) 34%, rgba(216,173,78,0) 66%); }
+/* ---------------------------------------------------------- pop cards */
+.pop { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; border-radius: 34px; box-shadow: 0 50px 110px rgba(0,0,0,.72), 0 0 0 1.5px rgba(246,227,163,.30), 0 0 70px rgba(216,173,78,.16); }
+/* ----------------------------------------------------------- end card */
+#end { position: absolute; inset: 0; }
+#endCrown { position: absolute; left: 450px; top: 318px; width: 180px; height: 146.6px; }
+#endGet { position: absolute; left: 0; right: 0; top: 560px; text-align: center; font: 600 30px/1 "JB Mono"; letter-spacing: .34em; color: var(--gold); }
+#endName { position: absolute; left: 0; right: 0; top: 626px; text-align: center; font: 800 94px/1.02 "TCP Display"; letter-spacing: -0.02em; color: var(--ivory); }
+#endAnd { position: absolute; left: 0; right: 0; top: 842px; text-align: center; font: italic 112px/1 "Serif"; }
+#endCta { position: absolute; left: 150px; width: 780px; top: 1014px; height: 118px; border-radius: 59px; background: linear-gradient(180deg, #F6E3A3, #D8AD4E 55%, #C29640); box-shadow: 0 20px 60px rgba(216,173,78,.35), 0 0 0 1px rgba(255,255,255,.35) inset; display: flex; align-items: center; justify-content: center; gap: 22px; font: 800 38px/1 "TCP Display"; letter-spacing: -0.01em; color: #0E0D0B; }
+#endCta svg { width: 42px; height: 42px; }
+#endBio { position: absolute; left: 0; right: 0; top: 1176px; text-align: center; font: 400 36px/1 "Archivo"; color: rgba(242,236,223,.8); }
+#endBio b { font-weight: 400; color: var(--gold-hi); }
+#endRisk { position: absolute; left: 70px; right: 70px; top: 1356px; text-align: center; font: 400 23px/1.5 "Archivo"; color: rgba(166,157,140,.92); }
+/* ----------------------------------------------------------------- fx */
+#flash { position: absolute; inset: 0; background: radial-gradient(60% 40% at 50% 42%, rgba(255,247,222,1) 0%, rgba(246,227,163,.75) 30%, rgba(216,173,78,.25) 60%, rgba(216,173,78,0) 100%); mix-blend-mode: screen; }
+#leak { position: absolute; width: 1800px; height: 1800px; border-radius: 50%; background: radial-gradient(circle, rgba(255,196,110,.55) 0%, rgba(216,120,60,.22) 38%, rgba(216,120,60,0) 70%); mix-blend-mode: screen; }
+#streak { position: absolute; left: -200px; width: 1480px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, transparent, rgba(255,240,200,.95), transparent); box-shadow: 0 0 40px 10px rgba(246,227,163,.5); mix-blend-mode: screen; }
+#vignette { position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 48%, rgba(0,0,0,0) 55%, rgba(0,0,0,.62) 100%); }
+#grain { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; mix-blend-mode: overlay; opacity: .09; image-rendering: pixelated; }
+#scrim { position: absolute; left: 0; right: 0; top: 0; height: 760px; background: linear-gradient(180deg, rgba(6,5,4,.92) 0%, rgba(6,5,4,.7) 45%, rgba(6,5,4,0) 100%); }
+#letterbox { position: absolute; left: 0; right: 0; height: 0; background: #000; }
+.hide { display: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" class="full" width="1080" height="1920"></canvas>
+  <div id="glow"></div>
+  <canvas id="swarmFx" class="full" width="1080" height="1920"></canvas>
+
+  <div id="title">
+    <svg id="crown" viewBox="-19.2 -19.53 238.4 194.2"></svg>
+    <div id="tcp" class="foil">TCP</div>
+    <div id="qt">QUANT TERMINAL</div>
+    <div id="tagline">Probabilities, <span class="foil">not promises.</span></div>
+    <div id="titleSweep" class="sweep"></div>
+  </div>
+
+  <div id="scrim"></div>
+  <div id="phoneWrap">
+    <div id="phone">
+      <div id="shell"></div>
+      <div id="btn1"></div><div id="btn2"></div><div id="btn3"></div>
+      <div id="screenBox"><canvas id="screen" width="780" height="1688"></canvas><div id="glare"></div></div>
+      <div id="island"></div>
+    </div>
+  </div>
+  <canvas id="popA" class="pop"></canvas>
+  <canvas id="popB" class="pop"></canvas>
+  <canvas id="fullCv" class="full" width="1080" height="1920"></canvas>
+
+  <div id="cap"><div id="capLabel"></div><div id="capHead"></div><div id="capAccent" class="foil"></div><div id="capTagWrap"></div></div>
+  <div id="capSub"></div>
+
+  <div id="end">
+    <svg id="endCrown" viewBox="-19.2 -19.53 238.4 194.2"></svg>
+    <div id="endGet">GET ACCESS TO THE</div>
+    <div id="endName">QUANT<br>TERMINAL</div>
+    <div id="endAnd" class="foil">app &amp; indicator</div>
+    <div id="endCta">Join the TCP Inner Circle <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="#0E0D0B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div id="endBio">Link in bio · <b>@TCPInnerCircleBot</b></div>
+    <div id="endRisk">CFDs and crypto are high-risk. Leveraged products can lose you money fast.<br>Not financial advice. 18+. Partner link: I may earn a commission.<br>Past performance is no guide to the future. Interface shown with demo prices.</div>
+  </div>
+
+  <div id="leak"></div>
+  <div id="streak"></div>
+  <div id="flash"></div>
+  <div id="vignette"></div>
+  <canvas id="grain" width="540" height="960"></canvas>
+</div>
+<script src="film.js"></script>
+</body>
+</html>
